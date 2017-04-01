@@ -1,6 +1,7 @@
 import os
-from ctypes import c_char, c_char_p, c_int, c_void_p, cast, \
-    POINTER, CFUNCTYPE, CDLL, create_string_buffer
+import subprocess
+from ctypes import c_char_p, c_int, c_void_p, CDLL
+from ctypes.util import find_library
 from .util import ccall
 
 
@@ -11,17 +12,16 @@ class Rinstance(object):
     offset = None
 
     def __init__(self):
-        Rhome = "/usr/local/Cellar/r/3.3.2/R.framework/Resources"
-        os.environ['R_HOME'] = Rhome
+        if 'R_HOME' not in os.environ:
+            Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
+            os.environ['R_HOME'] = Rhome
         os.environ["R_DOC_DIR"] = os.path.join(Rhome, "doc")
         os.environ["R_INCLUDE_DIR"] = os.path.join(Rhome, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(Rhome, "share")
-
-        # /usr/local/Cellar/r/3.3.2/R.framework/Versions/3.3/Resources/lib/libR.dylib
-        Rinstance.libR = CDLL("libR.dylib")
+        Rinstance.libR = CDLL(find_library("R"))
 
     def run(self):
-        _argv = ["promptr", "--no-save", "--quiet"]
+        _argv = ["ride", "--no-save", "--quiet"]
         argn = len(_argv)
         argv = (c_char_p * argn)()
         for i, a in enumerate(_argv):

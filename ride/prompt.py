@@ -177,7 +177,7 @@ def create_r_repl_application():
 
     accept_action = create_accept_action(multi_prompt)
 
-    history = FileHistory(".consoler_history")
+    history = FileHistory(".rice_history")
 
     application = create_prompt_application(
         get_prompt_tokens=get_prompt_tokens,
