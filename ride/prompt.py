@@ -11,6 +11,7 @@ from prompt_toolkit.buffer import AcceptAction
 from prompt_toolkit.interface import AbortAction
 from prompt_toolkit.history import FileHistory
 import time
+import os
 import traceback
 
 from .runtime import Rinstance
@@ -177,7 +178,7 @@ def create_r_repl_application():
 
     accept_action = create_accept_action(multi_prompt)
 
-    history = FileHistory(".ride_history")
+    history = FileHistory(os.path.join(os.path.expanduser("~"), ".ride_history"))
 
     application = create_prompt_application(
         get_prompt_tokens=get_prompt_tokens,
