@@ -6,7 +6,7 @@ A better R REPL. `ride` is still under develpement, users should take their own 
 
 - [x] brackted paste mode
 - [x] multiline editing
-- [ ] auto completion
+- [x] auto completion
 - [ ] syntax color
 
 ### Installation

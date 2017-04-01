@@ -1,6 +1,9 @@
 from prompt_toolkit.shortcuts import \
     create_prompt_application, create_eventloop, CommandLineInterface, create_output
 from prompt_toolkit.token import Token
+from prompt_toolkit.completion import \
+    Completer, Completion, CompleteEvent, get_common_complete_suffix
+from prompt_toolkit.contrib.completers import WordCompleter
 from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import Condition, HasFocus
@@ -34,6 +37,36 @@ class MultiPrompt(object):
     @prompt_mode.setter
     def prompt_mode(self, m):
         self._prompt_mode = m
+
+
+class RCompleter(Completer):
+
+    def __init__(self):
+        self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
+        self.assignEnd = self.get_utils_func(".assignEnd")
+        self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
+        self.completeToken = self.get_utils_func(".completeToken")
+        self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
+
+    def get_utils_func(self, fname):
+        f = interface.rlang(api.mk_symbol(":::"), api.mk_string("utils"), api.mk_string(fname))
+        api.preserve_object(f)
+        return f
+
+    def get_completions(self, document, complete_event):
+        text = document.text
+        s = api.protect(api.mk_string(text))
+        interface.rcall(self.assignLinebuffer, s)
+        interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
+        token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
+        if len(token) >= 3:
+            interface.rcall(self.completeToken)
+            completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
+        else:
+            completions = []
+        api.unprotect(1)
+        for c in completions:
+            yield Completion(c, -len(token))
 
 
 def create_key_registry(multi_prompt):
@@ -151,6 +184,9 @@ def create_r_repl_application():
         key_bindings_registry=registry,
         multiline=True,
         history=history,
+        completer=RCompleter(),
+        complete_while_typing=True,
+        display_completions_in_columns=True,
         accept_action=accept_action,
         on_exit=AbortAction.RETURN_NONE)
 
@@ -166,8 +202,13 @@ def create_r_eventloop():
                 break
             api.process_events()
             time.sleep(0.01)
+    eventloop = create_eventloop(inputhook=process_events)
 
-    return create_eventloop(inputhook=process_events)
+    # these are necessary to run the completions in main thread.
+    eventloop.run_in_executor = lambda callback: callback()
+    eventloop.call_from_executor = lambda callback, _max_postpone_until=None: callback()
+
+    return eventloop
 
 
 class RCommandlineInterface(CommandLineInterface):

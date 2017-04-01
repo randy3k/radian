@@ -88,6 +88,10 @@ def mk_string(s):
     return rccall("Rf_mkString", c_void_p, [c_char_p], s.encode("utf-8"))
 
 
+def scalar_integer(i):
+    return rccall("Rf_ScalarInteger", c_void_p, [c_int], i)
+
+
 def parse_vector(s):
     status = c_int()
     val = rccall(

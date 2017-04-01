@@ -8,7 +8,7 @@ High level functions to interact with R api.
 
 
 def r_version_list():
-    return {k: v[0] for (k, v) in rcopy(rcall("R.Version")).items()}
+    return {k: v[0] for (k, v) in rcopy(rcall(api.mk_symbol("R.Version"))).items()}
 
 
 def r_version():
@@ -23,7 +23,7 @@ def rcopy(s):
     typ = api.typeof(s)
     if typ == api.VECSXP:
         ret = OrderedDict()
-        names = rcopy(rcall("names", s))
+        names = rcopy(rcall(api.mk_symbol("names"), s))
         for i in range(api.length(s)):
             ret[names[i]] = rcopy(api.vector_elt(s, i))
     elif typ == api.STRSXP:
@@ -55,7 +55,7 @@ def rlang(*args, **kwargs):
 
 
 def rcall(*args, **kwargs):
-    val, status = api.try_eval(rlang(api.mk_symbol(args[0]), *args[1:], **kwargs))
+    val, status = api.try_eval(rlang(*args, **kwargs))
     if status != 0:
         raise RuntimeError("R eval error.")
     return val
@@ -85,4 +85,4 @@ def reval(s):
 
 
 def rprint(s):
-    rcall("print", s)
+    rcall(api.mk_symbol("print"), s)
