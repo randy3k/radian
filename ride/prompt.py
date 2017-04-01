@@ -1,12 +1,11 @@
+from __future__ import unicode_literals
 from prompt_toolkit.shortcuts import \
-    create_prompt_application, create_eventloop, CommandLineInterface, create_output
+    create_prompt_application, create_eventloop, CommandLineInterface
 from prompt_toolkit.token import Token
-from prompt_toolkit.completion import \
-    Completer, Completion, CompleteEvent, get_common_complete_suffix
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.filters import Condition, HasFocus
+from prompt_toolkit.filters import Condition
 from prompt_toolkit.buffer import AcceptAction
 from prompt_toolkit.interface import AbortAction
 from prompt_toolkit.history import FileHistory
@@ -23,7 +22,7 @@ class MultiPrompt(object):
     prompts = {
         "r": "r$> ",
         "help": "help?> ",
-        "python": "python%> "
+        "debug": "debug%> "
     }
     _prompt_mode = "r"
 
@@ -32,17 +31,18 @@ class MultiPrompt(object):
         return self.prompts[self._prompt_mode]
 
     @property
-    def prompt_mode(self):
+    def mode(self):
         return self._prompt_mode
 
-    @prompt_mode.setter
-    def prompt_mode(self, m):
+    @mode.setter
+    def mode(self, m):
         self._prompt_mode = m
 
 
 class RCompleter(Completer):
 
-    def __init__(self):
+    def __init__(self, multi_prompt):
+        self.multi_prompt = multi_prompt
         self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
         self.assignEnd = self.get_utils_func(".assignEnd")
         self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
@@ -55,17 +55,18 @@ class RCompleter(Completer):
         return f
 
     def get_completions(self, document, complete_event):
-        text = document.text
-        s = api.protect(api.mk_string(text))
-        interface.rcall(self.assignLinebuffer, s)
-        interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
-        token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
-        if len(token) >= 3:
-            interface.rcall(self.completeToken)
-            completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
-        else:
-            completions = []
-        api.unprotect(1)
+        completions = []
+        token = ""
+        if self.multi_prompt.mode in ["r", "help"]:
+            text = document.text
+            s = api.protect(api.mk_string(text))
+            interface.rcall(self.assignLinebuffer, s)
+            interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
+            token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
+            if (len(token) > 3 and text[-1].isalnum()) or complete_event.completion_requested:
+                interface.rcall(self.completeToken)
+                completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
+            api.unprotect(1)
         for c in completions:
             yield Completion(c, -len(token))
 
@@ -74,13 +75,15 @@ def create_key_registry(multi_prompt):
     registry = load_key_bindings_for_prompt(enable_system_bindings=True)
 
     is_begining_of_line = Condition(lambda cli: cli.current_buffer.cursor_position == 0)
-    prase_complete = Condition(
-        lambda cli: api.parse_vector(api.mk_string(cli.current_buffer.text))[1] != 2)
+
+    @Condition
+    def prase_complete(cli):
+        return api.parse_vector(api.mk_string(cli.current_buffer.text))[1] != 2
 
     is_returnable = Condition(lambda cli: cli.current_buffer.accept_action.is_returnable)
 
     def in_prompt_mode(m):
-        return Condition(lambda _: multi_prompt.prompt_mode == m)
+        return Condition(lambda _: multi_prompt.mode == m)
 
     # R prompt
 
@@ -91,30 +94,34 @@ def create_key_registry(multi_prompt):
 
     @registry.add_binding("?", filter=is_begining_of_line & in_prompt_mode("r"))
     def _(event):
-        multi_prompt.prompt_mode = "help"
+        multi_prompt.mode = "help"
 
-    @registry.add_binding(Keys.ControlT, filter=in_prompt_mode("r"))
+    @registry.add_binding(Keys.ControlP, filter=in_prompt_mode("r"))
     def _(event):
-        multi_prompt.prompt_mode = "python"
+        multi_prompt.mode = "debug"
 
     # help prompt
 
     @registry.add_binding(Keys.Backspace, filter=is_begining_of_line & in_prompt_mode("help"))
     def _(event):
-        multi_prompt.prompt_mode = "r"
+        multi_prompt.mode = "r"
 
     @registry.add_binding(Keys.ControlJ, filter=in_prompt_mode("help") & is_returnable)
     def _(event):
         buff = event.current_buffer
         buff.accept_action.validate_and_handle(event.cli, buff)
 
-    # python prompt
-
-    @registry.add_binding(Keys.ControlT, filter=in_prompt_mode("python"))
+    @registry.add_binding(Keys.ControlC, filter=in_prompt_mode("help"))
     def _(event):
-        multi_prompt.prompt_mode = "r"
+        multi_prompt.mode = "r"
 
-    @registry.add_binding(Keys.ControlJ, filter=in_prompt_mode("python") & is_returnable)
+    # debug prompt
+
+    @registry.add_binding(Keys.ControlP, filter=in_prompt_mode("debug"))
+    def _(event):
+        multi_prompt.mode = "r"
+
+    @registry.add_binding(Keys.ControlJ, filter=in_prompt_mode("debug") & is_returnable)
     def _(event):
         buff = event.current_buffer
         buff.accept_action.validate_and_handle(event.cli, buff)
@@ -130,7 +137,7 @@ def create_accept_action(multi_prompt):
     def _process_input(cli, buffer):
         text = buffer.text
         if len(text.strip()) > 0:
-            if multi_prompt.prompt_mode == "r":
+            if multi_prompt.mode == "r":
                 try:
                     Rinstance.is_busy = True
                     result = interface.reval(text)
@@ -145,7 +152,7 @@ def create_accept_action(multi_prompt):
                 finally:
                     Rinstance.is_busy = False
 
-            elif multi_prompt.prompt_mode == "python":
+            elif multi_prompt.mode == "debug":
                 try:
                     try:
                         result = eval(text, _globals, _locals)
@@ -185,9 +192,8 @@ def create_r_repl_application():
         key_bindings_registry=registry,
         multiline=True,
         history=history,
-        completer=RCompleter(),
+        completer=RCompleter(multi_prompt),
         complete_while_typing=True,
-        display_completions_in_columns=True,
         accept_action=accept_action,
         on_exit=AbortAction.RETURN_NONE)
 
@@ -207,7 +213,6 @@ def create_r_eventloop():
 
     # these are necessary to run the completions in main thread.
     eventloop.run_in_executor = lambda callback: callback()
-    eventloop.call_from_executor = lambda callback, _max_postpone_until=None: callback()
 
     return eventloop
 
@@ -215,6 +220,7 @@ def create_r_eventloop():
 class RCommandlineInterface(CommandLineInterface):
 
     def abort(self):
+        # make sure a new line is print
         self._abort_flag = True
         self._redraw()
         self.output.write("\n")
