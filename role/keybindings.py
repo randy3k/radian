@@ -1,0 +1,101 @@
+from __future__ import unicode_literals
+
+from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.filters import Condition, HasFocus
+from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER
+
+from .process_input import process_input, process_python_input, prase_input_complete
+
+
+def create_key_registry(multi_prompt):
+    registry = load_key_bindings_for_prompt(enable_system_bindings=True)
+
+    is_begining_of_buffer = Condition(lambda cli: cli.current_buffer.cursor_position == 0)
+    is_end_of_buffer = Condition(lambda cli: cli.current_buffer.cursor_position == len(cli.current_buffer.text))
+    is_empty = Condition(lambda cli: len(cli.current_buffer.text) == 0)
+    is_default_buffer = Condition(lambda cli: cli.current_buffer_name == DEFAULT_BUFFER)
+    last_history = Condition(lambda cli: cli.current_buffer.working_index == len(cli.current_buffer._working_lines)-1)
+
+    last_working_index = [-1]
+
+    prase_complete = Condition(prase_input_complete)
+
+    def in_prompt_mode(m):
+        return Condition(lambda _: multi_prompt.mode == m)
+
+    # R prompt
+
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & prase_complete)
+    def _(event):
+        last_working_index[0] = event.cli.current_buffer.working_index
+        process_input(event.cli)
+
+    @registry.add_binding("?", filter=is_default_buffer & in_prompt_mode("r") & is_begining_of_buffer)
+    def _(event):
+        multi_prompt.mode = "help"
+
+    @registry.add_binding(Keys.ControlY, filter=is_default_buffer & in_prompt_mode("r"))
+    def _(event):
+        multi_prompt.mode = "debug"
+
+    @registry.add_binding(Keys.BracketedPaste, filter=is_default_buffer & in_prompt_mode("r"))
+    def _(event):
+        data = event.data
+        data = data.replace('\r\n', '\n')
+        data = data.replace('\r', '\n')
+        event.current_buffer.insert_text(data)
+        if data and data[-1] == "\n":
+            process_input(event.cli)
+
+    # help prompt
+
+    @registry.add_binding(Keys.Backspace, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_buffer)
+    def _(event):
+        multi_prompt.mode = "r"
+
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("help"))
+    def _(event):
+        pass
+
+    @registry.add_binding(Keys.ControlC, filter=is_default_buffer & in_prompt_mode("help"))
+    def _(event):
+        multi_prompt.mode = "r"
+
+    # debug prompt
+
+    @registry.add_binding(Keys.ControlY, filter=is_default_buffer & in_prompt_mode("debug"))
+    def _(event):
+        multi_prompt.mode = "r"
+
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("debug"))
+    def _(event):
+        event.cli.run_in_terminal(lambda: process_python_input(event.cli), render_cli_done=True)
+
+    # search promot
+
+    @registry.add_binding(Keys.Escape, filter=HasFocus(SEARCH_BUFFER), eager=True)
+    def _(event):
+        search_buffer = event.cli.buffers[SEARCH_BUFFER]
+        search_buffer.reset()
+        event.cli.pop_focus()
+
+    # history
+
+    @registry.add_binding(Keys.Up, filter=is_end_of_buffer)
+    def _(event):
+        event.current_buffer.history_backward(count=event.arg)
+        event.cli.current_buffer.cursor_position = len(event.cli.current_buffer.text)
+
+    @registry.add_binding(Keys.Down, filter=is_end_of_buffer)
+    def _(event):
+        event.current_buffer.history_forward(count=event.arg)
+        event.cli.current_buffer.cursor_position = len(event.cli.current_buffer.text)
+
+    @registry.add_binding(Keys.Down, filter=is_default_buffer & in_prompt_mode("r") & is_empty & last_history)
+    def _(event):
+        if last_working_index[0] >= 0:
+            event.cli.current_buffer.go_to_history(last_working_index[0] + 1)
+            last_working_index[0] = -1
+
+    return registry

@@ -7,7 +7,6 @@ from .util import ccall
 
 class Rinstance(object):
     libR = None
-    is_busy = False
     rinstance = None
     offset = None
 

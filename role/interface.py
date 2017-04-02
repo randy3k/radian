@@ -7,17 +7,13 @@ High level functions to interact with R api.
 """
 
 
-def r_version_list():
-    return {k: v[0] for (k, v) in rcopy(rcall(api.mk_symbol("R.Version"))).items()}
-
-
 def r_version():
-    info = r_version_list()
+    info = rcopy(rcall(api.mk_symbol("R.Version")), simplify=True)
     return "{} -- {}\nPlatform: {}\n".format(
         info["version.string"], info["nickname"], info["platform"])
 
 
-def rcopy(s):
+def rcopy(s, simplify=False):
     api.protect(s)
     ret = None
     typ = api.typeof(s)
@@ -25,16 +21,20 @@ def rcopy(s):
         ret = OrderedDict()
         names = rcopy(rcall(api.mk_symbol("names"), s))
         for i in range(api.length(s)):
-            ret[names[i]] = rcopy(api.vector_elt(s, i))
+            ret[names[i]] = rcopy(api.vector_elt(s, i), simplify=simplify)
     elif typ == api.STRSXP:
         ret = []
         for i in range(api.length(s)):
             ret.append(api.dataptr(api.string_elt(s, i)).value.decode("utf-8"))
+        if simplify and len(ret) == 1:
+            ret = ret[0]
     elif typ == api.LGLSXP or api.INTSXP or api.REALSXP:
         ret = []
         sp = api.dataptr(s)
         for i in range(api.length(s)):
             ret.append(sp[i])
+        if simplify and len(ret) == 1:
+            ret = ret[0]
     api.unprotect(1)
     return ret
 
