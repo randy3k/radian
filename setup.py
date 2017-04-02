@@ -10,7 +10,7 @@ except (IOError, ImportError):
 setup(
     name='role',
     author='Randy Lai',
-    version='0.0.2',
+    version='0.0.3',
     url='https://github.com/randy3k/role',
     description='R REPL build on top of prompt_toolkit',
     long_description=long_description,
