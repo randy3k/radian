@@ -161,7 +161,7 @@ def create_key_registry(multi_prompt):
     def _(event):
         multi_prompt.mode = "help"
 
-    @registry.add_binding(Keys.ControlP, filter=is_default_buffer & in_prompt_mode("r"))
+    @registry.add_binding(Keys.ControlY, filter=is_default_buffer & in_prompt_mode("r"))
     def _(event):
         multi_prompt.mode = "debug"
 
@@ -190,7 +190,7 @@ def create_key_registry(multi_prompt):
 
     # debug prompt
 
-    @registry.add_binding(Keys.ControlP, filter=is_default_buffer & in_prompt_mode("debug"))
+    @registry.add_binding(Keys.ControlY, filter=is_default_buffer & in_prompt_mode("debug"))
     def _(event):
         multi_prompt.mode = "r"
 
