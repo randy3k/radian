@@ -63,6 +63,14 @@ def create_key_registry(multi_prompt):
     def _(event):
         multi_prompt.mode = "r"
 
+    @registry.add_binding(Keys.ControlH, filter=is_default_buffer & in_prompt_mode("help_search") & is_begining_of_buffer)
+    def _(event):
+        multi_prompt.mode = "r"
+
+    @registry.add_binding(Keys.ControlH, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_buffer)
+    def _(event):
+        multi_prompt.mode = "r"
+
     @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("help"))
     def _(event):
         event.cli.run_in_terminal(lambda: show_help(event.cli), render_cli_done=True)
