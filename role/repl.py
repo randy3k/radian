@@ -7,6 +7,11 @@ from prompt_toolkit.token import Token
 from prompt_toolkit.buffer import AcceptAction
 from prompt_toolkit.interface import AbortAction
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.styles import style_from_dict, DEFAULT_STYLE_EXTENSIONS
+from prompt_toolkit.layout.lexers import PygmentsLexer
+
+from pygments.lexers.r import SLexer
+from pygments.styles import get_style_by_name
 
 from . import api
 from . import interface
@@ -62,19 +67,36 @@ class RCommandlineInterface(CommandLineInterface):
         self.current_buffer.reset(append_to_history=True)
 
 
+def create_style():
+    style_dict = {}
+    style_dict.update(DEFAULT_STYLE_EXTENSIONS)
+    style_dict.update(get_style_by_name("default").styles)
+    style_dict[Token.RPrompt] = "#ansiblue"
+    style_dict[Token.HelpPrompt] = "#ansiyellow"
+    style_dict[Token.DebugPrompt] = "#ansired"
+    return style_from_dict(style_dict)
+
+
 def create_r_repl():
     multi_prompt = MultiPrompt()
 
     registry = create_key_registry(multi_prompt)
 
     def get_prompt_tokens(cli):
-        return [(Token.Prompt, multi_prompt.prompt)]
+        if multi_prompt.mode == "r":
+            return [(Token.RPrompt, multi_prompt.prompt)]
+        elif multi_prompt.mode == "help":
+            return [(Token.HelpPrompt, multi_prompt.prompt)]
+        elif multi_prompt.mode == "debug":
+            return [(Token.DebugPrompt, multi_prompt.prompt)]
 
     history = FileHistory(os.path.join(os.path.expanduser("~"), ".role_history"))
 
     application = create_prompt_application(
         get_prompt_tokens=get_prompt_tokens,
         key_bindings_registry=registry,
+        lexer=PygmentsLexer(SLexer),
+        style=create_style(),
         multiline=True,
         history=history,
         completer=RCompleter(multi_prompt),

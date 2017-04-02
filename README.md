@@ -7,12 +7,14 @@ Note: _Role_ is still under development, users should use it at their own risks.
 
 ### Features
 
-- [x] lightwight, no compilation is required.
-- [x] brackted paste mode
 - [x] multiline editing
+- [x] brackted paste mode
+- [x] syntax highlight
 - [x] auto completion
-- [x] running on both Python 2 and 3.
-- [ ] syntax color
+- [x] lightwight, no compilation is required
+- [x] robust, running on both Python 2 and 3
+- [ ] function call tips
+- [ ] object viewer
 
 ### Installation
 
