@@ -1,17 +1,16 @@
 from setuptools import setup
-import os
 
-long_description = open(
-    os.path.join(
-        os.path.dirname(__file__),
-        'README.md'
-    )
-).read()
+try:
+    import pypandoc
+    long_description = pypandoc.convert_file('README.md', 'rst')
+except (IOError, ImportError):
+    long_description = ''
+
 
 setup(
     name='role',
     author='Randy Lai',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/randy3k/role',
     description='R REPL build on top of prompt_toolkit',
     long_description=long_description,
