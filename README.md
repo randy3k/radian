@@ -1,6 +1,9 @@
-# Ride: A 21 century R console
+# Role: A 21 century R console
 
-_Ride_ is still under development, users should use it at their own risks. Do **not** run important data on _Ride_.
+Role is a modern **R** cons**ole** with a handful of features allow R programming faster.
+
+Note: _Role_ is still under development, users should use it at their own risks. Do **not** run important data on _Role_.
+
 
 ### Features
 
@@ -14,9 +17,9 @@ _Ride_ is still under development, users should use it at their own risks. Do **
 ### Installation
 
 ```python
-pip install git+https://github.com/randy3k/ride
+pip install git+https://github.com/randy3k/role
 ```
 
 ### Caveat
 
-_Ride_ is written in pure python and built on the [prompt-toolkit](https://github.com/jonathanslenders/python-prompt-toolkit) and _Ride_ has a minimal dependency of `six`, `wcwidth`, `prompt-toolkit`, `pygments`.
+_Role_ is written in pure python and built on the [prompt-toolkit](https://github.com/jonathanslenders/python-prompt-toolkit) and _Role_ has a minimal dependency of `six`, `wcwidth`, `prompt-toolkit`, `pygments`.

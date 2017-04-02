@@ -31,7 +31,7 @@ class Rinstance(object):
         Rinstance.libR = CDLL(libR_path)
 
     def run(self):
-        _argv = ["ride", "--no-save", "--quiet"]
+        _argv = ["role", "--no-save", "--quiet"]
         argn = len(_argv)
         argv = (c_char_p * argn)()
         for i, a in enumerate(_argv):

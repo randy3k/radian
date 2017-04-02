@@ -5,11 +5,11 @@ from prompt_toolkit.token import Token
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.filters import Condition
+from prompt_toolkit.filters import Condition, HasFocus
 from prompt_toolkit.buffer import AcceptAction
 from prompt_toolkit.interface import AbortAction
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.enums import DEFAULT_BUFFER
+from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER
 import time
 import os
 import traceback
@@ -171,7 +171,7 @@ def create_key_registry(multi_prompt):
         data = data.replace('\r\n', '\n')
         data = data.replace('\r', '\n')
         event.current_buffer.insert_text(data)
-        if data[-1] == "\n":
+        if data and data[-1] == "\n":
             process_input(event.cli)
 
     # help prompt
@@ -198,6 +198,13 @@ def create_key_registry(multi_prompt):
     def _(event):
         event.cli.run_in_terminal(lambda: process_python_input(event.cli), render_cli_done=True)
 
+    # search promot
+    @registry.add_binding(Keys.Escape, filter=HasFocus(SEARCH_BUFFER), eager=True)
+    def _(event):
+        search_buffer = event.cli.buffers[SEARCH_BUFFER]
+        search_buffer.reset()
+        event.cli.pop_focus()
+
     return registry
 
 
@@ -210,7 +217,7 @@ def create_r_repl_application():
     def get_prompt_tokens(cli):
         return [(Token.Prompt, multi_prompt.prompt)]
 
-    history = FileHistory(os.path.join(os.path.expanduser("~"), ".ride_history"))
+    history = FileHistory(os.path.join(os.path.expanduser("~"), ".role_history"))
 
     application = create_prompt_application(
         get_prompt_tokens=get_prompt_tokens,
