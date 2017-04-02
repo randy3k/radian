@@ -9,7 +9,7 @@ Note: _Role_ is very new, users should use it at their own risks.
 
 ### Features
 
-Already implemented features:
+Implemented features:
 
 - [x] multiline editing
 - [x] brackted paste mode
@@ -19,10 +19,12 @@ Already implemented features:
 - [x] cross-platform, work on Windows, macOS and Linux
 - [x] robust, run on both Python 2 and 3
 
-Planning features:
+Planned features:
 
-- [ ] function call tips
+- [ ] allow custom color scheme
+- [ ] highlight output
 - [ ] object viewer
+- [ ] a backdoor to allow other programs to communicate with Role.
 
 ### Installation
 
