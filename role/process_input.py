@@ -43,6 +43,30 @@ def process_input(cli):
                 break
 
 
+def show_help(cli):
+    text = cli.current_buffer.text
+    try:
+        interface.help(text)
+    except SyntaxError as e:
+        print(e)
+    except RuntimeError as e:
+        pass
+    finally:
+        cli.output.write("\n")
+
+
+def show_help_search(cli, try_all_packages=False):
+    text = cli.current_buffer.text
+    try:
+        interface.help_search(text)
+    except SyntaxError as e:
+        print(e)
+    except RuntimeError as e:
+        pass
+    finally:
+        cli.output.write("\n")
+
+
 _globals = {"api": api, "interface": interface}
 _locals = {}
 

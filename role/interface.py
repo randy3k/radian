@@ -86,4 +86,18 @@ def reval(s):
 
 
 def rprint(s):
-    rcall(api.mk_symbol("print"), s)
+    api.protect(s)
+    try:
+        rcall(api.mk_symbol("print"), s)
+    finally:
+        api.unprotect(1)
+
+
+def help(topic):
+    result = rcall(api.mk_symbol("help"), api.mk_symbol(topic))
+    rprint(result)
+
+
+def help_search(topic, try_all_packages=False):
+    result = rcall(api.mk_symbol("help.search"), api.mk_string(topic))
+    rprint(result)

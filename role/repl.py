@@ -23,6 +23,7 @@ class MultiPrompt(object):
     prompts = {
         "r": "r$> ",
         "help": "help?> ",
+        "help_search": "help??> ",
         "debug": "debug%> "
     }
     _prompt_mode = "r"
@@ -85,7 +86,7 @@ def create_r_repl():
     def get_prompt_tokens(cli):
         if multi_prompt.mode == "r":
             return [(Token.RPrompt, multi_prompt.prompt)]
-        elif multi_prompt.mode == "help":
+        elif multi_prompt.mode.startswith("help"):
             return [(Token.HelpPrompt, multi_prompt.prompt)]
         elif multi_prompt.mode == "debug":
             return [(Token.DebugPrompt, multi_prompt.prompt)]
