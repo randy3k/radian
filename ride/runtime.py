@@ -1,7 +1,7 @@
 import os
 import subprocess
+import sys
 from ctypes import c_char_p, c_int, c_void_p, CDLL
-from ctypes.util import find_library
 from .util import ccall
 
 
@@ -18,7 +18,17 @@ class Rinstance(object):
         os.environ["R_DOC_DIR"] = os.path.join(Rhome, "doc")
         os.environ["R_INCLUDE_DIR"] = os.path.join(Rhome, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(Rhome, "share")
-        Rinstance.libR = CDLL(find_library("R"))
+        if sys.platform == "win32":
+            libR_path = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32], "R.dll")
+        elif sys.platform == "darwin":
+            libR_path = os.path.join(Rhome, "lib", "libR.dylib")
+        elif sys.platform.startswith("linux"):
+            libR_path = os.path.join(Rhome, "lib", "libR.so")
+
+        if not os.path.exists(libR_path):
+            raise RuntimeError("Cannot locate R share library.")
+
+        Rinstance.libR = CDLL(libR_path)
 
     def run(self):
         _argv = ["ride", "--no-save", "--quiet"]
