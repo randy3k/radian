@@ -9,6 +9,7 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.buffer import AcceptAction
 from prompt_toolkit.interface import AbortAction
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.enums import DEFAULT_BUFFER
 import time
 import os
 import traceback
@@ -71,107 +72,133 @@ class RCompleter(Completer):
             yield Completion(c, -len(token))
 
 
+def _process_input(cli, status):
+    code = cli.current_buffer.text
+    try:
+        Rinstance.is_busy = True
+        result = interface.reval(code)
+        if api.visible():
+            # todo: use cli.output.write
+            interface.rprint(result)
+    except SyntaxError as e:
+        status[0] = False
+        print(e)
+    except RuntimeError as e:
+        status[0] = False
+        pass
+    finally:
+        cli.current_buffer.reset(append_to_history=True)
+        Rinstance.is_busy = False
+
+    cli.output.write("\n")
+
+
+def process_input(cli):
+    text = cli.current_buffer.text
+    lines = text.strip("\n").split("\n")
+    lineno = 0
+    status = [True]
+    for i in range(len(lines)):
+        code = "\n".join(lines[lineno:(i+1)]).strip("\n")
+        if len(code) > 0:
+            if api.parse_vector(api.mk_string(code))[1] == 1:
+                lineno = i + 1
+                cli.current_buffer.cursor_position = 0
+                cli.current_buffer.text = code
+                cli.run_in_terminal(lambda: _process_input(cli, status), render_cli_done=True)
+                if not status[0]:
+                    break
+
+    cli.current_buffer.insert_text("\n".join(lines[lineno:]).strip("\n"))
+
+
+_globals = {"api": api, "interface": interface}
+_locals = {}
+
+
+def process_python_input(cli):
+    text = cli.current_buffer.text
+    if len(text.strip()) > 0:
+        try:
+            try:
+                result = eval(text, _globals, _locals)
+                if result:
+                    # todo: use cli.output.write
+                    print(result)
+
+            except SyntaxError:
+                exec(text, _globals, _locals)
+
+        except Exception:
+            traceback.print_exc()
+
+        cli.current_buffer.reset(append_to_history=True)
+
+    # print a new line between prompts
+    cli.output.write("\n")
+
+
 def create_key_registry(multi_prompt):
     registry = load_key_bindings_for_prompt(enable_system_bindings=True)
 
     is_begining_of_line = Condition(lambda cli: cli.current_buffer.cursor_position == 0)
+    is_default_buffer = Condition(lambda cli: cli.current_buffer_name == DEFAULT_BUFFER)
 
     @Condition
     def prase_complete(cli):
         return api.parse_vector(api.mk_string(cli.current_buffer.text))[1] != 2
-
-    is_returnable = Condition(lambda cli: cli.current_buffer.accept_action.is_returnable)
 
     def in_prompt_mode(m):
         return Condition(lambda _: multi_prompt.mode == m)
 
     # R prompt
 
-    @registry.add_binding(Keys.ControlJ, filter=prase_complete & in_prompt_mode("r") & is_returnable)
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & prase_complete)
     def _(event):
-        buff = event.current_buffer
-        buff.accept_action.validate_and_handle(event.cli, buff)
+        process_input(event.cli)
 
-    @registry.add_binding("?", filter=is_begining_of_line & in_prompt_mode("r"))
+    @registry.add_binding("?", filter=is_default_buffer & in_prompt_mode("r") & is_begining_of_line)
     def _(event):
         multi_prompt.mode = "help"
 
-    @registry.add_binding(Keys.ControlP, filter=in_prompt_mode("r"))
+    @registry.add_binding(Keys.ControlP, filter=is_default_buffer & in_prompt_mode("r"))
     def _(event):
         multi_prompt.mode = "debug"
 
+    @registry.add_binding(Keys.BracketedPaste, filter=is_default_buffer & in_prompt_mode("r"))
+    def _(event):
+        data = event.data
+        data = data.replace('\r\n', '\n')
+        data = data.replace('\r', '\n')
+        event.current_buffer.insert_text(data)
+        if data[-1] == "\n":
+            process_input(event.cli)
+
     # help prompt
 
-    @registry.add_binding(Keys.Backspace, filter=is_begining_of_line & in_prompt_mode("help"))
+    @registry.add_binding(Keys.Backspace, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_line)
     def _(event):
         multi_prompt.mode = "r"
 
-    @registry.add_binding(Keys.ControlJ, filter=in_prompt_mode("help") & is_returnable)
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("help"))
     def _(event):
-        buff = event.current_buffer
-        buff.accept_action.validate_and_handle(event.cli, buff)
+        pass
 
-    @registry.add_binding(Keys.ControlC, filter=in_prompt_mode("help"))
+    @registry.add_binding(Keys.ControlC, filter=is_default_buffer & in_prompt_mode("help"))
     def _(event):
         multi_prompt.mode = "r"
 
     # debug prompt
 
-    @registry.add_binding(Keys.ControlP, filter=in_prompt_mode("debug"))
+    @registry.add_binding(Keys.ControlP, filter=is_default_buffer & in_prompt_mode("debug"))
     def _(event):
         multi_prompt.mode = "r"
 
-    @registry.add_binding(Keys.ControlJ, filter=in_prompt_mode("debug") & is_returnable)
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("debug"))
     def _(event):
-        buff = event.current_buffer
-        buff.accept_action.validate_and_handle(event.cli, buff)
+        event.cli.run_in_terminal(lambda: process_python_input(event.cli), render_cli_done=True)
 
     return registry
-
-
-def create_accept_action(multi_prompt):
-
-    _globals = {"api": api, "interface": interface}
-    _locals = {}
-
-    def _process_input(cli, buffer):
-        text = buffer.text
-        if len(text.strip()) > 0:
-            if multi_prompt.mode == "r":
-                try:
-                    Rinstance.is_busy = True
-                    result = interface.reval(text)
-                    if api.visible():
-                        # todo: use cli.output.write
-                        interface.rprint(result)
-                except SyntaxError as e:
-                    cli.output.write(str(e))
-                    cli.output.write("\n")
-                except RuntimeError as e:
-                    pass
-                finally:
-                    Rinstance.is_busy = False
-
-            elif multi_prompt.mode == "debug":
-                try:
-                    try:
-                        result = eval(text, _globals, _locals)
-                        if result:
-                            # todo: use cli.output.write
-                            print(result)
-
-                    except SyntaxError:
-                        exec(text, _globals, _locals)
-
-                except Exception:
-                    traceback.print_exc()
-
-            buffer.reset(append_to_history=True)
-
-        # print a new line between prompts
-        cli.output.write("\n")
-
-    return AcceptAction.run_in_terminal(_process_input, render_cli_done=True)
 
 
 def create_r_repl_application():
@@ -183,8 +210,6 @@ def create_r_repl_application():
     def get_prompt_tokens(cli):
         return [(Token.Prompt, multi_prompt.prompt)]
 
-    accept_action = create_accept_action(multi_prompt)
-
     history = FileHistory(os.path.join(os.path.expanduser("~"), ".ride_history"))
 
     application = create_prompt_application(
@@ -194,7 +219,7 @@ def create_r_repl_application():
         history=history,
         completer=RCompleter(multi_prompt),
         complete_while_typing=True,
-        accept_action=accept_action,
+        accept_action=AcceptAction.IGNORE,
         on_exit=AbortAction.RETURN_NONE)
 
     application.on_start = lambda cli: cli.output.write(interface.r_version() + "\n")
