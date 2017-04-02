@@ -101,15 +101,13 @@ def process_input(cli):
     for i in range(len(lines)):
         code = "\n".join(lines[lineno:(i+1)]).strip("\n")
         if len(code) > 0:
-            if api.parse_vector(api.mk_string(code))[1] == 1:
+            if api.parse_vector(api.mk_string(code))[1] != 2:
                 lineno = i + 1
                 cli.current_buffer.cursor_position = 0
                 cli.current_buffer.text = code
                 cli.run_in_terminal(lambda: _process_input(cli, status), render_cli_done=True)
                 if not status[0]:
                     break
-
-    cli.current_buffer.insert_text("\n".join(lines[lineno:]).strip("\n"))
 
 
 _globals = {"api": api, "interface": interface}
@@ -141,8 +139,13 @@ def process_python_input(cli):
 def create_key_registry(multi_prompt):
     registry = load_key_bindings_for_prompt(enable_system_bindings=True)
 
-    is_begining_of_line = Condition(lambda cli: cli.current_buffer.cursor_position == 0)
+    is_begining_of_buffer = Condition(lambda cli: cli.current_buffer.cursor_position == 0)
+    is_end_of_buffer = Condition(lambda cli: cli.current_buffer.cursor_position == len(cli.current_buffer.text))
+    is_empty = Condition(lambda cli: len(cli.current_buffer.text) == 0)
     is_default_buffer = Condition(lambda cli: cli.current_buffer_name == DEFAULT_BUFFER)
+    last_history = Condition(lambda cli: cli.current_buffer.working_index == len(cli.current_buffer._working_lines)-1)
+
+    last_working_index = [-1]
 
     @Condition
     def prase_complete(cli):
@@ -155,9 +158,10 @@ def create_key_registry(multi_prompt):
 
     @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & prase_complete)
     def _(event):
+        last_working_index[0] = event.cli.current_buffer.working_index
         process_input(event.cli)
 
-    @registry.add_binding("?", filter=is_default_buffer & in_prompt_mode("r") & is_begining_of_line)
+    @registry.add_binding("?", filter=is_default_buffer & in_prompt_mode("r") & is_begining_of_buffer)
     def _(event):
         multi_prompt.mode = "help"
 
@@ -176,7 +180,7 @@ def create_key_registry(multi_prompt):
 
     # help prompt
 
-    @registry.add_binding(Keys.Backspace, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_line)
+    @registry.add_binding(Keys.Backspace, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_buffer)
     def _(event):
         multi_prompt.mode = "r"
 
@@ -199,11 +203,30 @@ def create_key_registry(multi_prompt):
         event.cli.run_in_terminal(lambda: process_python_input(event.cli), render_cli_done=True)
 
     # search promot
+
     @registry.add_binding(Keys.Escape, filter=HasFocus(SEARCH_BUFFER), eager=True)
     def _(event):
         search_buffer = event.cli.buffers[SEARCH_BUFFER]
         search_buffer.reset()
         event.cli.pop_focus()
+
+    # history
+
+    @registry.add_binding(Keys.Up, filter=is_end_of_buffer)
+    def _(event):
+        event.current_buffer.history_backward(count=event.arg)
+        event.cli.current_buffer.cursor_position = len(event.cli.current_buffer.text)
+
+    @registry.add_binding(Keys.Down, filter=is_end_of_buffer)
+    def _(event):
+        event.current_buffer.history_forward(count=event.arg)
+        event.cli.current_buffer.cursor_position = len(event.cli.current_buffer.text)
+
+    @registry.add_binding(Keys.Down, filter=is_default_buffer & in_prompt_mode("r") & is_empty & last_history)
+    def _(event):
+        if last_working_index[0] >= 0:
+            event.cli.current_buffer.go_to_history(last_working_index[0] + 1)
+            last_working_index[0] = -1
 
     return registry
 
