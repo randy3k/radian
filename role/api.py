@@ -1,4 +1,4 @@
-from ctypes import c_char_p, c_char, c_int, c_double, c_void_p, cast, POINTER
+from ctypes import c_char_p, c_char, c_int, c_double, c_void_p, cast, addressof, POINTER
 import sys
 
 from .util import ccall, cglobal
@@ -100,6 +100,10 @@ def parse_vector(s):
         [c_void_p, c_int, POINTER(c_int), c_void_p],
         s, -1, status, rcglobal("R_NilValue"))
     return val, status.value
+
+
+def parse_error_msg():
+    return cast(addressof(rcglobal("R_ParseErrorMsg", c_char)), c_char_p).value.decode("utf-8")
 
 
 def length(s):

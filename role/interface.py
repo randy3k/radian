@@ -64,7 +64,7 @@ def rcall(*args, **kwargs):
 def rparse(s):
     val, status = api.parse_vector(api.mk_string(s))
     if status != 1:
-        raise SyntaxError("R has a parser error %d." % status)
+        raise SyntaxError("Error: %s" % api.parse_error_msg())
     return val
 
 
@@ -74,6 +74,7 @@ def reval(s):
     except Exception as e:
         raise e
     api.protect(exprs)
+    val = None
     try:
         for i in range(0, api.length(exprs)):
             val, status = api.try_eval(api.vector_elt(exprs, i))

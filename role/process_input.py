@@ -12,7 +12,7 @@ def _process_input(cli, status):
     code = cli.current_buffer.text
     try:
         result = interface.reval(code)
-        if api.visible():
+        if result and api.visible():
             # todo: use cli.output.write
             interface.rprint(result)
     except SyntaxError as e:
@@ -34,14 +34,13 @@ def process_input(cli):
     status = [True]
     for i in range(len(lines)):
         code = "\n".join(lines[lineno:(i+1)]).strip("\n")
-        if len(code) > 0:
-            if api.parse_vector(api.mk_string(code))[1] != 2:
-                lineno = i + 1
-                cli.current_buffer.cursor_position = 0
-                cli.current_buffer.text = code
-                cli.run_in_terminal(lambda: _process_input(cli, status), render_cli_done=True)
-                if not status[0]:
-                    break
+        if api.parse_vector(api.mk_string(code))[1] != 2:
+            lineno = i + 1
+            cli.current_buffer.cursor_position = 0
+            cli.current_buffer.text = code
+            cli.run_in_terminal(lambda: _process_input(cli, status), render_cli_done=True)
+            if not status[0]:
+                break
 
 
 _globals = {"api": api, "interface": interface}
@@ -50,21 +49,20 @@ _locals = {}
 
 def process_python_input(cli):
     text = cli.current_buffer.text
-    if len(text.strip()) > 0:
+    try:
         try:
-            try:
-                result = eval(text, _globals, _locals)
-                if result:
-                    # todo: use cli.output.write
-                    print(result)
+            result = eval(text, _globals, _locals)
+            if result:
+                # todo: use cli.output.write
+                print(result)
 
-            except SyntaxError:
-                exec(text, _globals, _locals)
+        except SyntaxError:
+            exec(text, _globals, _locals)
 
-        except Exception:
-            traceback.print_exc()
+    except Exception:
+        traceback.print_exc()
 
-        cli.current_buffer.reset(append_to_history=True)
+    cli.current_buffer.reset(append_to_history=True)
 
     # print a new line between prompts
     cli.output.write("\n")
