@@ -7,12 +7,18 @@ Note: _Role_ is still under development, users should use it at their own risks.
 
 ### Features
 
+Already implemented features:
+
 - [x] multiline editing
 - [x] brackted paste mode
 - [x] syntax highlight
 - [x] auto completion
 - [x] lightwight, no compilation is required
-- [x] robust, running on both Python 2 and 3
+- [x] cross-platform, work on Windows, macOS and Linux
+- [x] robust, run on both Python 2 and 3
+
+Planning features:
+
 - [ ] function call tips
 - [ ] object viewer
 
