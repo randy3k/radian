@@ -2,7 +2,7 @@
 
 Role is a modern **R** cons**ole** with a handful of features allow R programming faster.
 
-Note: _Role_ is still under development, users should use it at their own risks. Do **not** run important data on _Role_.
+Note: _Role_ is very new, users should use it at their own risks. 
 
 <img width="500px" src="https://cloud.githubusercontent.com/assets/1690993/24591455/773e3478-17cf-11e7-8cac-a76ae03d4cf5.png"></img>
 
@@ -26,11 +26,26 @@ Planning features:
 
 ### Installation
 
-```python
+Requirements:
+
+- The installation of R is required to use _Role_, R installation binary can be downloaded from https://cran.r-project.org.
+- `python` is also required to install _Role_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work.
+- `pip` is optional but it makes the installation a bit easier.
+
+```sh
 # install released version
 pip install role
 # or the development version
 pip install git+https://github.com/randy3k/role
+```
+
+### Troubleshooting
+
+If _Role_ cannot locate the R installation files automatically. You can either expose the R binary to the system `PATH` variable or export the environment variable `R_HOME`. For example,
+
+```sh
+$ export R_HOME=/usr/local/lib/R
+$ role  
 ```
 
 ### Caveat
