@@ -24,7 +24,7 @@ class RCompleter(Completer):
         completions = []
         token = ""
         if self.multi_prompt.mode in ["r", "help"]:
-            text = document.text
+            text = document.text_before_cursor
             s = api.protect(api.mk_string(text))
             interface.rcall(self.assignLinebuffer, s)
             interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
