@@ -14,6 +14,8 @@ class Rinstance(object):
         if 'R_HOME' not in os.environ:
             Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
             os.environ['R_HOME'] = Rhome
+        else:
+            Rhome = os.environ['R_HOME']
         os.environ["R_DOC_DIR"] = os.path.join(Rhome, "doc")
         os.environ["R_INCLUDE_DIR"] = os.path.join(Rhome, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(Rhome, "share")
