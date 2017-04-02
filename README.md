@@ -17,6 +17,9 @@ Note: _Role_ is still under development, users should use it at their own risks.
 ### Installation
 
 ```python
+# install released version
+pip install role
+# or the development version
 pip install git+https://github.com/randy3k/role
 ```
 
