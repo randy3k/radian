@@ -82,12 +82,12 @@ def create_key_registry(multi_prompt):
 
     # history
 
-    @registry.add_binding(Keys.Up, filter=is_end_of_buffer)
+    @registry.add_binding(Keys.Up, filter=is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_backward(count=event.arg)
         event.cli.current_buffer.cursor_position = len(event.cli.current_buffer.text)
 
-    @registry.add_binding(Keys.Down, filter=is_end_of_buffer)
+    @registry.add_binding(Keys.Down, filter=is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_forward(count=event.arg)
         event.cli.current_buffer.cursor_position = len(event.cli.current_buffer.text)
