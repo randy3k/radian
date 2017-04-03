@@ -9,7 +9,7 @@ def prase_input_complete(cli):
 
 
 def process_input(cli):
-    code = cli.current_buffer.text
+    code = cli.current_buffer.text.strip("\n").rstrip()
     try:
         result = interface.reval(code)
         if result and api.visible():
@@ -20,6 +20,8 @@ def process_input(cli):
     except RuntimeError as e:
         pass
     finally:
+        cli.current_buffer.cursor_position = len(code)
+        cli.current_buffer.text = code
         cli.current_buffer.reset(append_to_history=True)
 
     cli.output.write("\n")

@@ -31,7 +31,7 @@ def create_key_registry(multi_prompt):
 
     # R prompt
 
-    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & is_end_of_buffer & prase_complete)
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & prase_complete)
     @registry.add_binding(Keys.Escape, Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r"))
     def _(event):
         last_working_index[0] = event.cli.current_buffer.working_index
@@ -54,11 +54,13 @@ def create_key_registry(multi_prompt):
         data = event.data
         data = data.replace('\r\n', '\n')
         data = data.replace('\r', '\n')
-        shouldeval = data[-1] == "\n"
-        data = data.strip("\n")
-        event.current_buffer.insert_text(data)
-        if data and shouldeval:
+        shouldeval = data[-1] == "\n" and len(event.cli.current_buffer.document.text_after_cursor) == 0
+        if shouldeval:
+            data = data.strip("\n")
+            event.current_buffer.insert_text(data)
             event.cli.run_in_terminal(lambda: process_input(event.cli), render_cli_done=True)
+        else:
+            event.current_buffer.insert_text(data)
 
     # help prompt
 
@@ -67,17 +69,8 @@ def create_key_registry(multi_prompt):
         multi_prompt.mode = "help_search"
 
     @registry.add_binding(Keys.Backspace, filter=is_default_buffer & in_prompt_mode("help_search") & is_begining_of_buffer)
-    def _(event):
-        multi_prompt.mode = "r"
-
     @registry.add_binding(Keys.Backspace, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_buffer)
-    def _(event):
-        multi_prompt.mode = "r"
-
     @registry.add_binding(Keys.ControlH, filter=is_default_buffer & in_prompt_mode("help_search") & is_begining_of_buffer)
-    def _(event):
-        multi_prompt.mode = "r"
-
     @registry.add_binding(Keys.ControlH, filter=is_default_buffer & in_prompt_mode("help") & is_begining_of_buffer)
     def _(event):
         multi_prompt.mode = "r"
@@ -95,9 +88,6 @@ def create_key_registry(multi_prompt):
         multi_prompt.mode = "r"
 
     @registry.add_binding(Keys.ControlC, filter=is_default_buffer & in_prompt_mode("help"))
-    def _(event):
-        multi_prompt.mode = "r"
-
     @registry.add_binding(Keys.ControlC, filter=is_default_buffer & in_prompt_mode("help_search"))
     def _(event):
         multi_prompt.mode = "r"
