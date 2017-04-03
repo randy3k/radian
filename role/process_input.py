@@ -44,9 +44,10 @@ def process_input(cli):
 
 
 def show_help(cli):
-    text = cli.current_buffer.text
+    text = cli.current_buffer.text.strip()
     try:
-        interface.help(text)
+        if text:
+            interface.help(text)
     except SyntaxError as e:
         print(e)
     except RuntimeError as e:
@@ -56,9 +57,10 @@ def show_help(cli):
 
 
 def show_help_search(cli, try_all_packages=False):
-    text = cli.current_buffer.text
+    text = cli.current_buffer.text.strip()
     try:
-        interface.help_search(text)
+        if text:
+            interface.help_search(text)
     except SyntaxError as e:
         print(e)
     except RuntimeError as e:
