@@ -8,7 +8,7 @@ def prase_input_complete(cli):
     return api.parse_vector(api.mk_string(cli.current_buffer.text))[1] != 2
 
 
-def _process_input(cli, status):
+def process_input(cli):
     code = cli.current_buffer.text
     try:
         result = interface.reval(code)
@@ -16,10 +16,8 @@ def _process_input(cli, status):
             # todo: use cli.output.write
             interface.rprint(result)
     except SyntaxError as e:
-        status[0] = False
         print(e)
     except RuntimeError as e:
-        status[0] = False
         pass
     finally:
         cli.current_buffer.reset(append_to_history=True)
@@ -27,20 +25,22 @@ def _process_input(cli, status):
     cli.output.write("\n")
 
 
-def process_input(cli):
-    text = cli.current_buffer.text
-    lines = text.strip("\n").split("\n")
-    lineno = 0
-    status = [True]
-    for i in range(len(lines)):
-        code = "\n".join(lines[lineno:(i+1)]).strip("\n")
-        if api.parse_vector(api.mk_string(code))[1] != 2:
-            lineno = i + 1
-            cli.current_buffer.cursor_position = 0
-            cli.current_buffer.text = code
-            cli.run_in_terminal(lambda: _process_input(cli, status), render_cli_done=True)
-            if not status[0]:
-                break
+# def process_input(cli):
+#     text = cli.current_buffer.text
+#     lines = text.strip("\n").split("\n")
+#     lineno = 0
+#     status = [True]
+#     for i in range(len(lines)):
+#         code = "\n".join(lines[lineno:(i+1)]).strip("\n")
+#         if api.parse_vector(api.mk_string(code))[1] != 2:
+#             lineno = i + 1
+#             cli.current_buffer.cursor_position = 0
+#             cli.current_buffer.text = code
+#             cli.run_in_terminal(lambda: _process_input(cli, status), render_cli_done=True)
+#             if not status[0]:
+#                 break
+#     cli.current_buffer.cursor_position = 0
+#     cli.current_buffer.text = "\n".join(lines[lineno:]).strip("\n")
 
 
 def show_help(cli):

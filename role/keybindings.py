@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import re
 
 from prompt_toolkit.key_binding.defaults import load_key_bindings_for_prompt
 from prompt_toolkit.keys import Keys
@@ -11,12 +12,15 @@ from .process_input import process_input, process_python_input, prase_input_comp
 
 def create_key_registry(multi_prompt):
     registry = load_key_bindings_for_prompt(enable_system_bindings=True)
+    # todo: configurable
+    tabsize = 4
 
     is_begining_of_buffer = Condition(lambda cli: cli.current_buffer.cursor_position == 0)
     is_end_of_buffer = Condition(lambda cli: cli.current_buffer.cursor_position == len(cli.current_buffer.text))
     is_empty = Condition(lambda cli: len(cli.current_buffer.text) == 0)
     is_default_buffer = Condition(lambda cli: cli.current_buffer_name == DEFAULT_BUFFER)
     last_history = Condition(lambda cli: cli.current_buffer.working_index == len(cli.current_buffer._working_lines)-1)
+    is_tabble = Condition(lambda cli:  re.search(r"(\n|\s{%d})$" % tabsize, cli.current_buffer.document.text_before_cursor) is not None)
 
     last_working_index = [-1]
 
@@ -27,10 +31,15 @@ def create_key_registry(multi_prompt):
 
     # R prompt
 
-    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & prase_complete)
+    @registry.add_binding(Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r") & is_end_of_buffer & prase_complete)
+    @registry.add_binding(Keys.Escape, Keys.ControlJ, filter=is_default_buffer & in_prompt_mode("r"))
     def _(event):
         last_working_index[0] = event.cli.current_buffer.working_index
-        process_input(event.cli)
+        event.cli.run_in_terminal(lambda: process_input(event.cli), render_cli_done=True)
+
+    @registry.add_binding(Keys.ControlI, filter=is_default_buffer & in_prompt_mode("r") & is_tabble)
+    def _(event):
+        event.current_buffer.insert_text(" " * tabsize)
 
     @registry.add_binding("?", filter=is_default_buffer & in_prompt_mode("r") & is_begining_of_buffer)
     def _(event):
@@ -45,9 +54,11 @@ def create_key_registry(multi_prompt):
         data = event.data
         data = data.replace('\r\n', '\n')
         data = data.replace('\r', '\n')
+        shouldeval = data[-1] == "\n"
+        data = data.strip("\n")
         event.current_buffer.insert_text(data)
-        if data and data[-1] == "\n":
-            process_input(event.cli)
+        if data and shouldeval:
+            event.cli.run_in_terminal(lambda: process_input(event.cli), render_cli_done=True)
 
     # help prompt
 
