@@ -1,9 +1,5 @@
-from .runtime import Rinstance
-from .repl import create_r_repl
+from .application import RoleApplication
 
 
 def main():
-    runtime = Rinstance()
-    runtime.run()
-    application = create_r_repl()
-    application.run()
+    RoleApplication().run()

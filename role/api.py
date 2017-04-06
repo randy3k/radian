@@ -2,7 +2,9 @@ from ctypes import c_char_p, c_char, c_int, c_double, c_void_p, cast, addressof,
 import sys
 
 from .util import ccall, cglobal
-from .runtime import Rinstance
+
+# to be set by RoleApplication
+rinstance = None
 
 """
 A minimum set of R api functions to make the repl works.
@@ -42,16 +44,16 @@ rglobal_dict = {}
 
 
 def rccall(fname, *args):
-    return ccall(fname, Rinstance.libR, *args)
+    return ccall(fname, rinstance.libR, *args)
 
 
 def rcglobal(vname, cast_type=c_void_p):
     if cast_type == c_void_p:
         if vname not in rglobal_dict:
-            rglobal_dict[vname] = cglobal(vname, Rinstance.libR, c_void_p)
+            rglobal_dict[vname] = cglobal(vname, rinstance.libR, c_void_p)
         return rglobal_dict[vname]
     else:
-        return cglobal(vname, Rinstance.libR, cast_type)
+        return cglobal(vname, rinstance.libR, cast_type)
 
 
 def process_events():
@@ -125,7 +127,7 @@ def dataptr(s):
     """
     DATAPTR is not exported, it is a trick to get the actual data.
     """
-    return cast(s.value + Rinstance.offset, dataptr_type(s))
+    return cast(s.value + rinstance.offset, dataptr_type(s))
 
 
 def vector_elt(s, i):

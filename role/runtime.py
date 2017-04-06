@@ -7,7 +7,6 @@ from .util import ccall
 
 class Rinstance(object):
     libR = None
-    rinstance = None
     offset = None
 
     def __init__(self):
@@ -29,16 +28,15 @@ class Rinstance(object):
         if not os.path.exists(libR_path):
             raise RuntimeError("Cannot locate R share library.")
 
-        Rinstance.libR = CDLL(libR_path)
+        self.libR = CDLL(libR_path)
 
-    def run(self):
         _argv = ["role", "--no-save", "--quiet"]
         argn = len(_argv)
         argv = (c_char_p * argn)()
         for i, a in enumerate(_argv):
             argv[i] = c_char_p(a.encode('utf-8'))
 
-        Rinstance.libR.Rf_initEmbeddedR(argn, argv)
+        self.libR.Rf_initEmbeddedR(argn, argv)
 
-        s = ccall("Rf_ScalarInteger", Rinstance.libR, c_void_p, [c_int], 0)
-        Rinstance.offset = ccall("INTEGER", Rinstance.libR, c_void_p, [c_void_p], s).value - s.value
+        s = ccall("Rf_ScalarInteger", self.libR, c_void_p, [c_int], 0)
+        self.offset = ccall("INTEGER", self.libR, c_void_p, [c_void_p], s).value - s.value

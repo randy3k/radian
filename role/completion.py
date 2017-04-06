@@ -1,6 +1,5 @@
 from prompt_toolkit.completion import Completer, Completion
 
-from .runtime import Rinstance
 from . import api
 from . import interface
 
