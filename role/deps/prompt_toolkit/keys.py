@@ -1,129 +1,130 @@
 from __future__ import unicode_literals
 
 __all__ = (
-    'Key',
     'Keys',
+    'ALL_KEYS',
 )
 
 
-class Key(object):
-    def __init__(self, name):
-
-        #: Descriptive way of writing keys in configuration files. e.g. <C-A>
-        #: for ``Control-A``.
-        self.name = name
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.name)
-
-
 class Keys(object):
-    Escape = Key('<Escape>')
+    Escape = 'escape'  # Also Control-[
 
-    ControlA = Key('<C-A>')
-    ControlB = Key('<C-B>')
-    ControlC = Key('<C-C>')
-    ControlD = Key('<C-D>')
-    ControlE = Key('<C-E>')
-    ControlF = Key('<C-F>')
-    ControlG = Key('<C-G>')
-    ControlH = Key('<C-H>')
-    ControlI = Key('<C-I>')  # Tab
-    ControlJ = Key('<C-J>')  # Enter
-    ControlK = Key('<C-K>')
-    ControlL = Key('<C-L>')
-    ControlM = Key('<C-M>')  # Enter
-    ControlN = Key('<C-N>')
-    ControlO = Key('<C-O>')
-    ControlP = Key('<C-P>')
-    ControlQ = Key('<C-Q>')
-    ControlR = Key('<C-R>')
-    ControlS = Key('<C-S>')
-    ControlT = Key('<C-T>')
-    ControlU = Key('<C-U>')
-    ControlV = Key('<C-V>')
-    ControlW = Key('<C-W>')
-    ControlX = Key('<C-X>')
-    ControlY = Key('<C-Y>')
-    ControlZ = Key('<C-Z>')
+    ControlAt = 'c-@'  # Also Control-Space.
 
-    ControlSpace       = Key('<C-Space>')
-    ControlBackslash   = Key('<C-Backslash>')
-    ControlSquareClose = Key('<C-SquareClose>')
-    ControlCircumflex  = Key('<C-Circumflex>')
-    ControlUnderscore  = Key('<C-Underscore>')
-    ControlLeft        = Key('<C-Left>')
-    ControlRight       = Key('<C-Right>')
-    ControlUp          = Key('<C-Up>')
-    ControlDown        = Key('<C-Down>')
+    ControlA = 'c-a'
+    ControlB = 'c-b'
+    ControlC = 'c-c'
+    ControlD = 'c-d'
+    ControlE = 'c-e'
+    ControlF = 'c-f'
+    ControlG = 'c-g'
+    ControlH = 'c-h'
+    ControlI = 'c-i'  # Tab
+    ControlJ = 'c-j'  # Newline
+    ControlK = 'c-k'
+    ControlL = 'c-l'
+    ControlM = 'c-m'  # Carriage return
+    ControlN = 'c-n'
+    ControlO = 'c-o'
+    ControlP = 'c-p'
+    ControlQ = 'c-q'
+    ControlR = 'c-r'
+    ControlS = 'c-s'
+    ControlT = 'c-t'
+    ControlU = 'c-u'
+    ControlV = 'c-v'
+    ControlW = 'c-w'
+    ControlX = 'c-x'
+    ControlY = 'c-y'
+    ControlZ = 'c-z'
 
-    Up          = Key('<Up>')
-    Down        = Key('<Down>')
-    Right       = Key('<Right>')
-    Left        = Key('<Left>')
+    ControlBackslash   = 'c-\\'
+    ControlSquareClose = 'c-]'
+    ControlCircumflex  = 'c-^'
+    ControlUnderscore  = 'c-_'
 
-    ShiftLeft   = Key('<ShiftLeft>')
-    ShiftUp     = Key('<ShiftUp>')
-    ShiftDown   = Key('<ShiftDown>')
-    ShiftRight  = Key('<ShiftRight>')
+    ControlLeft        = 'c-left'
+    ControlRight       = 'c-right'
+    ControlUp          = 'c-up'
+    ControlDown        = 'c-down'
 
-    Home        = Key('<Home>')
-    End         = Key('<End>')
-    Delete      = Key('<Delete>')
-    ShiftDelete = Key('<ShiftDelete>')
-    ControlDelete = Key('<C-Delete>')
-    PageUp      = Key('<PageUp>')
-    PageDown    = Key('<PageDown>')
-    BackTab     = Key('<BackTab>')  # shift + tab
-    Insert      = Key('<Insert>')
-    Backspace   = Key('<Backspace>')
+    Up          = 'up'
+    Down        = 'down'
+    Right       = 'right'
+    Left        = 'left'
 
-    # Aliases.
-    Tab         = ControlI
-    Enter       = ControlJ
-        # XXX: Actually Enter equals ControlM, not ControlJ,
-        #      However, in prompt_toolkit, we made the mistake of translating
-        #      \r into \n during the input, so everyone is now handling the
-        #      enter key by binding ControlJ.
+    ShiftLeft   = 's-left'
+    ShiftUp     = 's-up'
+    ShiftDown   = 's-down'
+    ShiftRight  = 's-right'
+    ShiftDelete = 's-delete'
+    BackTab     = 's-tab'  # shift + tab
 
-        #      From now on, it's better to bind `Keys.Enter` everywhere,
-        #      because that's future compatible, and will still work when we
-        #      stop replacing \r by \n.
+    Home        = 'home'
+    End         = 'end'
+    Delete      = 'delete'
+    ControlDelete = 'c-delete'
+    PageUp      = 'pageup'
+    PageDown    = 'pagedown'
+    Insert      = 'insert'
 
-    F1 = Key('<F1>')
-    F2 = Key('<F2>')
-    F3 = Key('<F3>')
-    F4 = Key('<F4>')
-    F5 = Key('<F5>')
-    F6 = Key('<F6>')
-    F7 = Key('<F7>')
-    F8 = Key('<F8>')
-    F9 = Key('<F9>')
-    F10 = Key('<F10>')
-    F11 = Key('<F11>')
-    F12 = Key('<F12>')
-    F13 = Key('<F13>')
-    F14 = Key('<F14>')
-    F15 = Key('<F15>')
-    F16 = Key('<F16>')
-    F17 = Key('<F17>')
-    F18 = Key('<F18>')
-    F19 = Key('<F19>')
-    F20 = Key('<F20>')
-    F21 = Key('<F21>')
-    F22 = Key('<F22>')
-    F23 = Key('<F23>')
-    F24 = Key('<F24>')
+    F1 = 'f1'
+    F2 = 'f2'
+    F3 = 'f3'
+    F4 = 'f4'
+    F5 = 'f5'
+    F6 = 'f6'
+    F7 = 'f7'
+    F8 = 'f8'
+    F9 = 'f9'
+    F10 = 'f10'
+    F11 = 'f11'
+    F12 = 'f12'
+    F13 = 'f13'
+    F14 = 'f14'
+    F15 = 'f15'
+    F16 = 'f16'
+    F17 = 'f17'
+    F18 = 'f18'
+    F19 = 'f19'
+    F20 = 'f20'
+    F21 = 'f21'
+    F22 = 'f22'
+    F23 = 'f23'
+    F24 = 'f24'
 
     # Matches any key.
-    Any = Key('<Any>')
+    Any = '<any>'
 
-    # Special
-    CPRResponse = Key('<Cursor-Position-Response>')
-    Vt100MouseEvent = Key('<Vt100-Mouse-Event>')
-    WindowsMouseEvent = Key('<Windows-Mouse-Event>')
-    BracketedPaste = Key('<Bracketed-Paste>')
+    # Special.
+    ScrollUp    = '<scroll-up>'
+    ScrollDown  = '<scroll-down>'
 
-    # Key which is ignored. (The key binding for this key should not do
-    # anything.)
-    Ignore = Key('<Ignore>')
+    CPRResponse = '<cursor-position-response>'
+    Vt100MouseEvent = '<vt100-mouse-event>'
+    WindowsMouseEvent = '<windows-mouse-event>'
+    BracketedPaste = '<bracketed-paste>'
+
+    # For internal use: key which is ignored.
+    # (The key binding for this key should not do anything.)
+    Ignore = '<ignore>'
+
+
+ALL_KEYS = [getattr(Keys, k) for k in dir(Keys) if not k.startswith('_')]
+
+
+# Aliases.
+KEY_ALIASES = {
+    'backspace': 'c-h',
+    'c-space': 'c-@',
+    'enter': 'c-m',
+    'tab': 'c-i',
+}
+
+
+# The following should not end up in ALL_KEYS, but we still want them in Keys
+# for backwards-compatibility.
+Keys.ControlSpace = Keys.ControlAt
+Keys.Tab          = Keys.ControlI
+Keys.Enter        = Keys.ControlM
+Keys.Backspace    = Keys.ControlH

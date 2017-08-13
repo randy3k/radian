@@ -24,6 +24,6 @@ def create_write_console_ex(_handler):
 
         output = buf.decode("utf-8")
         # todo: send otype
-        _handler(output)
+        _handler(output, otype)
 
     return _write_console_ex

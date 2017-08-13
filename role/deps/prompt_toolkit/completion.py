@@ -2,11 +2,15 @@
 """
 from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass
+from six import with_metaclass, text_type
+from .eventloop import Future, run_in_executor
 
 __all__ = (
     'Completion',
     'Completer',
+    'ThreadedCompleter',
+    'DummyCompleter',
+    'DynamicCompleter',
     'CompleteEvent',
     'get_common_complete_suffix',
 )
@@ -24,9 +28,20 @@ class Completion(object):
         completion, e.g. the path or source where it's coming from.
     :param get_display_meta: Lazy `display_meta`. Retrieve meta information
         only when meta is displayed.
+    :param style: Style string.
+    :param selected_style: Style string, used for a selected completion.
+        This can override the `style` parameter.
     """
     def __init__(self, text, start_position=0, display=None, display_meta=None,
-                 get_display_meta=None):
+                 get_display_meta=None, style='', selected_style=''):
+        assert isinstance(text, text_type)
+        assert isinstance(start_position, int)
+        assert display is None or isinstance(display, text_type)
+        assert display_meta is None or isinstance(display_meta, text_type)
+        assert get_display_meta is None or callable(get_display_meta)
+        assert isinstance(style, text_type)
+        assert isinstance(selected_style, text_type)
+
         self.text = text
         self.start_position = start_position
         self._display_meta = display_meta
@@ -36,6 +51,9 @@ class Completion(object):
             self.display = text
         else:
             self.display = display
+
+        self.style = style
+        self.selected_style = selected_style
 
         assert self.start_position <= 0
 
@@ -74,9 +92,9 @@ class Completion(object):
     def new_completion_from_position(self, position):
         """
         (Only for internal use!)
-        Get a new completion by splitting this one. Used by
-        `CommandLineInterface` when it needs to have a list of new completions
-        after inserting the common prefix.
+        Get a new completion by splitting this one. Used by `Application` when
+        it needs to have a list of new completions after inserting the common
+        prefix.
         """
         assert isinstance(position, int) and position - self.start_position >= 0
 
@@ -129,6 +147,64 @@ class Completer(with_metaclass(ABCMeta, object)):
         """
         while False:
             yield
+
+    def get_completions_future(self, document, complete_event):
+        """
+        Return a `Future` which is set when the completions are ready.
+        This function can be overloaded in order to provide an asynchronous
+        implementation.
+        """
+        return Future.succeed(self.get_completions(document, complete_event))
+
+
+class ThreadedCompleter(Completer):
+    """
+    Wrapper that runs completions in a thread.
+    (Use this to prevent the user interface from becoming unresponsive if the
+    generation of completions takes too much time.)
+    """
+    def __init__(self, completer):
+        assert isinstance(completer, Completer)
+        self.completer = completer
+
+    def get_completions(self, document, complete_event):
+        return self.completer.get_completions(document, complete_event)
+
+    def get_completions_future(self, document, complete_event):
+        """
+        Run the `get_completions` function in a thread.
+        """
+        def run_get_completions_thread():
+            return self.get_completions(document, complete_event)
+        f = run_in_executor(run_get_completions_thread)
+        return f
+
+
+class DummyCompleter(Completer):
+    """
+    A completer that doesn't return any completion.
+    """
+    def get_completions(self, document, complete_event):
+        return []
+
+
+class DynamicCompleter(Completer):
+    """
+    Completer class that can dynamically returns any Completer.
+
+    :param get_completer: Callable that returns a :class:`.Completer` instance.
+    """
+    def __init__(self, get_completer):
+        assert callable(get_completer)
+        self.get_completer = get_completer
+
+    def get_completions(self, document, complete_event):
+        completer = self.get_completer() or DummyCompleter()
+        return completer.get_completions(document, complete_event)
+
+    def get_completions_future(self, document, complete_event):
+        completer = self.get_completer() or DummyCompleter()
+        return completer.get_completions_future(document, complete_event)
 
 
 def get_common_complete_suffix(document, completions):

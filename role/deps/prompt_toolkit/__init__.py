@@ -13,10 +13,10 @@ See the examples directory to learn about the usage.
 Probably, to get started, you meight also want to have a look at
 `prompt_toolkit.shortcuts.prompt`.
 """
-from .interface import CommandLineInterface
-from .application import AbortAction, Application
-from .shortcuts import prompt, prompt_async
+from .application import Application
+from .shortcuts import *
+from .formatted_text import HTML, ANSI
 
 
 # Don't forget to update in `docs/conf.py`!
-__version__ = '1.0.15'
+__version__ = '1.0.9'

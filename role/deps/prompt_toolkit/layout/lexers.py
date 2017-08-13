@@ -7,8 +7,7 @@ from abc import ABCMeta, abstractmethod
 from six import with_metaclass
 from six.moves import range
 
-from prompt_toolkit.token import Token
-from prompt_toolkit.filters import to_cli_filter
+from prompt_toolkit.filters import to_filter
 from .utils import split_lines
 
 import re
@@ -21,6 +20,7 @@ __all__ = (
     'SyntaxSync',
     'SyncFromStart',
     'RegexSync',
+    'DynamicLexer',
 )
 
 
@@ -29,33 +29,42 @@ class Lexer(with_metaclass(ABCMeta, object)):
     Base class for all lexers.
     """
     @abstractmethod
-    def lex_document(self, cli, document):
+    def lex_document(self, document):
         """
         Takes a :class:`~prompt_toolkit.document.Document` and returns a
-        callable that takes a line number and returns the tokens for that line.
+        callable that takes a line number and returns a list of
+        ``(style_str, text)`` tuples for that line.
+
+        XXX: Note that in the past, this was supposed to return a list
+             of ``(Token, text)`` tuples, just like a Pygments lexer.
         """
+
+    def invalidation_hash(self):
+        """
+        When this changes, `lex_document` could give a different output.
+        (Only used for `DynamicLexer`.)
+        """
+        return id(self)
 
 
 class SimpleLexer(Lexer):
     """
-    Lexer that doesn't do any tokenizing and returns the whole input as one token.
+    Lexer that doesn't do any tokenizing and returns the whole input as one
+    token.
 
-    :param token: The `Token` for this lexer.
+    :param style: The style string for this lexer.
     """
-    # `default_token` parameter is deprecated!
-    def __init__(self, token=Token, default_token=None):
-        self.token = token
+    def __init__(self, style=''):
+        assert isinstance(style, six.text_type)
+        self.style = style
 
-        if default_token is not None:
-            self.token = default_token
-
-    def lex_document(self, cli, document):
+    def lex_document(self, document):
         lines = document.lines
 
         def get_line(lineno):
             " Return the tokens for the given line. "
             try:
-                return [(self.token, lines[lineno])]
+                return [(self.style, lines[lineno])]
             except IndexError:
                 return []
         return get_line
@@ -146,6 +155,23 @@ class RegexSync(SyntaxSync):
         return cls(p)
 
 
+class _TokenCache(dict):
+    """
+    Cache that converts Pygments tokens into `prompt_toolkit` style objects.
+
+    ``Token.A.B.C`` will be converted into:
+    ``class:pygments,pygments.A,pygments.A.B,pygments.A.B.C``
+    """
+    def __missing__(self, key):
+        parts = ('pygments',) + key
+
+        result = ('class:' + '.'.join(parts)).lower()
+        self[key] = result
+        return result
+
+_token_cache = _TokenCache()
+
+
 class PygmentsLexer(Lexer):
     """
     Lexer that calls a pygments lexer.
@@ -186,7 +212,7 @@ class PygmentsLexer(Lexer):
         assert syntax_sync is None or isinstance(syntax_sync, SyntaxSync)
 
         self.pygments_lexer_cls = pygments_lexer_cls
-        self.sync_from_start = to_cli_filter(sync_from_start)
+        self.sync_from_start = to_filter(sync_from_start)
 
         # Instantiate the Pygments lexer.
         self.pygments_lexer = pygments_lexer_cls(
@@ -213,10 +239,10 @@ class PygmentsLexer(Lexer):
         else:
             return cls(pygments_lexer.__class__, sync_from_start=sync_from_start)
 
-    def lex_document(self, cli, document):
+    def lex_document(self, document):
         """
         Create a lexer function that takes a line number and returns the list
-        of (Token, text) tuples as the Pygments lexer returns for that line.
+        of (style_str, text) tuples as the Pygments lexer returns for that line.
         """
         # Cache of already lexed lines.
         cache = {}
@@ -226,7 +252,7 @@ class PygmentsLexer(Lexer):
 
         def get_syntax_sync():
             " The Syntax synchronisation objcet that we currently use. "
-            if self.sync_from_start(cli):
+            if self.sync_from_start():
                 return SyncFromStart()
             else:
                 return self.syntax_sync
@@ -242,17 +268,19 @@ class PygmentsLexer(Lexer):
             Create a generator that yields the lexed lines.
             Each iteration it yields a (line_number, [(token, text), ...]) tuple.
             """
-            def get_tokens():
+            def get_text_fragments():
                 text = '\n'.join(document.lines[start_lineno:])[column:]
 
-                # We call `get_tokens_unprocessed`, because `get_tokens` will
+                # We call `get_text_fragments_unprocessed`, because `get_tokens` will
                 # still replace \r\n and \r by \n.  (We don't want that,
                 # Pygments should return exactly the same amount of text, as we
                 # have given as input.)
                 for _, t, v in self.pygments_lexer.get_tokens_unprocessed(text):
-                    yield t, v
+                    # Turn Pygments `Token` object into prompt_toolkit `Token`
+                    # objects.
+                    yield _token_cache[t], v
 
-            return enumerate(split_lines(get_tokens()), start_lineno)
+            return enumerate(split_lines(get_text_fragments()), start_lineno)
 
         def get_generator(i):
             """
@@ -318,3 +346,23 @@ class PygmentsLexer(Lexer):
             return []
 
         return get_line
+
+
+class DynamicLexer(Lexer):
+    """
+    Lexer class that can dynamically returns any Lexer.
+
+    :param get_lexer: Callable that returns a :class:`.Lexer` instance.
+    """
+    def __init__(self, get_lexer):
+        self.get_lexer = get_lexer
+        self._dummy = SimpleLexer()
+
+    def lex_document(self, document):
+        lexer = self.get_lexer() or self._dummy
+        assert isinstance(lexer, Lexer)
+        return lexer.lex_document(document)
+
+    def invalidation_hash(self):
+        lexer = self.get_lexer() or self._dummy
+        return id(lexer)
