@@ -1,6 +1,5 @@
 import sys
 import os
-import types
 
 from .instance import Rinstance
 from . import interface
@@ -12,11 +11,14 @@ from prompt_toolkit.input import set_default_input
 from prompt_toolkit.utils import is_windows
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from pygments.lexers.r import SLexer
+from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
+from pygments.styles import get_style_by_name
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings
 from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER
 from prompt_toolkit.formatted_text import ANSI
+
 
 from .completion import RCompleter
 
@@ -73,7 +75,11 @@ class RoleApplication(object):
 
         history = FileHistory(os.path.join(os.path.expanduser("~"), ".role_history"))
         kb = KeyBindings()
-        input_terminal = CustomVt100Input(sys.stdin)
+        vt100 = CustomVt100Input(sys.stdin)
+
+        style = merge_styles([
+            default_style(),
+            style_from_pygments(get_style_by_name("vim"))])
 
         @Condition
         def do_accept():
@@ -96,10 +102,11 @@ class RoleApplication(object):
             complete_while_typing=True,
             enable_suspend=True,
             lexer=PygmentsLexer(SLexer),
+            style=style,
             completer=RCompleter(self.multi_prompt),
             history=history,
             extra_key_bindings=kb,
-            input=input_terminal if not is_windows() else None
+            input=vt100 if not is_windows() else None
         )
 
         def on_render(app):
