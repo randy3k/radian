@@ -23,7 +23,6 @@ def create_write_console_ex(_handler):
     def _write_console_ex(buf, buflen, otype):
 
         output = buf.decode("utf-8")
-        # todo: send otype
         _handler(output, otype)
 
     return _write_console_ex

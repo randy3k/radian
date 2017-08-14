@@ -5,21 +5,27 @@ from . import interface
 
 
 class RCompleter(Completer):
+    _methods_exist = False
 
     def __init__(self, multi_prompt):
         self.multi_prompt = multi_prompt
-        self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
-        self.assignEnd = self.get_utils_func(".assignEnd")
-        self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
-        self.completeToken = self.get_utils_func(".completeToken")
-        self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
 
     def get_utils_func(self, fname):
         f = interface.rlang(api.mk_symbol(":::"), api.mk_string("utils"), api.mk_string(fname))
         api.preserve_object(f)
         return f
 
+    def _make_sure_methods_exist(self):
+        if not self._methods_exist:
+            self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
+            self.assignEnd = self.get_utils_func(".assignEnd")
+            self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
+            self.completeToken = self.get_utils_func(".completeToken")
+            self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
+            self._methods_exist = True
+
     def get_completions(self, document, complete_event):
+        self._make_sure_methods_exist()
         completions = []
         token = ""
         if self.multi_prompt.mode in ["r", "help"]:

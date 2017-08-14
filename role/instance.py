@@ -53,7 +53,7 @@ class Rinstance(object):
 
     @property
     def offset(self):
-        if self._offset:
+        if not self._offset:
             s = ccall("Rf_ScalarInteger", self.libR, c_void_p, [c_int], 0)
             self._offset = ccall("INTEGER", self.libR, c_void_p, [c_void_p], s).value - s.value
 
