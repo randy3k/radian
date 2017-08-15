@@ -4,7 +4,7 @@ Rice has a handful of features allow R programming faster.
 
 Note: _Rice_ is still being developed, users should use it at their own risks. 
 
-<img width="500px" src="https://cloud.githubusercontent.com/assets/1690993/24591455/773e3478-17cf-11e7-8cac-a76ae03d4cf5.png"></img>
+<img width="500px" src="https://user-images.githubusercontent.com/1690993/29305813-9e7d3eaa-8168-11e7-98b1-de0bae83c590.png"></img>
 
 
 ### Roadmap
