@@ -8,13 +8,13 @@ except (IOError, ImportError):
 
 
 setup(
-    name='role',
+    name='rice',
     author='Randy Lai',
     version='0.0.3-dev',
-    url='https://github.com/randy3k/role',
+    url='https://github.com/randy3k/rice',
     description='R REPL build on top of prompt_toolkit',
     long_description=long_description,
-    packages=["role"],
+    packages=["rice"],
     install_requires=[
         'pygments',
         'six',
@@ -22,7 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'role = role:main'
+            'rice = rice:main'
         ]
     }
 )

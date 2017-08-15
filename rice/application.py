@@ -17,6 +17,7 @@ from pygments.lexers.r import SLexer, RConsoleLexer
 from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
 from pygments.styles import get_style_by_name
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings
 from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER
@@ -110,6 +111,7 @@ def create_multi_prompt():
         completer=rcompleter,
         history=history,
         extra_key_bindings=kb,
+        extra_input_processor=HighlightMatchingBracketProcessor(),
         input=vt100 if not is_windows() else None
     )
 
@@ -122,11 +124,7 @@ def create_multi_prompt():
     return p
 
 
-class RoleApplication(object):
-
-    # def run(self):
-    #     p = Prompt()
-    #     p.prompt("> ")
+class RiceApplication(object):
 
     def run(self):
         p = create_multi_prompt()
