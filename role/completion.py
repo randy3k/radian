@@ -1,3 +1,4 @@
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
 
 from . import api
@@ -6,9 +7,6 @@ from . import interface
 
 class RCompleter(Completer):
     _methods_exist = False
-
-    def __init__(self, multi_prompt):
-        self.multi_prompt = multi_prompt
 
     def get_utils_func(self, fname):
         f = interface.rlang(api.mk_symbol(":::"), api.mk_string("utils"), api.mk_string(fname))
@@ -28,7 +26,7 @@ class RCompleter(Completer):
         self._make_sure_methods_exist()
         completions = []
         token = ""
-        if self.multi_prompt.mode in ["r", "help"]:
+        if get_app().prompt_mode in ["r", "help"]:
             text = document.text_before_cursor
             s = api.protect(api.mk_string(text))
             interface.rcall(self.assignLinebuffer, s)
