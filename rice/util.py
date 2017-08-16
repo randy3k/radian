@@ -13,7 +13,7 @@ def ccall(fname, lib, restype, argtypes, *args):
         return res
 
 
-def cglobal(vname, lib, vtype):
+def cglobal(vname, lib, vtype=c_void_p):
     return vtype.in_dll(lib, vname)
 
 
