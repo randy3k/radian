@@ -11,15 +11,15 @@ from .util import ccall, cglobal
 if sys.platform.startswith("win"):
     from ctypes import wintypes
 
-    FlushConsoleInputBuffer = ctypes.windll.kernel32.FlushConsoleInputBuffer
-    FlushConsoleInputBuffer.argtypes = [wintypes.HANDLE]
-    FlushConsoleInputBuffer.restype = wintypes.BOOL
+    # FlushConsoleInputBuffer = ctypes.windll.kernel32.FlushConsoleInputBuffer
+    # FlushConsoleInputBuffer.argtypes = [wintypes.HANDLE]
+    # FlushConsoleInputBuffer.restype = wintypes.BOOL
 
-    GetStdHandle = ctypes.windll.kernel32.GetStdHandle
-    GetStdHandle.argtypes = [wintypes.DWORD]
-    GetStdHandle.restype = wintypes.HANDLE
+    # GetStdHandle = ctypes.windll.kernel32.GetStdHandle
+    # GetStdHandle.argtypes = [wintypes.DWORD]
+    # GetStdHandle.restype = wintypes.HANDLE
 
-    STD_INPUT_HANDLE = -10
+    # STD_INPUT_HANDLE = -10
 
     class RStart(ctypes.Structure):
         _fields_ = [
@@ -38,8 +38,8 @@ if sys.platform.startswith("win"):
             ('max_nsize', c_size_t),
             ('ppsize', c_size_t),
             ('NoRenviron', c_int),
-            ('rhome', c_char_p),
-            ('home', c_char_p),
+            ('rhome', POINTER(c_char)),
+            ('home', POINTER(c_char)),
             ('ReadConsole', c_void_p),
             ('WriteConsole', c_void_p),
             ('CallBack', c_void_p),
@@ -57,6 +57,7 @@ class Rinstance(object):
     read_console = None
     write_console_ex = None
     polled_events = None
+    show_message = None
     clean_up = None
 
     def __init__(self):
@@ -92,8 +93,8 @@ class Rinstance(object):
             self.libR.R_setStartTime()
             self._setup_callbacks_win32()
             self.libR.R_set_command_line_arguments(argn, argv)
-            FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE))
-            self.libR.setup_term_ui()
+            # FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE))
+            # self.libR.setup_term_ui()
         else:
             self.libR.Rf_initialize_R(argn, argv)
             self._setup_callbacks_unix()
@@ -114,16 +115,19 @@ class Rinstance(object):
     def ask_yes_no_cancel(self, string):
         raise "not yet implemented"
 
+    def r_busy(self, which):
+        pass
+
     def _setup_callbacks_win32(self):
         rstart = RStart()
         self.libR.R_DefParams(pointer(rstart))
         rstart.R_Quiet = 1
         rstart.R_Interactive = 1
-        rstart.CharacterMode = 1
+        rstart.CharacterMode = 0
+        rstart.SaveAction = 0
 
-        rstart.rhome = ccall("get_R_HOME", self.libR, c_char_p, [])
-        rstart.home = ccall("getRUser", self.libR, c_char_p, [])
-
+        rstart.rhome = ccall("get_R_HOME", self.libR, POINTER(c_char), [])
+        rstart.home = ccall("getRUser", self.libR, POINTER(c_char), [])
         rstart.ReadConsole = cast(
             CFUNCTYPE(c_int, c_char_p, POINTER(c_char), c_int, c_int)(self.read_console),
             c_void_p)
@@ -132,11 +136,12 @@ class Rinstance(object):
             CFUNCTYPE(None, c_char_p, c_int, c_int)(self.write_console_ex),
             c_void_p)
         rstart.CallBack = cast(CFUNCTYPE(None)(self.process_event), c_void_p)
-        rstart.ShowMessage = cglobal("R_ShowMessage", self.libR)
-        rstart.YesNoCancel = cast(CFUNCTYPE(c_char_p)(self.ask_yes_no_cancel), c_void_p)
-        rstart.Busy = cglobal("R_Busy", self.libR).value
+        rstart.ShowMessage = cast(CFUNCTYPE(None, c_char_p)(self.show_message), c_void_p)
+        rstart.YesNoCancel = cast(CFUNCTYPE(c_int, c_char_p)(self.ask_yes_no_cancel), c_void_p)
+        rstart.Busy = cast(CFUNCTYPE(None, c_int)(self.r_busy), c_void_p)
 
         self.libR.R_SetParams(pointer(rstart))
+
         self.rstart = rstart
 
     def _setup_callbacks_unix(self):

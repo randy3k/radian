@@ -147,6 +147,10 @@ def clean_up(save_type, status, runlast):
     pass
 
 
+def show_message(buf):
+    printer(buf.decode("utf-8"))
+
+
 class RiceApplication(object):
 
     def run(self):
@@ -180,6 +184,7 @@ class RiceApplication(object):
         rinstance.read_console = create_read_console(result_from_prompt)
         rinstance.write_console_ex = create_write_console_ex(printer)
         rinstance.clean_up = clean_up
+        rinstance.show_message = show_message
 
         # to make api work
         api.rinstance = rinstance
