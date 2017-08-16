@@ -10,7 +10,7 @@ except (IOError, ImportError):
 setup(
     name='rice',
     author='Randy Lai',
-    version='0.0.2',
+    version='0.0.3',
     url='https://github.com/randy3k/rice',
     description='R CLI built on top of prompt_toolkit',
     long_description=long_description,
