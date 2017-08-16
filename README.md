@@ -44,7 +44,7 @@ If _Rice_ cannot locate the R installation files automatically. You can either e
 
 ```sh
 $ export R_HOME=/usr/local/lib/R
-$ role  
+$ rice
 ```
 
 ### Caveat
