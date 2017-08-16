@@ -1,4 +1,4 @@
-from .import depspath
+from . import deps
 from .application import RiceApplication
 
 

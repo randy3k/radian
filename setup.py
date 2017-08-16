@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 try:
     import pypandoc
@@ -12,9 +12,9 @@ setup(
     author='Randy Lai',
     version='0.0.1',
     url='https://github.com/randy3k/rice',
-    description='R REPL build on top of prompt_toolkit',
+    description='R CLI built on top of prompt_toolkit',
     long_description=long_description,
-    packages=["rice"],
+    packages=find_packages(),
     install_requires=[
         'pygments',
         'six',
