@@ -33,6 +33,7 @@ Requirements:
 
 ```sh
 # install released version
+pip install rice
 # or the development version
 pip install git+https://github.com/randy3k/rice
 ```

@@ -10,11 +10,11 @@ except (IOError, ImportError):
 setup(
     name='rice',
     author='Randy Lai',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/randy3k/rice',
     description='R CLI built on top of prompt_toolkit',
     long_description=long_description,
-    packages=find_packages(),
+    packages=find_packages('.'),
     install_requires=[
         'pygments',
         'six',
