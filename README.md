@@ -18,8 +18,8 @@ Note: _Rice_ is still being developed, users should use it at their own risks.
 - [x] mac and linux
 - [ ] windows
 - [x] python 3
-- [ ] python 2
-- [ ] brackted paste mode
+- [x] python 2
+- [x] brackted paste mode
 - [ ] object viewer
 - [ ] a backdoor to allow other programs to communicate with Role.
 
