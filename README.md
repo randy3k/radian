@@ -1,4 +1,4 @@
-# Rice: A 21 century R console
+# Rice: 🍚 A 21 century R console
 
 Rice has a handful of features allow R programming faster.
 
