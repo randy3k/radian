@@ -111,6 +111,7 @@ def create_multi_prompt():
         style=style,
         completer=rcompleter,
         history=history,
+        enable_suspend=True,
         extra_key_bindings=kb,
         extra_input_processor=HighlightMatchingBracketProcessor(),
         input=vt100 if not is_windows() else None
