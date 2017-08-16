@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ctypes import c_char_p, c_char, c_int, c_void_p, cast, POINTER
 
 

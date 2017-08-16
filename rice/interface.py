@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ctypes import c_char
 from collections import OrderedDict
 from . import api
