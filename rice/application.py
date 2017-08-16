@@ -19,6 +19,7 @@ from prompt_toolkit.styles import default_style, merge_styles, style_from_pygmen
 from pygments.styles import get_style_by_name
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
+from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings
 from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER
@@ -88,20 +89,38 @@ def create_multi_prompt():
     kb = KeyBindings()
 
     @Condition
-    def do_accept():
+    def prase_complete():
         app = get_app()
-        if app.current_buffer.name != DEFAULT_BUFFER or not prase_input_complete(app):
-            return False
+        return prase_input_complete(app)
 
-        return True
+    @Condition
+    def is_default_buffer():
+        app = get_app()
+        return app.current_buffer.name == DEFAULT_BUFFER
 
-    @kb.add('enter', filter=do_accept)
+    @kb.add('enter', filter=is_default_buffer & prase_complete)
     def _(event):
         event.app.current_buffer.validate_and_handle()
 
     @kb.add('c-c')
     def _(event):
         event.app.abort()
+
+    @kb.add(Keys.BracketedPaste, filter=is_default_buffer)
+    def _(event):
+        data = event.data
+
+        data = data.replace('\r\n', '\n')
+        data = data.replace('\r', '\n')
+
+        shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
+        if shouldeval:
+            data = data.rstrip("\n")
+            event.current_buffer.insert_text(data)
+            event.app.current_buffer.validate_and_handle()
+        else:
+            event.current_buffer.insert_text(data)
+
 
     p = MultiPrompt(
         multiline=True,
@@ -111,7 +130,6 @@ def create_multi_prompt():
         style=style,
         completer=rcompleter,
         history=history,
-        enable_suspend=True,
         extra_key_bindings=kb,
         extra_input_processor=HighlightMatchingBracketProcessor(),
         input=vt100 if not is_windows() else None
