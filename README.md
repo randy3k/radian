@@ -11,15 +11,15 @@ Note: _Rice_ is still being developed, users should use it at their own risks.
 
 - [x] lightwight, no compilation is required
 - [x] multiline editing
-- [x] input highlight
-- [ ] output highlight
+- [x] syntax highlight
 - [x] auto completion
-- [ ] allow custom color scheme
 - [x] mac and linux
 - [x] windows
 - [x] python 3
 - [x] python 2
 - [x] brackted paste mode
+- [ ] more completions
+- [ ] allow custom color scheme
 - [ ] object viewer
 
 
