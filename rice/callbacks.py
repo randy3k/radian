@@ -4,7 +4,7 @@ import ctypes
 
 def create_read_console(get_text):
     def _read_console(p, buf, buflen, add_history):
-        text = get_text()
+        text = get_text(p.decode("utf-8"))
         if text is None:
             return 0
 

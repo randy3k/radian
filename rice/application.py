@@ -41,8 +41,9 @@ class MultiPrompt(Prompt):
         super(MultiPrompt, self).__init__(*args, **kwargs)
         self.app.prompt_mode = self._default_prompt_mode
 
-    def prompt(self, **kwargs):
-        message = self._prompts[self.app.prompt_mode]
+    def prompt(self, message=None, **kwargs):
+        if not message:
+            message = self._prompts[self.app.prompt_mode]
         return super(MultiPrompt, self).prompt(message, **kwargs)
 
 if not is_windows():
@@ -160,7 +161,7 @@ class RiceApplication(object):
 
         _first_time = [True]
 
-        def result_from_prompt():
+        def result_from_prompt(p):
             if _first_time[0]:
                 printer(interface.r_version(), 0)
                 _first_time[0] = False
@@ -169,7 +170,10 @@ class RiceApplication(object):
             text = None
             while text is None:
                 try:
-                    text = mp.prompt()
+                    if p == "> ":
+                        text = mp.prompt()
+                    else:
+                        text = mp.prompt(message=p)
                 except Exception as e:
                     if isinstance(e, EOFError):
                         # todo: confirmation
