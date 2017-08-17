@@ -68,7 +68,7 @@ def prase_input_complete(text):
 
 def create_multi_prompt():
 
-    history = FileHistory(os.path.join(os.path.expanduser("~"), ".role_history"))
+    history = FileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
     if not is_windows():
         vt100 = CustomVt100Input(sys.stdin)
 
