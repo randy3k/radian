@@ -4,23 +4,11 @@ import subprocess
 import sys
 import ctypes
 from ctypes import c_char, c_char_p, c_int, c_size_t, c_void_p, \
-    cast, addressof, pointer, CDLL, CFUNCTYPE, POINTER
-from .util import ccall, cglobal
+    cast, pointer, CDLL, CFUNCTYPE, POINTER
+from .util import ccall
 
 
 if sys.platform.startswith("win"):
-    from ctypes import wintypes
-
-    # FlushConsoleInputBuffer = ctypes.windll.kernel32.FlushConsoleInputBuffer
-    # FlushConsoleInputBuffer.argtypes = [wintypes.HANDLE]
-    # FlushConsoleInputBuffer.restype = wintypes.BOOL
-
-    # GetStdHandle = ctypes.windll.kernel32.GetStdHandle
-    # GetStdHandle.argtypes = [wintypes.DWORD]
-    # GetStdHandle.restype = wintypes.HANDLE
-
-    # STD_INPUT_HANDLE = -10
-
     class RStart(ctypes.Structure):
         _fields_ = [
             ('R_Quiet', c_int),
@@ -56,7 +44,7 @@ class Rinstance(object):
     _offset = None
     read_console = None
     write_console_ex = None
-    polled_events = None
+    process_event = None
     show_message = None
     clean_up = None
 
@@ -91,13 +79,11 @@ class Rinstance(object):
 
         if sys.platform.startswith("win"):
             self.libR.R_setStartTime()
-            self._setup_callbacks_win32()
+            self.setup_callbacks_win32()
             self.libR.R_set_command_line_arguments(argn, argv)
-            # FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE))
-            # self.libR.setup_term_ui()
         else:
             self.libR.Rf_initialize_R(argn, argv)
-            self._setup_callbacks_unix()
+            self.setup_callbacks_posix()
 
         self.libR.Rf_mainloop()
 
@@ -109,7 +95,7 @@ class Rinstance(object):
 
         return self._offset
 
-    def process_event(self):
+    def polled_events(self):
         pass
 
     def ask_yes_no_cancel(self, string):
@@ -118,16 +104,13 @@ class Rinstance(object):
     def r_busy(self, which):
         pass
 
-    def _setup_callbacks_win32(self):
+    def setup_callbacks_win32(self):
         rstart = RStart()
         self.libR.R_DefParams(pointer(rstart))
-        rstart.R_Quiet = 1
-        rstart.R_Interactive = 1
-        rstart.CharacterMode = 0
-        rstart.SaveAction = 0
 
         rstart.rhome = ccall("get_R_HOME", self.libR, POINTER(c_char), [])
         rstart.home = ccall("getRUser", self.libR, POINTER(c_char), [])
+        rstart.CharacterMode = 0
         rstart.ReadConsole = cast(
             CFUNCTYPE(c_int, c_char_p, POINTER(c_char), c_int, c_int)(self.read_console),
             c_void_p)
@@ -135,16 +118,29 @@ class Rinstance(object):
         rstart.WriteConsoleEx = cast(
             CFUNCTYPE(None, c_char_p, c_int, c_int)(self.write_console_ex),
             c_void_p)
-        rstart.CallBack = cast(CFUNCTYPE(None)(self.process_event), c_void_p)
+        rstart.CallBack = cast(CFUNCTYPE(None)(self.polled_events), c_void_p)
         rstart.ShowMessage = cast(CFUNCTYPE(None, c_char_p)(self.show_message), c_void_p)
         rstart.YesNoCancel = cast(CFUNCTYPE(c_int, c_char_p)(self.ask_yes_no_cancel), c_void_p)
         rstart.Busy = cast(CFUNCTYPE(None, c_int)(self.r_busy), c_void_p)
+
+        rstart.R_Quiet = 1
+        rstart.R_Interactive = 1
+        rstart.RestoreAction = 0
+        rstart.SaveAction = 0
 
         self.libR.R_SetParams(pointer(rstart))
 
         self.rstart = rstart
 
-    def _setup_callbacks_unix(self):
+    def setup_callbacks_posix(self):
+
+        # ptr_R_Suicide
+
+        if self.show_message:
+            self.ptr_show_message = CFUNCTYPE(None, c_char_p)(self.show_message)
+            ptr = c_void_p.in_dll(self.libR, 'ptr_R_ShowMessage')
+            ptr.value = cast(self.ptr_show_message, c_void_p).value
+
         if self.read_console:
             # make sure it is not gc'ed
             self.ptr_read_console = \
@@ -153,25 +149,50 @@ class Rinstance(object):
             ptr.value = cast(self.ptr_read_console, c_void_p).value
 
         if self.write_console_ex:
-            c_void_p.in_dll(self.libR, 'ptr_R_WriteConsole').value = 0
+            c_void_p.in_dll(self.libR, 'ptr_R_WriteConsole').value = None
             # make sure it is not gc'ed
             self.ptr_write_console_ex = \
                 CFUNCTYPE(None, c_char_p, c_int, c_int)(self.write_console_ex)
             ptr = c_void_p.in_dll(self.libR, 'ptr_R_WriteConsoleEx')
             ptr.value = cast(self.ptr_write_console_ex, c_void_p).value
 
+        # ptr_R_ResetConsole
+        # ptr_R_FlushConsole
+        # ptr_R_ClearerrConsole
+
+        if self.r_busy:
+            self.ptr_r_busy = CFUNCTYPE(None, c_int)(self.r_busy)
+            ptr = c_void_p.in_dll(self.libR, 'ptr_R_Busy')
+            ptr.value = cast(self.ptr_r_busy, c_void_p).value
+
+        if self.clean_up:
+            ptr = c_void_p.in_dll(self.libR, 'ptr_R_CleanUp')
+            R_CleanUp = CFUNCTYPE(None, c_int, c_int, c_int)(ptr.value)
+
+            def _handler(save_type, status, runlast):
+                self.clean_up(save_type, status, runlast)
+                R_CleanUp(save_type, status, runlast)
+
+            self.ptr_r_clean_up = CFUNCTYPE(None, c_int, c_int, c_int)(_handler)
+            ptr.value = cast(self.ptr_r_clean_up, c_void_p).value
+
+        # ptr_R_ShowFiles
+        # ptr_R_ChooseFile
+        # ptr_R_EditFile
+        # ptr_R_loadhistory
+        # ptr_R_savehistory
+        # ptr_R_addhistory
+        # ptr_R_EditFiles
+        # ptr_do_selectlist
+        # ptr_do_dataentry
+        # ptr_do_dataviewer
+
+        if self.process_event:
+            self.ptr_process_event = CFUNCTYPE(None)(self.process_event)
+            ptr = c_void_p.in_dll(self.libR, 'ptr_R_ProcessEvents')
+            ptr.value = cast(self.ptr_process_event, c_void_p).value
+
         if self.polled_events:
             self.ptr_polled_events = CFUNCTYPE(None)(self.polled_events)
             ptr = c_void_p.in_dll(self.libR, 'R_PolledEvents')
             ptr.value = cast(self.ptr_polled_events, c_void_p).value
-
-        if self.clean_up:
-            R_CleanUp_Type = CFUNCTYPE(None, c_int, c_int, c_int)
-            R_CleanUP = cglobal('ptr_R_CleanUp', self.libR, R_CleanUp_Type)
-
-            def _handler(save_type, status, runlast):
-                self.clean_up(save_type, status, runlast)
-                R_CleanUP(save_type, status, runlast)
-
-            self.ptr_r_clean_up = R_CleanUp_Type(_handler)
-            ptr.value = cast(self.ptr_r_clean_up, c_void_p).value
