@@ -62,8 +62,8 @@ def printer(text, otype=0):
         sys.stderr.write(text)
 
 
-def prase_input_complete(app):
-    return api.parse_vector(api.mk_string(app.current_buffer.text))[1] != 2
+def prase_input_complete(text):
+    return api.parse_vector(api.mk_string(text))[1] != 2
 
 
 def create_multi_prompt():
@@ -92,7 +92,7 @@ def create_multi_prompt():
     @Condition
     def prase_complete():
         app = get_app()
-        return prase_input_complete(app)
+        return prase_input_complete(app.current_buffer.text)
 
     @Condition
     def is_default_buffer():
@@ -115,7 +115,8 @@ def create_multi_prompt():
         data = data.replace('\r', '\n')
 
         shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
-        if shouldeval:
+        # todo: allow partial prase complete
+        if shouldeval and prase_input_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
             event.app.current_buffer.validate_and_handle()
