@@ -18,6 +18,7 @@ Note: _Rice_ is still being developed, users should use it at their own risks.
 - [x] python 3
 - [x] python 2
 - [x] brackted paste mode
+- [ ] better history navigation
 - [ ] more completions
 - [ ] allow custom color scheme
 - [ ] object viewer
