@@ -51,6 +51,13 @@ $ export R_HOME=/usr/local/lib/R
 $ rice
 ```
 
+If the above doesn't work, you may need to futher specify `LD_LIBRARY_PATH`,
+
+```sh
+$ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+$ rice
+```
+
 ### Does it slow down my R program?
 
 _Rice_ only provides a frontend to the R program, the actual running engine is identical to the traditional R console. There is no performance sacrifice while enjoying the benefits of this modern command line interface. 
