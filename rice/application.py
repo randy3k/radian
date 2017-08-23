@@ -21,7 +21,7 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition
+from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition, Filter
 from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.formatted_text import ANSI
@@ -102,6 +102,13 @@ def create_multi_prompt():
         app = get_app()
         return app.current_buffer.name == DEFAULT_BUFFER
 
+    @Condition
+    def tab_should_insert_whitespaces():
+        app = get_app()
+        b = app.current_buffer
+        before_cursor = b.document.current_line_before_cursor
+        return bool(b.text and (not before_cursor or before_cursor.isspace()))
+
     @kb.add('enter', filter=insert_mode & is_default_buffer)
     def _(event):
         if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
@@ -126,9 +133,13 @@ def create_multi_prompt():
 
         event.current_buffer.insert_text(event.data)
 
+    @kb.add(Keys.Tab, filter=insert_mode & is_default_buffer & tab_should_insert_whitespaces)
+    def _(event):
+        event.current_buffer.insert_text('    ')
+
     @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete)
     def _(event):
-        event.app.current_buffer.validate_and_handle()
+        event.current_buffer.validate_and_handle()
 
     @kb.add('c-c')
     def _(event):
@@ -146,7 +157,7 @@ def create_multi_prompt():
         if shouldeval and prase_input_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
-            event.app.current_buffer.validate_and_handle()
+            event.current_buffer.validate_and_handle()
         else:
             event.current_buffer.insert_text(data)
 
