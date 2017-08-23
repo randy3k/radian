@@ -18,6 +18,7 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] windows
 - [x] run on both python 2 and 3
 - [x] brackted paste mode
+- [ ] vi editing mode
 - [ ] better history navigation
 - [ ] more completions
 - [ ] allow custom color scheme
