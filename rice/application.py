@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import sys
 import os
 import time
+import re
 
 from .instance import Rinstance
 from . import interface
@@ -21,9 +22,9 @@ from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition
+from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.formatted_text import ANSI
-
 
 from .completion import RCompleter
 
@@ -87,6 +88,8 @@ def create_multi_prompt():
         default_style(),
         style_from_pygments(get_style_by_name("vim"))])
 
+    insert_mode = vi_insert_mode | emacs_insert_mode
+
     kb = KeyBindings()
 
     @Condition
@@ -99,7 +102,31 @@ def create_multi_prompt():
         app = get_app()
         return app.current_buffer.name == DEFAULT_BUFFER
 
-    @kb.add('enter', filter=is_default_buffer & prase_complete)
+    @kb.add('enter', filter=insert_mode & is_default_buffer)
+    def _(event):
+        if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
+            event.current_buffer.newline(copy_margin=not in_paste_mode())
+            event.current_buffer.insert_text('    ')
+        else:
+            event.current_buffer.newline(copy_margin=not in_paste_mode())
+
+    @kb.add('}', filter=insert_mode & is_default_buffer)
+    @kb.add(']', filter=insert_mode & is_default_buffer)
+    @kb.add(')', filter=insert_mode & is_default_buffer)
+    def _(event):
+        text = event.current_buffer.document.text_before_cursor
+        textList = text.split("\n")
+        if len(textList) >= 2:
+            m = re.match(r"^\s*$", textList[-1])
+            if m:
+                current_indentation = m.group(0)
+                previous_indentation = re.match(r"^\s*", textList[-2]).group(0)
+                if len(current_indentation) >= 4 and current_indentation == previous_indentation:
+                    event.current_buffer.delete_before_cursor(4)
+
+        event.current_buffer.insert_text(event.data)
+
+    @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete)
     def _(event):
         event.app.current_buffer.validate_and_handle()
 
