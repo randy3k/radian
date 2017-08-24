@@ -14,14 +14,12 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] multiline editing
 - [x] syntax highlight
 - [x] auto completion
-- [x] mac and linux
-- [x] windows
+- [x] brackated paste mode
+- [x] cross platform, runs on Windows, macOS and Linux
 - [x] run on both python 2 and 3
-- [x] brackted paste mode
 - [ ] vi editing mode
-- [ ] better history navigation
 - [ ] more completions
-- [ ] allow custom color scheme
+- [ ] custom color scheme
 - [ ] object viewer
 
 

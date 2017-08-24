@@ -109,6 +109,27 @@ def create_multi_prompt():
         before_cursor = b.document.current_line_before_cursor
         return bool(b.text and (not before_cursor or before_cursor.isspace()))
 
+    @Condition
+    def is_begining_of_buffer():
+        return get_app().current_buffer.cursor_position == 0
+
+    @Condition
+    def is_end_of_buffer():
+        app = get_app()
+        return app.current_buffer.cursor_position == len(app.current_buffer.text)
+
+    @Condition
+    def is_empty():
+        return len(get_app().current_buffer.text) == 0
+
+    @Condition
+    def last_history():
+        app = get_app()
+        return app.current_buffer.working_index == len(app.current_buffer._working_lines)-1
+
+    last_working_index = [-1]
+
+    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer)
     @kb.add('enter', filter=insert_mode & is_default_buffer)
     def _(event):
         if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
@@ -117,28 +138,9 @@ def create_multi_prompt():
         else:
             event.current_buffer.newline(copy_margin=not in_paste_mode())
 
-    @kb.add('}', filter=insert_mode & is_default_buffer)
-    @kb.add(']', filter=insert_mode & is_default_buffer)
-    @kb.add(')', filter=insert_mode & is_default_buffer)
-    def _(event):
-        text = event.current_buffer.document.text_before_cursor
-        textList = text.split("\n")
-        if len(textList) >= 2:
-            m = re.match(r"^\s*$", textList[-1])
-            if m:
-                current_indentation = m.group(0)
-                previous_indentation = re.match(r"^\s*", textList[-2]).group(0)
-                if len(current_indentation) >= 4 and current_indentation == previous_indentation:
-                    event.current_buffer.delete_before_cursor(4)
-
-        event.current_buffer.insert_text(event.data)
-
-    @kb.add(Keys.Tab, filter=insert_mode & is_default_buffer & tab_should_insert_whitespaces)
-    def _(event):
-        event.current_buffer.insert_text('    ')
-
     @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete)
     def _(event):
+        last_working_index[0] = event.current_buffer.working_index
         event.current_buffer.validate_and_handle()
 
     @kb.add('c-c')
@@ -160,6 +162,46 @@ def create_multi_prompt():
             event.current_buffer.validate_and_handle()
         else:
             event.current_buffer.insert_text(data)
+
+    # indentation
+
+    @kb.add('}', filter=insert_mode & is_default_buffer)
+    @kb.add(']', filter=insert_mode & is_default_buffer)
+    @kb.add(')', filter=insert_mode & is_default_buffer)
+    def _(event):
+        text = event.current_buffer.document.text_before_cursor
+        textList = text.split("\n")
+        if len(textList) >= 2:
+            m = re.match(r"^\s*$", textList[-1])
+            if m:
+                current_indentation = m.group(0)
+                previous_indentation = re.match(r"^\s*", textList[-2]).group(0)
+                if len(current_indentation) >= 4 and current_indentation == previous_indentation:
+                    event.current_buffer.delete_before_cursor(4)
+
+        event.current_buffer.insert_text(event.data)
+
+    @kb.add(Keys.Tab, filter=insert_mode & is_default_buffer & tab_should_insert_whitespaces)
+    def _(event):
+        event.current_buffer.insert_text('    ')
+
+    # history
+
+    @kb.add(Keys.Up, filter=is_default_buffer & is_end_of_buffer & ~last_history)
+    def _(event):
+        event.current_buffer.history_backward(count=event.arg)
+        event.current_buffer.cursor_position = len(event.current_buffer.text)
+
+    @kb.add(Keys.Down, filter=is_default_buffer & is_end_of_buffer & ~last_history)
+    def _(event):
+        event.current_buffer.history_forward(count=event.arg)
+        event.current_buffer.cursor_position = len(event.current_buffer.text)
+
+    @kb.add(Keys.Down, filter=is_default_buffer & is_empty & last_history)
+    def _(event):
+        if last_working_index[0] >= 0:
+            event.current_buffer.go_to_history(last_working_index[0] + 1)
+            last_working_index[0] = -1
 
     mp = MultiPrompt(
         multiline=True,
