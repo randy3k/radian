@@ -59,3 +59,7 @@ $ rice
 ### Does it slow down my R program?
 
 _Rice_ only provides a frontend to the R program, the actual running engine is identical to the traditional R console. There is no performance sacrifice while enjoying the benefits of this modern command line interface. 
+
+### Does it support Nvim-R?
+
+Partially, try `let R_app= 'rice'` in your vim config.
