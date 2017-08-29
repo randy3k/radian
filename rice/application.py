@@ -14,14 +14,14 @@ from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 
 from prompt_toolkit.utils import is_windows
 from prompt_toolkit.layout.lexers import PygmentsLexer
-from pygments.lexers.r import SLexer, RConsoleLexer
+from pygments.lexers.r import SLexer
 from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
 from pygments.styles import get_style_by_name
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition, Filter
+from prompt_toolkit.filters import Condition
 from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode
 from prompt_toolkit.enums import DEFAULT_BUFFER
 from prompt_toolkit.formatted_text import ANSI
