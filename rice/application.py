@@ -143,10 +143,6 @@ def create_multi_prompt():
         last_working_index[0] = event.current_buffer.working_index
         event.current_buffer.validate_and_handle()
 
-    @kb.add('c-c')
-    def _(event):
-        event.app.abort()
-
     @kb.add(Keys.BracketedPaste, filter=is_default_buffer)
     def _(event):
         data = event.data
