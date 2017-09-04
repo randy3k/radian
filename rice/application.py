@@ -2,14 +2,12 @@ from __future__ import unicode_literals
 import sys
 import os
 import time
-import re
 
 from .instance import Rinstance
 from . import interface
 from . import api
 from .callbacks import create_read_console, create_write_console_ex
 from prompt_toolkit import Prompt
-from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 
 from prompt_toolkit.utils import is_windows
@@ -19,14 +17,12 @@ from prompt_toolkit.styles import default_style, merge_styles, style_from_pygmen
 from pygments.styles import get_style_by_name
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
-from prompt_toolkit.keys import Keys
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.filters import Condition
-from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode
-from prompt_toolkit.enums import DEFAULT_BUFFER, EditingMode
+
+from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 
 from .completion import RCompleter
+from .keybinding import create_keybindings
 
 
 def rice_settings():
@@ -79,10 +75,6 @@ def printer(text, otype=0):
         sys.stderr.write(text)
 
 
-def prase_input_complete(text):
-    return api.parse_vector(api.mk_string(text))[1] != 2
-
-
 def create_multi_prompt():
 
     history = FileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
@@ -100,118 +92,6 @@ def create_multi_prompt():
 
     rcompleter = RCompleter()
 
-    insert_mode = vi_insert_mode | emacs_insert_mode
-
-    kb = KeyBindings()
-
-    @Condition
-    def prase_complete():
-        app = get_app()
-        return prase_input_complete(app.current_buffer.text)
-
-    @Condition
-    def is_default_buffer():
-        app = get_app()
-        return app.current_buffer.name == DEFAULT_BUFFER
-
-    @Condition
-    def tab_should_insert_whitespaces():
-        app = get_app()
-        b = app.current_buffer
-        before_cursor = b.document.current_line_before_cursor
-        return bool(b.text and (not before_cursor or before_cursor.isspace()))
-
-    @Condition
-    def is_begining_of_buffer():
-        return get_app().current_buffer.cursor_position == 0
-
-    @Condition
-    def is_end_of_buffer():
-        app = get_app()
-        return app.current_buffer.cursor_position == len(app.current_buffer.text)
-
-    @Condition
-    def is_empty():
-        return len(get_app().current_buffer.text) == 0
-
-    @Condition
-    def last_history():
-        app = get_app()
-        return app.current_buffer.working_index == len(app.current_buffer._working_lines) - 1
-
-    last_working_index = [-1]
-
-    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer)
-    @kb.add('enter', filter=insert_mode & is_default_buffer)
-    def _(event):
-        if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
-            event.current_buffer.newline(copy_margin=not in_paste_mode())
-            event.current_buffer.insert_text('    ')
-        else:
-            event.current_buffer.newline(copy_margin=not in_paste_mode())
-
-    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer & prase_complete)
-    @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete)
-    def _(event):
-        last_working_index[0] = event.current_buffer.working_index
-        event.current_buffer.validate_and_handle()
-
-    @kb.add(Keys.BracketedPaste, filter=is_default_buffer)
-    def _(event):
-        data = event.data
-
-        data = data.replace('\r\n', '\n')
-        data = data.replace('\r', '\n')
-
-        shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
-        # todo: allow partial prase complete
-        if shouldeval and prase_input_complete(data):
-            data = data.rstrip("\n")
-            event.current_buffer.insert_text(data)
-            event.current_buffer.validate_and_handle()
-        else:
-            event.current_buffer.insert_text(data)
-
-    # indentation
-
-    @kb.add('}', filter=insert_mode & is_default_buffer)
-    @kb.add(']', filter=insert_mode & is_default_buffer)
-    @kb.add(')', filter=insert_mode & is_default_buffer)
-    def _(event):
-        text = event.current_buffer.document.text_before_cursor
-        textList = text.split("\n")
-        if len(textList) >= 2:
-            m = re.match(r"^\s*$", textList[-1])
-            if m:
-                current_indentation = m.group(0)
-                previous_indentation = re.match(r"^\s*", textList[-2]).group(0)
-                if len(current_indentation) >= 4 and current_indentation == previous_indentation:
-                    event.current_buffer.delete_before_cursor(4)
-
-        event.current_buffer.insert_text(event.data)
-
-    @kb.add(Keys.Tab, filter=insert_mode & is_default_buffer & tab_should_insert_whitespaces)
-    def _(event):
-        event.current_buffer.insert_text('    ')
-
-    # history
-
-    @kb.add(Keys.Up, filter=is_default_buffer & is_end_of_buffer & ~last_history)
-    def _(event):
-        event.current_buffer.history_backward(count=event.arg)
-        event.current_buffer.cursor_position = len(event.current_buffer.text)
-
-    @kb.add(Keys.Down, filter=is_default_buffer & is_end_of_buffer & ~last_history)
-    def _(event):
-        event.current_buffer.history_forward(count=event.arg)
-        event.current_buffer.cursor_position = len(event.current_buffer.text)
-
-    @kb.add(Keys.Down, filter=is_default_buffer & is_empty & last_history)
-    def _(event):
-        if last_working_index[0] >= 0:
-            event.current_buffer.go_to_history(last_working_index[0] + 1)
-            last_working_index[0] = -1
-
     mp = MultiPrompt(
         multiline=True,
         complete_while_typing=True,
@@ -219,7 +99,7 @@ def create_multi_prompt():
         lexer=PygmentsLexer(SLexer),
         completer=rcompleter,
         history=history,
-        extra_key_bindings=kb,
+        extra_key_bindings=create_keybindings(),
         extra_input_processor=HighlightMatchingBracketProcessor(),
         input=vt100 if not is_windows() else None
     )
