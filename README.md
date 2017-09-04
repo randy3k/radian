@@ -62,4 +62,9 @@ _Rice_ only provides a frontend to the R program, the actual running engine is i
 
 ### Does it support Nvim-R?
 
-Partially, try `let R_app= 'rice'` in your vim config.
+Partially, try putting
+```vim
+let g:R_app = 'rice'
+let g:R_cmd = "R"
+```
+in your vim config.
