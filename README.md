@@ -17,9 +17,9 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] brackated paste mode
 - [x] cross platform, runs on Windows, macOS and Linux
 - [x] run on both python 2 and 3
-- [ ] vi editing mode
+- [x] vi editing mode
+- [x] custom color scheme
 - [ ] more completions
-- [ ] custom color scheme
 - [ ] object viewer
 
 
@@ -37,6 +37,20 @@ pip install rice
 # or the development version
 pip install git+https://github.com/randy3k/rice
 ```
+
+## Settings
+
+_Rice_ can be customized by executing the `options` function in `.Rprofile` file. This file is usually located in your user home directory.
+
+```r
+options(
+    rice.color_scheme = "native",
+    rice.editing_mode = "emacs"
+)
+```
+
+- color scheme: see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
+- editing mode: either  `"emacs"` (default) or `"vi"`.
 
 ## FAQ
 

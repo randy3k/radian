@@ -23,10 +23,18 @@ from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode
-from prompt_toolkit.enums import DEFAULT_BUFFER
+from prompt_toolkit.enums import DEFAULT_BUFFER, EditingMode
 from prompt_toolkit.formatted_text import ANSI
 
 from .completion import RCompleter
+
+
+def rice_settings():
+    settings = {
+        "color_scheme": interface.get_option("rice.color_scheme") or "native",
+        "editing_mode": interface.get_option("rice.editing_mode") or "emacs",
+    }
+    return settings
 
 
 class MultiPrompt(Prompt):
@@ -42,10 +50,16 @@ class MultiPrompt(Prompt):
         super(MultiPrompt, self).__init__(*args, **kwargs)
         self.app.prompt_mode = self._default_prompt_mode
 
-    def prompt(self, message=None, **kwargs):
+    def prompt(self, message=None, color_scheme="vim", mode="emacs"):
         if not message:
             message = self._prompts[self.app.prompt_mode]
-        return super(MultiPrompt, self).prompt(message, **kwargs)
+
+        editing_mode = EditingMode.VI if mode == "vi" or mode == "vim" else EditingMode.EMACS
+        style = merge_styles([
+            default_style(),
+            style_from_pygments(get_style_by_name(color_scheme))])
+
+        return super(MultiPrompt, self).prompt(message, editing_mode=editing_mode, style=style)
 
 
 if not is_windows():
@@ -84,10 +98,6 @@ def create_multi_prompt():
     set_event_loop(create_event_loop(inputhook=process_events))
 
     rcompleter = RCompleter()
-
-    style = merge_styles([
-        default_style(),
-        style_from_pygments(get_style_by_name("vim"))])
 
     insert_mode = vi_insert_mode | emacs_insert_mode
 
@@ -206,7 +216,6 @@ def create_multi_prompt():
         complete_while_typing=True,
         enable_suspend=True,
         lexer=PygmentsLexer(SLexer),
-        style=style,
         completer=rcompleter,
         history=history,
         extra_key_bindings=kb,
@@ -239,9 +248,11 @@ class RiceApplication(object):
         rinstance = Rinstance()
 
         _first_time = [True]
+        _settings = [None]
 
         def result_from_prompt(p):
             if _first_time[0]:
+                _settings[0] = rice_settings()
                 printer(interface.r_version(), 0)
                 _first_time[0] = False
 
@@ -250,7 +261,9 @@ class RiceApplication(object):
             while text is None:
                 try:
                     if p == "> ":
-                        text = mp.prompt()
+                        text = mp.prompt(
+                            color_scheme=_settings[0].get("color_scheme"),
+                            mode=_settings[0].get("editing_mode"))
                     else:
                         text = mp.prompt(message=p)
                 except Exception as e:

@@ -6,6 +6,11 @@ High level functions to interact with R api.
 """
 
 
+def get_option(key):
+    s = rcall(api.mk_symbol("options"), api.mk_string(key))
+    return rcopy(api.vector_elt(s, 0), simplify=True)
+
+
 def r_version():
     info = rcopy(rcall(api.mk_symbol("R.Version")), simplify=True)
     return "{} -- {}\nPlatform: {}\n".format(
