@@ -19,6 +19,7 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] run on both python 2 and 3
 - [x] vi editing mode
 - [x] custom color scheme
+- [x] read more than 4096 bytes per line
 - [ ] more completions
 - [ ] object viewer
 

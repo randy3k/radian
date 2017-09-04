@@ -50,7 +50,7 @@ class MultiPrompt(Prompt):
         super(MultiPrompt, self).__init__(*args, **kwargs)
         self.app.prompt_mode = self._default_prompt_mode
 
-    def prompt(self, message=None, color_scheme="vim", mode="emacs"):
+    def prompt(self, message=None, color_scheme="vim", mode="emacs", **kwargs):
         if not message:
             message = self._prompts[self.app.prompt_mode]
 
@@ -59,7 +59,8 @@ class MultiPrompt(Prompt):
             default_style(),
             style_from_pygments(get_style_by_name(color_scheme))])
 
-        return super(MultiPrompt, self).prompt(message, editing_mode=editing_mode, style=style)
+        return super(MultiPrompt, self).prompt(
+            message, editing_mode=editing_mode, style=style, **kwargs)
 
 
 if not is_windows():
@@ -265,7 +266,15 @@ class RiceApplication(object):
                             color_scheme=_settings[0].get("color_scheme"),
                             mode=_settings[0].get("editing_mode"))
                     else:
-                        text = mp.prompt(message=p)
+                        # invoked by `readline`
+                        text = mp.prompt(
+                            message=p + " ",
+                            mode=_settings[0].get("editing_mode"),
+                            multiline=False,
+                            lexer=None,
+                            completer=None,
+                            history=None,
+                            extra_key_bindings=None)
                 except Exception as e:
                     if isinstance(e, EOFError):
                         # todo: confirmation
