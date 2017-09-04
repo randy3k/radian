@@ -139,6 +139,7 @@ def create_multi_prompt():
         else:
             event.current_buffer.newline(copy_margin=not in_paste_mode())
 
+    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer & prase_complete)
     @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete)
     def _(event):
         last_working_index[0] = event.current_buffer.working_index
