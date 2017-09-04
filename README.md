@@ -52,6 +52,16 @@ options(
 - color scheme: see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
 - editing mode: either  `"emacs"` (default) or `"vi"`.
 
+## Alias
+
+You could alias `r` to `rice` by putting
+
+```bash
+alias r="rice"
+```
+in `~/.profile` such that `r` would open `rice` and `R` would still open the tranditional R console.
+(`R` is still useful, e.g, running `R CMD BUILD`.)
+
 ## FAQ
 
 ### R_HOME location
