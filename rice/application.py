@@ -47,6 +47,7 @@ class MultiPrompt(Prompt):
             message = self._prompts[self.app.prompt_mode]
         return super(MultiPrompt, self).prompt(message, **kwargs)
 
+
 if not is_windows():
     from prompt_toolkit.input.vt100 import Vt100Input
 
@@ -78,7 +79,7 @@ def create_multi_prompt():
             if context.input_is_ready():
                 break
             api.process_events()
-            time.sleep(1.0/30)
+            time.sleep(1.0 / 30)
 
     set_event_loop(create_event_loop(inputhook=process_events))
 
@@ -125,7 +126,7 @@ def create_multi_prompt():
     @Condition
     def last_history():
         app = get_app()
-        return app.current_buffer.working_index == len(app.current_buffer._working_lines)-1
+        return app.current_buffer.working_index == len(app.current_buffer._working_lines) - 1
 
     last_working_index = [-1]
 

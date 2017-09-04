@@ -11,9 +11,9 @@ def create_read_console(get_text):
         code = text.encode("utf-8")
         addr = ctypes.addressof(buf.contents)
         c2 = (ctypes.c_char * buflen).from_address(addr)
-        nb = min(len(code), buflen-2)
+        nb = min(len(code), buflen - 2)
         c2[:nb] = code[:nb]
-        c2[nb:(nb+2)] = b'\n\0'
+        c2[nb:(nb + 2)] = b'\n\0'
 
         return 1
 

@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
-from ctypes import c_char
 from collections import OrderedDict
 from . import api
-
 """
 High level functions to interact with R api.
 """
@@ -42,7 +40,8 @@ def rcopy(s, simplify=False):
 
 def rlang(*args, **kwargs):
     nargs = len(args) + len(kwargs)
-    s = l = api.protect(api.alloc_vector(api.LANGSXP, nargs))
+    t = api.protect(api.alloc_vector(api.LANGSXP, nargs))
+    s = t
     api.setcar(s, args[0])
     for a in args[1:]:
         s = api.cdr(s)
@@ -52,7 +51,7 @@ def rlang(*args, **kwargs):
         api.setcar(s, v)
         api.settag(s, api.mk_symbol(k))
     api.unprotect(1)
-    return l
+    return t
 
 
 def rcall(*args, **kwargs):
