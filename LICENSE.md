@@ -1,4 +1,4 @@
-__Role__ is licensed under the MIT "Expat" License:
+__Rice__ is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2017 Randy Lai
 >
