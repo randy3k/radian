@@ -27,7 +27,8 @@ class RCompleter(Completer):
         self._make_sure_methods_exist()
         completions = []
         token = ""
-        if get_app().prompt_mode in ["r", "help"]:
+        app = get_app()
+        if hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:
             text = document.text_before_cursor
             s = api.protect(api.mk_string(text))
             interface.rcall(self.assignLinebuffer, s)
