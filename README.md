@@ -64,7 +64,8 @@ _Rice_ only provides a frontend to the R program, the actual running engine is i
 
 Partially, try putting
 ```vim
-let g:R_app = 'rice'
+let g:R_app = "rice"
 let g:R_cmd = "R"
+let g:R_hl_term = 0
 ```
 in your vim config.
