@@ -17,6 +17,10 @@ def r_version():
         info["version.string"], info["nickname"], info["platform"])
 
 
+def installed_packages():
+    return rcopy(reval("row.names(installed.packages())"))
+
+
 def rcopy(s, simplify=False):
     api.protect(s)
     ret = None

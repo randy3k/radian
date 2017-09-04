@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
+import re
 
 from . import api
 from . import interface
+
+
+LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
 class RCompleter(Completer):
@@ -29,14 +33,30 @@ class RCompleter(Completer):
         token = ""
         app = get_app()
         if hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:
-            text = document.text_before_cursor
-            s = api.protect(api.mk_string(text))
-            interface.rcall(self.assignLinebuffer, s)
-            interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
-            token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
-            if (len(token) > 3 and text[-1].isalnum()) or complete_event.completion_requested:
-                interface.rcall(self.completeToken)
-                completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
-            api.unprotect(1)
-        for c in completions:
-            yield Completion(c, -len(token))
+
+            packages = interface.installed_packages()
+            text = document.current_line_before_cursor
+            m = LIBRARY_PATTERN.match(text)
+            if m:
+                prefix = m.group(1)
+                for p in packages:
+                    if p.startswith(prefix):
+                        yield Completion(p, -len(prefix))
+
+            if not completions:
+                s = api.protect(api.mk_string(text))
+                interface.rcall(self.assignLinebuffer, s)
+                interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
+                token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
+                if (len(token) > 3 and text[-1].isalnum()) or complete_event.completion_requested:
+                    interface.rcall(self.completeToken)
+                    completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
+                api.unprotect(1)
+
+                for c in completions:
+                    yield Completion(c, -len(token))
+
+                if len(token) >= 3:
+                    for p in packages:
+                        if p.startswith(token):
+                            yield Completion(p, -len(token))
