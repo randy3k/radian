@@ -3,7 +3,7 @@ import optparse
 from . import deps
 from .application import RiceApplication
 
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 
 
 def main():
