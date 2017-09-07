@@ -27,8 +27,8 @@ from .keybinding import create_keybindings
 
 def rice_settings():
     settings = {
-        "color_scheme": interface.get_option("rice.color_scheme") or "native",
-        "editing_mode": interface.get_option("rice.editing_mode") or "emacs",
+        "color_scheme": interface.get_option("rice.color_scheme", "native"),
+        "editing_mode": interface.get_option("rice.editing_mode", "emacs")
     }
     return settings
 
