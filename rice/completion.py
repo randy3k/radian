@@ -29,7 +29,6 @@ class RCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         self._make_sure_methods_exist()
-        completions = []
         token = ""
         app = get_app()
         if hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:
@@ -43,7 +42,8 @@ class RCompleter(Completer):
                     if p.startswith(prefix):
                         yield Completion(p, -len(prefix))
 
-            if not completions:
+            else:
+                completions = []
                 s = api.protect(api.mk_string(text))
                 interface.rcall(self.assignLinebuffer, s)
                 interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
@@ -59,4 +59,6 @@ class RCompleter(Completer):
                 if len(token) >= 3:
                     for p in packages:
                         if p.startswith(token):
-                            yield Completion(p, -len(token))
+                            comp = p + "::"
+                            if comp not in completions:
+                                yield Completion(comp, -len(token))
