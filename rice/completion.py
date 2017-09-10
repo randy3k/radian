@@ -30,8 +30,8 @@ class RCompleter(Completer):
     def get_completions(self, document, complete_event):
         self._make_sure_methods_exist()
         token = ""
-        app = get_app()
-        if hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:
+        app = get_app(return_none=True)
+        if app and hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:
 
             packages = interface.installed_packages()
             text = document.current_line_before_cursor
