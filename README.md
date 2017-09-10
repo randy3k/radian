@@ -20,7 +20,6 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] vi editing mode
 - [x] custom color scheme
 - [x] read more than 4096 bytes per line
-- [ ] object viewer
 
 
 ## Installation
