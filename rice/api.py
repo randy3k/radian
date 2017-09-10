@@ -213,3 +213,7 @@ def print_value(s):
 
 def visible():
     return rcglobal("R_Visible", c_int)
+
+
+def localecp():
+    return rcglobal("localeCP", c_int)

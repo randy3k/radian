@@ -2,15 +2,18 @@ from __future__ import unicode_literals
 import ctypes
 
 
+ENCODING = "utf-8"
+
+
 def create_read_console(get_text):
     code = [None]
 
     def _read_console(p, buf, buflen, add_history):
         if not code[0]:
-            text = get_text(p.decode("utf-8"))
+            text = get_text(p.decode(ENCODING))
             if text is None:
                 return 0
-            code[0] = text.encode("utf-8")
+            code[0] = text.encode(ENCODING)
 
         addr = ctypes.addressof(buf.contents)
         c2 = (ctypes.c_char * buflen).from_address(addr)
@@ -27,7 +30,7 @@ def create_read_console(get_text):
 def create_write_console_ex(_handler):
     def _write_console_ex(buf, buflen, otype):
 
-        output = buf.decode("utf-8")
+        output = buf.decode(ENCODING)
         _handler(output, otype)
 
     return _write_console_ex

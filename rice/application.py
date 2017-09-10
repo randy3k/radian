@@ -6,6 +6,7 @@ import time
 from .instance import Rinstance
 from . import interface
 from . import api
+from . import callbacks
 from .callbacks import create_read_console, create_write_console_ex
 from prompt_toolkit import Prompt
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
@@ -133,6 +134,10 @@ class RiceApplication(object):
 
         def result_from_prompt(p):
             if _first_time[0]:
+                if is_windows():
+                    cp = api.localecp()
+                    if cp and cp.value:
+                        callbacks.ENCODING = "cp" + str(cp.value)
                 _settings[0] = rice_settings()
                 printer(interface.r_version(), 0)
                 _first_time[0] = False
