@@ -16,7 +16,7 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] auto completion
 - [x] brackated paste mode
 - [x] cross platform, runs on Windows, macOS and Linux
-- [x] run on both python 2 and 3
+- [x] run on both python 2 and 3 (there is a bug upstream which causes `rice` doesn't run with python 2.7 on Windows.)
 - [x] vi editing mode
 - [x] custom color scheme
 - [x] read more than 4096 bytes per line
