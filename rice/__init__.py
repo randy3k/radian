@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 import optparse
+import os
+
 from . import deps
 from .application import RiceApplication
 
@@ -15,5 +17,7 @@ def main():
     if options.version:
         print("version {}".format(__version__))
         return
+
+    os.environ["RICE_VERSION"] = __version__
 
     RiceApplication().run()
