@@ -27,7 +27,8 @@ def create_keybindings():
     @Condition
     def is_completing():
         app = get_app()
-        return app.current_buffer.complete_state
+        cs = app.current_buffer.complete_state
+        return cs and cs.complete_index is not None
 
     @Condition
     def is_default_buffer():
