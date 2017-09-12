@@ -25,6 +25,11 @@ def create_keybindings():
         return prase_input_complete(app.current_buffer.text)
 
     @Condition
+    def is_completing():
+        app = get_app()
+        return app.current_buffer.complete_state
+
+    @Condition
     def is_default_buffer():
         app = get_app()
         return app.current_buffer.name == DEFAULT_BUFFER
@@ -72,6 +77,11 @@ def create_keybindings():
     def _(event):
         last_working_index[0] = event.current_buffer.working_index
         event.current_buffer.validate_and_handle()
+
+    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer & is_completing)
+    @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete & is_completing)
+    def _(event):
+        event.current_buffer.complete_state = None
 
     @kb.add(Keys.BracketedPaste, filter=is_default_buffer)
     def _(event):
