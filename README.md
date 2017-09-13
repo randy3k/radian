@@ -10,7 +10,7 @@ _Rice_ is still under active development, any feedbacks will be welcome. Users s
 
 ## Features
 
-- [x] lightwight, no compilation is required
+- [x] lightweight, no compilation is required
 - [x] multiline editing
 - [x] syntax highlight
 - [x] auto completion
