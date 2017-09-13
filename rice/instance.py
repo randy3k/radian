@@ -67,7 +67,7 @@ class Rinstance(object):
         if not os.path.exists(libR_path):
             raise RuntimeError("Cannot locate R share library.")
 
-        self.libR = CDLL(libR_path)
+        self.libR = CDLL(str(libR_path))
 
     def run(self):
 
