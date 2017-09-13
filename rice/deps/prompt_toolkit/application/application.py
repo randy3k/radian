@@ -60,10 +60,10 @@ class Application(object):
     :param min_redraw_interval: Number of seconds to wait between redraws. Use
         this for applications where `invalidate` is called a lot. This could cause
         a lot of terminal output, which some terminals are not able to process.
-        
+
         `None` means that every `invalidate` will be scheduled right away
         (which is usually fine).
-        
+
         When one `invalidate` is called, but a scheduled redraw of a previous
         `invalidate` call has not been executed yet, nothing will happen in any
         case.
@@ -617,11 +617,12 @@ class Application(object):
         """
         Called when we don't receive the cursor position response in time.
         """
-        def in_terminal():
-            self.output.write(
-                "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
-            self.output.flush()
-        self.run_in_terminal(in_terminal)
+        # def in_terminal():
+        #     self.output.write(
+        #         "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
+        #     self.output.flush()
+        # self.run_in_terminal(in_terminal)
+        pass
 
     def exit(self):
         " Set exit. When Control-D has been pressed. "
@@ -921,4 +922,3 @@ def _do_wait_for_enter(wait_text):
         message=wait_text,
         extra_key_bindings=key_bindings)
     yield From(prompt.app.run_async())
-
