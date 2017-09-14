@@ -47,7 +47,7 @@ class MultiPrompt(Prompt):
 
     def __init__(self, *args, **kwargs):
         super(MultiPrompt, self).__init__(*args, **kwargs)
-        self.app.prompt_mode = list(self._prompts.keys())[0]
+        self.app.prompt_mode = "r"
 
     @property
     def Rprompt(self):
