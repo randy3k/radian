@@ -58,9 +58,6 @@ def create_keybindings():
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed)
     @kb.add(Keys.Enter, filter=insert_mode & default_focussed)
     def _(event):
-        with open("/tmp/rice", "a") as f:
-            f.write(str(event.current_buffer.complete_state))
-            f.write("\n")
         if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
             event.current_buffer.newline(copy_margin=not in_paste_mode())
             event.current_buffer.insert_text('    ')
