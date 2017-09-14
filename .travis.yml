@@ -1,0 +1,16 @@
+language: python
+python: 3.5
+
+install:
+  - pip install .
+
+script:
+  - rice --version
+
+deploy:
+    provider: pypi
+    user: "randy3k"
+    password:
+        secure: ""
+    on:
+        tags: true
