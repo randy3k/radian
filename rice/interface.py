@@ -14,6 +14,11 @@ def get_option(key, default=None):
     return ret
 
 
+def set_option(key, value):
+    kwargs = {key: api.mk_string(value)}
+    rcall(api.mk_symbol("options"), **kwargs)
+
+
 def r_version():
     info = rcopy(rcall(api.mk_symbol("R.Version")), simplify=True)
     return "{} -- {}\nPlatform: {}\n".format(
