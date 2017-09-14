@@ -147,9 +147,6 @@ class RiceApplication(object):
                         callbacks.ENCODING = "cp" + str(cp.value)
 
                 _rice_settings[0] = rice_settings()
-                f = open("/tmp/rice", "a")
-                f.write(p)
-                f.close()
                 mp.set_rprompt(p)
                 printer(interface.r_version(), 0)
                 _first_time[0] = False
