@@ -5,8 +5,8 @@ from prompt_toolkit.application.current import get_app
 
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.filters import Condition
-from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode
+from prompt_toolkit.filters import Condition, has_focus
+from prompt_toolkit.filters import emacs_insert_mode, vi_insert_mode, in_paste_mode, app
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
 from . import api
@@ -24,16 +24,7 @@ def create_keybindings():
         app = get_app()
         return prase_input_complete(app.current_buffer.text)
 
-    @Condition
-    def is_completing():
-        app = get_app()
-        cs = app.current_buffer.complete_state
-        return cs and cs.complete_index is not None
-
-    @Condition
-    def is_default_buffer():
-        app = get_app()
-        return app.current_buffer.name == DEFAULT_BUFFER
+    default_focussed = has_focus(DEFAULT_BUFFER)
 
     @Condition
     def tab_should_insert_whitespaces():
@@ -52,7 +43,7 @@ def create_keybindings():
         return app.current_buffer.cursor_position == len(app.current_buffer.text)
 
     @Condition
-    def is_empty():
+    def is_empty_buffer():
         return len(get_app().current_buffer.text) == 0
 
     @Condition
@@ -64,27 +55,30 @@ def create_keybindings():
 
     last_working_index = [-1]
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer)
-    @kb.add('enter', filter=insert_mode & is_default_buffer)
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed)
+    @kb.add(Keys.Enter, filter=insert_mode & default_focussed)
     def _(event):
+        with open("/tmp/rice", "a") as f:
+            f.write(str(event.current_buffer.complete_state))
+            f.write("\n")
         if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
             event.current_buffer.newline(copy_margin=not in_paste_mode())
             event.current_buffer.insert_text('    ')
         else:
             event.current_buffer.newline(copy_margin=not in_paste_mode())
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer & prase_complete)
-    @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete)
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prase_complete)
+    @kb.add(Keys.Enter, filter=insert_mode & default_focussed & prase_complete)
     def _(event):
         last_working_index[0] = event.current_buffer.working_index
         event.current_buffer.validate_and_handle()
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & is_default_buffer & is_completing)
-    @kb.add('enter', filter=insert_mode & is_default_buffer & prase_complete & is_completing)
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
+    @kb.add(Keys.Enter, filter=insert_mode & default_focussed & app.has_completions)
     def _(event):
         event.current_buffer.complete_state = None
 
-    @kb.add(Keys.BracketedPaste, filter=is_default_buffer)
+    @kb.add(Keys.BracketedPaste, filter=default_focussed)
     def _(event):
         data = event.data
 
@@ -102,9 +96,9 @@ def create_keybindings():
 
     # indentation
 
-    @kb.add('}', filter=insert_mode & is_default_buffer)
-    @kb.add(']', filter=insert_mode & is_default_buffer)
-    @kb.add(')', filter=insert_mode & is_default_buffer)
+    @kb.add('}', filter=insert_mode & default_focussed)
+    @kb.add(']', filter=insert_mode & default_focussed)
+    @kb.add(')', filter=insert_mode & default_focussed)
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -118,23 +112,23 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
-    @kb.add(Keys.Tab, filter=insert_mode & is_default_buffer & tab_should_insert_whitespaces)
+    @kb.add(Keys.Tab, filter=insert_mode & default_focussed & tab_should_insert_whitespaces)
     def _(event):
         event.current_buffer.insert_text('    ')
 
     # history
 
-    @kb.add(Keys.Up, filter=is_default_buffer & is_end_of_buffer & ~last_history)
+    @kb.add(Keys.Up, filter=default_focussed & is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_backward(count=event.arg)
         event.current_buffer.cursor_position = len(event.current_buffer.text)
 
-    @kb.add(Keys.Down, filter=is_default_buffer & is_end_of_buffer & ~last_history)
+    @kb.add(Keys.Down, filter=default_focussed & is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_forward(count=event.arg)
         event.current_buffer.cursor_position = len(event.current_buffer.text)
 
-    @kb.add(Keys.Down, filter=is_default_buffer & is_empty & last_history)
+    @kb.add(Keys.Down, filter=default_focussed & is_empty_buffer & last_history)
     def _(event):
         if last_working_index[0] >= 0:
             event.current_buffer.go_to_history(last_working_index[0] + 1)
