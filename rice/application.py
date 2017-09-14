@@ -61,7 +61,7 @@ class MultiPrompt(Prompt):
         if not message:
             message = self._prompts[self.app.prompt_mode]
             if message == PROMPT:
-                message = "\x1b[34m" + PROMPT + "\x1b[0m "
+                message = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
             message = ANSI(message)
 
         editing_mode = EditingMode.VI if mode == "vi" or mode == "vim" else EditingMode.EMACS
