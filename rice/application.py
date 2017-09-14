@@ -27,10 +27,11 @@ from .keybinding import create_keybindings
 
 
 PROMPT = "r$> "
+COLORED_PROMPT = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
 
 
 class MultiPrompt(Prompt):
-    _prompts = {
+    _message = {
         "r": PROMPT,
         "help": "\x1b[33mhelp?>\x1b[0m ",
         "help_search": "\x1b[33mhelp??>\x1b[0m ",
@@ -41,20 +42,17 @@ class MultiPrompt(Prompt):
         super(MultiPrompt, self).__init__(*args, **kwargs)
         self.app.prompt_mode = "r"
 
-    @property
-    def Rprompt(self):
-        return self._prompts["r"]
+    def set_prompt_message(self, mode, message):
+        self._message[mode] = message
 
-    @Rprompt.setter
-    def Rprompt(self, p):
-        self._prompts["r"] = p
+    def prompt_message(self, mode):
+        return self._message[mode]
 
-    def prompt(self, message=None, **kwargs):
-        if not message:
-            message = self._prompts[self.app.prompt_mode]
-            if message == PROMPT:
-                message = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
-            message = ANSI(message)
+    def readconsole(self, **kwargs):
+        message = self.prompt_message(self.app.prompt_mode)
+        if message == PROMPT:
+            message = COLORED_PROMPT
+        message = ANSI(message)
 
         return super(MultiPrompt, self).prompt(message, **kwargs)
 
@@ -131,19 +129,8 @@ def show_message(buf):
     printer(buf.decode("utf-8"))
 
 
-def rice_settings():
-    settings = {
-        "color_scheme": interface.get_option("rice.color_scheme", "native"),
-        "editing_mode": interface.get_option("rice.editing_mode", "emacs"),
-        "prompt": interface.get_option("rice.prompt", PROMPT),
-        "auto_indentation": interface.get_option("rice.auto_indentation", 1)
-    }
-    return settings
-
-
 class RiceApplication(object):
     initialized = False
-    rice_settings = {}
 
     def r_initialize(self, mp):
         if is_windows():
@@ -151,45 +138,59 @@ class RiceApplication(object):
             if cp and cp.value:
                 callbacks.ENCODING = "cp" + str(cp.value)
 
-        self.settings = rice_settings()
-        if self.settings.get("editing_mode") == "emacs":
+        settings = {
+            "color_scheme": interface.get_option("rice.color_scheme", "native"),
+            "editing_mode": interface.get_option("rice.editing_mode", "emacs"),
+            "prompt": interface.get_option("rice.prompt", None),
+            "auto_indentation": interface.get_option("rice.auto_indentation", 1)
+        }
+
+        if settings.get("editing_mode") == "emacs":
             mp.app.editing_mode = EditingMode.EMACS
         else:
             mp.app.editing_mode = EditingMode.VI
 
-        color_scheme = self.settings.get("color_scheme")
+        color_scheme = settings.get("color_scheme")
         self.style = merge_styles([
             default_style(),
             style_from_pygments(get_style_by_name(color_scheme))])
 
-        mp.app.auto_indentation = self.settings.get("auto_indentation") == 1
+        mp.app.auto_indentation = settings.get("auto_indentation") == 1
+
+        prompt = settings.get("prompt")
+        sys_prompt = interface.get_option("prompt")
+        if not prompt:
+            if sys_prompt == "> ":
+                prompt = PROMPT
+            else:
+                prompt = sys_prompt
+
+        interface.set_option("prompt", prompt)
+        mp.set_prompt_message("r", prompt)
+
+        # print welcome message
+        printer(interface.r_version(), 0)
 
     def run(self):
         mp = create_multi_prompt()
 
         rinstance = Rinstance()
 
-        def result_from_prompt(p):
+        def result_from_prompt(message):
             if not self.initialized:
                 self.r_initialize(mp)
-                if p == "> ":
-                    p = PROMPT
-                    interface.set_option("prompt", p)
-
-                mp.Rprompt = p
-
-                printer(interface.r_version(), 0)
+                message = mp.prompt_message("r")
                 self.initialized = True
 
             printer("\n")
             text = None
             while text is None:
                 try:
-                    if p == mp.Rprompt:
-                        text = mp.prompt(style=self.style)
+                    if message == mp.prompt_message("r"):
+                        text = mp.readconsole(style=self.style)
                     else:
                         # invoked by `readline`
-                        text = mp.readline(p)
+                        text = mp.readline(message)
 
                 except Exception as e:
                     if isinstance(e, EOFError):
