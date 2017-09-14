@@ -36,9 +36,9 @@ def rice_settings():
 
 class MultiPrompt(Prompt):
     _prompts = {
-        "r": ANSI("\x1b[34mr$>\x1b[0m "),
-        "help": ANSI("\x1b[33mhelp?>\x1b[0m "),
-        "help_search": ANSI("\x1b[33mhelp??>\x1b[0m "),
+        "r": "\x1b[34mr$>\x1b[0m ",
+        "help": "\x1b[33mhelp?>\x1b[0m ",
+        "help_search": "\x1b[33mhelp??>\x1b[0m ",
         "debug": "debug%> "
     }
     _default_prompt_mode = "r"
@@ -47,9 +47,16 @@ class MultiPrompt(Prompt):
         super(MultiPrompt, self).__init__(*args, **kwargs)
         self.app.prompt_mode = self._default_prompt_mode
 
+    def set_rprompt(self, prompt):
+        if prompt:
+            self._prompts["r"] = prompt
+
+    def get_rprompt(self):
+        return self._prompts["r"]
+
     def prompt(self, message=None, color_scheme="vim", mode="emacs", **kwargs):
         if not message:
-            message = self._prompts[self.app.prompt_mode]
+            message = ANSI(self._prompts[self.app.prompt_mode])
 
         editing_mode = EditingMode.VI if mode == "vi" or mode == "vim" else EditingMode.EMACS
         style = merge_styles([
@@ -130,7 +137,7 @@ class RiceApplication(object):
         rinstance = Rinstance()
 
         _first_time = [True]
-        _settings = [None]
+        _rice_settings = [None]
 
         def result_from_prompt(p):
             if _first_time[0]:
@@ -138,7 +145,12 @@ class RiceApplication(object):
                     cp = api.localecp()
                     if cp and cp.value:
                         callbacks.ENCODING = "cp" + str(cp.value)
-                _settings[0] = rice_settings()
+
+                _rice_settings[0] = rice_settings()
+                f = open("/tmp/rice", "a")
+                f.write(p)
+                f.close()
+                mp.set_rprompt(p)
                 printer(interface.r_version(), 0)
                 _first_time[0] = False
 
@@ -146,15 +158,15 @@ class RiceApplication(object):
             text = None
             while text is None:
                 try:
-                    if p == "> ":
+                    if p == mp.get_rprompt():
                         text = mp.prompt(
-                            color_scheme=_settings[0].get("color_scheme"),
-                            mode=_settings[0].get("editing_mode"))
+                            color_scheme=_rice_settings[0].get("color_scheme"),
+                            mode=_rice_settings[0].get("editing_mode"))
                     else:
                         # invoked by `readline`
                         text = mp.prompt(
                             message=p + " ",
-                            mode=_settings[0].get("editing_mode"),
+                            mode=_rice_settings[0].get("editing_mode"),
                             multiline=False,
                             lexer=None,
                             completer=None,
