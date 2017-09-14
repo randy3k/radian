@@ -26,7 +26,7 @@ from .completion import RCompleter
 from .keybinding import create_keybindings
 
 
-PROMPTCODE = "0xaf4312"
+PROMPTCODE = "r$> "
 
 
 def rice_settings():
