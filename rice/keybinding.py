@@ -51,6 +51,10 @@ def create_keybindings():
         app = get_app()
         return app.current_buffer.working_index == len(app.current_buffer._working_lines) - 1
 
+    @Condition
+    def auto_indentation():
+        return get_app().auto_indentation
+
     insert_mode = vi_insert_mode | emacs_insert_mode
 
     last_working_index = [-1]
@@ -58,11 +62,10 @@ def create_keybindings():
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed)
     @kb.add(Keys.Enter, filter=insert_mode & default_focussed)
     def _(event):
-        if event.current_buffer.document.char_before_cursor in ["{", "[", "("]:
-            event.current_buffer.newline(copy_margin=not in_paste_mode())
+        should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
+        event.current_buffer.newline(copy_margin=not in_paste_mode())
+        if should_indent and event.app.auto_indentation:
             event.current_buffer.insert_text('    ')
-        else:
-            event.current_buffer.newline(copy_margin=not in_paste_mode())
 
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prase_complete)
     @kb.add(Keys.Enter, filter=insert_mode & default_focussed & prase_complete)
@@ -75,27 +78,11 @@ def create_keybindings():
     def _(event):
         event.current_buffer.complete_state = None
 
-    @kb.add(Keys.BracketedPaste, filter=default_focussed)
-    def _(event):
-        data = event.data
-
-        data = data.replace('\r\n', '\n')
-        data = data.replace('\r', '\n')
-
-        shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
-        # todo: allow partial prase complete
-        if shouldeval and prase_input_complete(data):
-            data = data.rstrip("\n")
-            event.current_buffer.insert_text(data)
-            event.current_buffer.validate_and_handle()
-        else:
-            event.current_buffer.insert_text(data)
-
     # indentation
 
-    @kb.add('}', filter=insert_mode & default_focussed)
-    @kb.add(']', filter=insert_mode & default_focussed)
-    @kb.add(')', filter=insert_mode & default_focussed)
+    @kb.add('}', filter=insert_mode & default_focussed & auto_indentation)
+    @kb.add(']', filter=insert_mode & default_focussed & auto_indentation)
+    @kb.add(')', filter=insert_mode & default_focussed & auto_indentation)
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -130,5 +117,22 @@ def create_keybindings():
         if last_working_index[0] >= 0:
             event.current_buffer.go_to_history(last_working_index[0] + 1)
             last_working_index[0] = -1
+
+    # bracketed paste
+    @kb.add(Keys.BracketedPaste, filter=default_focussed)
+    def _(event):
+        data = event.data
+
+        data = data.replace('\r\n', '\n')
+        data = data.replace('\r', '\n')
+
+        shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
+        # todo: allow partial prase complete
+        if shouldeval and prase_input_complete(data):
+            data = data.rstrip("\n")
+            event.current_buffer.insert_text(data)
+            event.current_buffer.validate_and_handle()
+        else:
+            event.current_buffer.insert_text(data)
 
     return kb
