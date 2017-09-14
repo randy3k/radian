@@ -26,7 +26,7 @@ from .completion import RCompleter
 from .keybinding import create_keybindings
 
 
-PROMPTCODE = "r$> "
+PROMPT = "r$> "
 
 
 def rice_settings():
@@ -39,7 +39,7 @@ def rice_settings():
 
 class MultiPrompt(Prompt):
     _prompts = {
-        "r": "> ",
+        "r": PROMPT,
         "help": "\x1b[33mhelp?>\x1b[0m ",
         "help_search": "\x1b[33mhelp??>\x1b[0m ",
         "debug": "debug%> "
@@ -60,8 +60,8 @@ class MultiPrompt(Prompt):
     def prompt(self, message=None, color_scheme="vim", mode="emacs", **kwargs):
         if not message:
             message = self._prompts[self.app.prompt_mode]
-            if message == PROMPTCODE:
-                message = "\x1b[34mr$>\x1b[0m "
+            if message == PROMPT:
+                message = "\x1b[34m" + PROMPT + "\x1b[0m "
             message = ANSI(message)
 
         editing_mode = EditingMode.VI if mode == "vi" or mode == "vim" else EditingMode.EMACS
@@ -155,8 +155,7 @@ class RiceApplication(object):
                 _rice_settings[0] = rice_settings()
 
                 if p == "> ":
-                    # set the prompt to same random string to be colorized later
-                    p = PROMPTCODE
+                    p = PROMPT
                     mp.Rprompt = p
                     interface.set_option("prompt", p)
                 else:
@@ -179,6 +178,7 @@ class RiceApplication(object):
                             message=p,
                             mode=_rice_settings[0].get("editing_mode"),
                             multiline=False,
+                            complete_while_typing=False,
                             lexer=None,
                             completer=None,
                             history=None,
