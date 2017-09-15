@@ -2,13 +2,15 @@ from __future__ import unicode_literals
 import sys
 import os
 import time
+import subprocess
+import shlex
 
 from .instance import Rinstance
 from . import interface
 from . import api
 from . import callbacks
 from prompt_toolkit import Prompt
-from prompt_toolkit.eventloop import create_event_loop, set_event_loop
+from prompt_toolkit.eventloop import create_event_loop, set_event_loop, run_in_executor
 
 from prompt_toolkit.utils import is_windows
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -32,31 +34,36 @@ COLORED_PROMPT = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
 class MultiPrompt(Prompt):
     _message = {
         "r": PROMPT,
-        "help": "\x1b[33mhelp?>\x1b[0m ",
-        "help_search": "\x1b[33mhelp??>\x1b[0m ",
-        "debug": "debug%> "
+        "help": "\x1b[33m?$>\x1b[0m ",
+        "help_search": "\x1b[33m??>\x1b[0m ",
+        "shell": "\x1b[31m!%>\x1b[0m "
     }
+    prompt_mode = "r"
 
     def __init__(self, *args, **kwargs):
         super(MultiPrompt, self).__init__(*args, **kwargs)
-        self.app.prompt_mode = "r"
+        self.prompt_mode = "r"
+        self.app.mp = self
 
-    def set_prompt_message(self, mode, message):
+    def set_prompt_mode_message(self, mode, message):
         self._message[mode] = message
 
-    def prompt_message(self, mode):
-        return self._message[mode]
+    def prompt_mode_message(self, mode, colorized=False):
+        message = self._message[mode]
+        if colorized and message == PROMPT:
+            message = COLORED_PROMPT
+        return message
+
+    def set_prompt_mode(self, mode):
+        self.prompt_mode = mode
+        self.message = ANSI(self.prompt_mode_message(mode, colorized=True))
 
     def readconsole(self, **kwargs):
-        message = self.prompt_message(self.app.prompt_mode)
-        if message == PROMPT:
-            message = COLORED_PROMPT
-        message = ANSI(message)
-
-        return super(MultiPrompt, self).prompt(message, **kwargs)
+        message = self.prompt_mode_message(self.prompt_mode, colorized=True)
+        return self.prompt(ANSI(message), **kwargs)
 
     def readline(self, message):
-        return super(MultiPrompt, self).prompt(
+        return self.prompt(
             message=message,
             multiline=False,
             complete_while_typing=False,
@@ -64,6 +71,34 @@ class MultiPrompt(Prompt):
             completer=None,
             history=None,
             extra_key_bindings=None)
+
+    def run_shell_command(self, command):
+
+        def run_command():
+            scommand = shlex.split(command)
+            if scommand[0] == "cd" or (scommand[0] == "dir" and is_windows()):
+                try:
+                    path = os.path.sep.join(scommand[1:])
+                    path = os.path.expanduser(path)
+                    path = os.path.expandvars(path)
+                    os.chdir(path)
+                except Exception as e:
+                    print(e)
+                finally:
+                    sys.stdout.write(os.getcwd())
+                    sys.stdout.write("\n")
+
+            else:
+                if is_windows():
+                    p = subprocess.Popen(command, shell=True, stdin=sys.stdin, stdout=sys.stdout)
+                else:
+                    shell = os.path.basename(os.environ.get("SHELL", "/bin/sh"))
+                    p = subprocess.Popen([shell, "-c", command], stdin=sys.stdin, stdout=sys.stdout)
+
+                p.wait()
+            sys.stdout.write("\n")
+
+        return self.app.run_coroutine_in_terminal(lambda: run_in_executor(run_command))
 
 
 if not is_windows():
@@ -143,7 +178,7 @@ class RiceApplication(object):
                 prompt = sys_prompt
 
         interface.set_option("prompt", prompt)
-        mp.set_prompt_message("r", prompt)
+        mp.set_prompt_mode_message("r", prompt)
 
         # print welcome message
         sys.stdout.write(interface.r_version())
@@ -154,14 +189,14 @@ class RiceApplication(object):
         def result_from_prompt(message):
             if not self.initialized:
                 self.app_initialize(mp)
-                message = mp.prompt_message("r")
+                message = mp.prompt_mode_message("r")
                 self.initialized = True
 
             sys.stdout.write("\n")
             text = None
             while text is None:
                 try:
-                    if message == mp.prompt_message("r"):
+                    if message == mp.prompt_mode_message("r"):
                         text = mp.readconsole(style=self.style)
                     else:
                         # invoked by `readline`

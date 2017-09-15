@@ -31,7 +31,7 @@ class RCompleter(Completer):
             self.initialize()
         token = ""
         app = get_app(return_none=True)
-        if app and hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:
+        if app and hasattr(app, "mp") and app.mp.prompt_mode in ["r", "help", "help_search"]:
 
             packages = interface.installed_packages()
             text = document.current_line_before_cursor
