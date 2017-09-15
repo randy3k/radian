@@ -39,7 +39,7 @@ if sys.platform.startswith("win"):
         ]
 
 
-class Rinstance(object):
+class RSession(object):
     libR = None
     _offset = None
     read_console = None

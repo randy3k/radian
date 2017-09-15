@@ -3,9 +3,8 @@ import sys
 import os
 import time
 import subprocess
-import shlex
 
-from .instance import Rinstance
+from .session import RSession
 from . import interface
 from . import api
 from . import callbacks
@@ -23,7 +22,7 @@ from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 
-from .completion import RCompleter
+from .completion import MultiPromptCompleter
 from .keybinding import create_keybindings
 
 
@@ -75,13 +74,10 @@ class MultiPrompt(Prompt):
     def run_shell_command(self, command):
 
         def run_command():
-            scommand = command.split(" ", 1)
-            if len(scommand) > 1 and scommand[0] == "cd" or (scommand[0] == "dir" and is_windows()):
+            scommand = command.strip().split(" ", 1)
+            if len(scommand) > 1 and scommand[0] == "cd":
                 try:
-                    if is_windows():
-                        path = scommand[1]
-                    else:
-                        path = os.path.sep.join(shlex.split(scommand[1]))
+                    path = scommand[1]
                     path = os.path.expanduser(path)
                     path = os.path.expandvars(path)
                     os.chdir(path)
@@ -128,14 +124,12 @@ def create_multi_prompt():
 
     set_event_loop(create_event_loop(inputhook=process_events))
 
-    rcompleter = RCompleter()
-
     mp = MultiPrompt(
         multiline=True,
         complete_while_typing=True,
         enable_suspend=True,
         lexer=PygmentsLexer(SLexer),
-        completer=rcompleter,
+        completer=MultiPromptCompleter(),
         history=history,
         extra_key_bindings=create_keybindings(),
         extra_input_processor=HighlightMatchingBracketProcessor(),
@@ -216,13 +210,13 @@ class RiceApplication(object):
 
             return text
 
-        rinstance = Rinstance()
-        rinstance.read_console = callbacks.create_read_console(result_from_prompt)
-        rinstance.write_console_ex = callbacks.write_console_ex
-        rinstance.clean_up = callbacks.clean_up
-        rinstance.show_message = callbacks.show_message
+        rsession = RSession()
+        rsession.read_console = callbacks.create_read_console(result_from_prompt)
+        rsession.write_console_ex = callbacks.write_console_ex
+        rsession.clean_up = callbacks.clean_up
+        rsession.show_message = callbacks.show_message
 
         # to make api work
-        api.rinstance = rinstance
+        api.rsession = rsession
 
-        rinstance.run()
+        rsession.run()
