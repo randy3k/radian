@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import ctypes
 from ctypes import c_char_p, c_void_p, cast
 import sys
 import shlex
