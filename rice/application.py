@@ -122,10 +122,10 @@ class RiceApplication(object):
             if cp and cp.value:
                 api.ENCODING = "cp" + str(cp.value)
 
-        if interface.get_option("rice.editing_mode", "emacs") == "emacs":
-            mp.app.editing_mode = EditingMode.EMACS
-        else:
+        if interface.get_option("rice.editing_mode", "emacs") in ["vim", "vi"]:
             mp.app.editing_mode = EditingMode.VI
+        else:
+            mp.app.editing_mode = EditingMode.EMACS
 
         color_scheme = interface.get_option("rice.color_scheme", "native")
         self.style = merge_styles([
