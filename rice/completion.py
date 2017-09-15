@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 from prompt_toolkit.utils import is_windows
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
-import shlex
 import os
 import re
 
 from . import api
 from . import interface
+from . import util
 
 from six import text_type
 
@@ -97,7 +97,7 @@ class SmartPathCompleter(Completer):
             path = ""
             while not path and text:
                 try:
-                    path = shlex.split(text, posix=not is_windows())[-1]
+                    path = util.split_args(text)[-1]
                 finally:
                     text = text[1:]
 

@@ -85,11 +85,6 @@ def create_keybindings():
         last_working_index[0] = event.current_buffer.working_index
         event.current_buffer.validate_and_handle()
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
-    @kb.add('enter', filter=insert_mode & default_focussed & app.has_completions)
-    def _(event):
-        event.current_buffer.complete_state = None
-
     # indentation
 
     @kb.add('}', filter=insert_mode & default_focussed & auto_indentation)
@@ -168,5 +163,12 @@ def create_keybindings():
         sys.stdout.write("\n")
         event.app.mp.run_shell_command(event.current_buffer.text)
         event.current_buffer.reset()
+
+    # emit completion
+
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
+    @kb.add('enter', filter=insert_mode & default_focussed & app.has_completions)
+    def _(event):
+        event.current_buffer.complete_state = None
 
     return kb
