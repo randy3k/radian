@@ -6,6 +6,7 @@ from .util import ccall, cglobal
 
 # to be set by RoleApplication
 rinstance = None
+ENCODING = "utf-8"
 
 """
 A minimum set of R api functions to make the repl works.
@@ -217,3 +218,7 @@ def visible():
 
 def localecp():
     return rcglobal("localeCP", c_int)
+
+
+def get_option1(s):
+    return rccall("Rf_GetOption1", c_void_p, [c_void_p], s)

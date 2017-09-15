@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 import ctypes
+import sys
 
-
-ENCODING = "utf-8"
+from .api import ENCODING
 
 
 def create_read_console(get_text):
@@ -27,10 +27,17 @@ def create_read_console(get_text):
     return _read_console
 
 
-def create_write_console_ex(_handler):
-    def _write_console_ex(buf, buflen, otype):
+def write_console_ex(buf, buflen, otype):
+    output = buf.decode(ENCODING)
+    if otype == 0:
+        sys.stdout.write(output)
+    else:
+        sys.stderr.write(output)
 
-        output = buf.decode(ENCODING)
-        _handler(output, otype)
 
-    return _write_console_ex
+def clean_up(save_type, status, runlast):
+    pass
+
+
+def show_message(buf):
+    sys.stdout.write(buf.decode(ENCODING))

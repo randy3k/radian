@@ -11,24 +11,24 @@ LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
 class RCompleter(Completer):
-    _methods_exist = False
+    initialized = False
 
     def get_utils_func(self, fname):
         f = interface.rlang(api.mk_symbol(":::"), api.mk_string("utils"), api.mk_string(fname))
         api.preserve_object(f)
         return f
 
-    def _make_sure_methods_exist(self):
-        if not self._methods_exist:
-            self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
-            self.assignEnd = self.get_utils_func(".assignEnd")
-            self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
-            self.completeToken = self.get_utils_func(".completeToken")
-            self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
-            self._methods_exist = True
+    def initialize(self):
+        self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
+        self.assignEnd = self.get_utils_func(".assignEnd")
+        self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
+        self.completeToken = self.get_utils_func(".completeToken")
+        self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
+        self.initialized = True
 
     def get_completions(self, document, complete_event):
-        self._make_sure_methods_exist()
+        if not self.initialized:
+            self.initialize()
         token = ""
         app = get_app(return_none=True)
         if app and hasattr(app, "prompt_mode") and app.prompt_mode in ["r", "help"]:

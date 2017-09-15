@@ -6,29 +6,6 @@ High level functions to interact with R api.
 """
 
 
-def get_option(key, default=None):
-    s = rcall(api.mk_symbol("options"), api.mk_string(key))
-    ret = rcopy(api.vector_elt(s, 0), simplify=True)
-    if not ret:
-        ret = default
-    return ret
-
-
-def set_option(key, value):
-    kwargs = {key: api.mk_string(value)}
-    rcall(api.mk_symbol("options"), **kwargs)
-
-
-def r_version():
-    info = rcopy(rcall(api.mk_symbol("R.Version")), simplify=True)
-    return "{} -- {}\nPlatform: {}\n".format(
-        info["version.string"], info["nickname"], info["platform"])
-
-
-def installed_packages():
-    return rcopy(reval("row.names(installed.packages())"))
-
-
 def rcopy(s, simplify=False):
     api.protect(s)
     ret = None
@@ -118,3 +95,25 @@ def help(topic):
 def help_search(topic, try_all_packages=False):
     result = rcall(api.mk_symbol("help.search"), api.mk_string(topic))
     rprint(result)
+
+
+def get_option(key, default=None):
+    ret = rcopy(api.get_option1(api.mk_symbol(key)), simplify=True)
+    if not ret:
+        ret = default
+    return ret
+
+
+def set_option(key, value):
+    kwargs = {key: api.mk_string(value)}
+    rcall(api.mk_symbol("options"), **kwargs)
+
+
+def r_version():
+    info = rcopy(rcall(api.mk_symbol("R.Version")), simplify=True)
+    return "{} -- {}\nPlatform: {}\n".format(
+        info["version.string"], info["nickname"], info["platform"])
+
+
+def installed_packages():
+    return rcopy(reval("row.names(installed.packages())"))

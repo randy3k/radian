@@ -7,7 +7,6 @@ from .instance import Rinstance
 from . import interface
 from . import api
 from . import callbacks
-from .callbacks import create_read_console, create_write_console_ex
 from prompt_toolkit import Prompt
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 
@@ -76,13 +75,6 @@ if not is_windows():
             return False
 
 
-def printer(text, otype=0):
-    if otype == 0:
-        sys.stdout.write(text)
-    else:
-        sys.stderr.write(text)
-
-
 def create_multi_prompt():
 
     history = FileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
@@ -114,19 +106,11 @@ def create_multi_prompt():
 
     def on_render(app):
         if app.is_aborting:
-            printer("\n")
+            sys.stdout.write("\n")
 
     mp.app.on_render += on_render
 
     return mp
-
-
-def clean_up(save_type, status, runlast):
-    pass
-
-
-def show_message(buf):
-    printer(buf.decode("utf-8"))
 
 
 class RiceApplication(object):
@@ -136,30 +120,23 @@ class RiceApplication(object):
         if is_windows():
             cp = api.localecp()
             if cp and cp.value:
-                callbacks.ENCODING = "cp" + str(cp.value)
+                api.ENCODING = "cp" + str(cp.value)
 
-        settings = {
-            "color_scheme": interface.get_option("rice.color_scheme", "native"),
-            "editing_mode": interface.get_option("rice.editing_mode", "emacs"),
-            "prompt": interface.get_option("rice.prompt", None),
-            "auto_indentation": interface.get_option("rice.auto_indentation", 1)
-        }
-
-        if settings.get("editing_mode") == "emacs":
+        if interface.get_option("rice.editing_mode", "emacs") == "emacs":
             mp.app.editing_mode = EditingMode.EMACS
         else:
             mp.app.editing_mode = EditingMode.VI
 
-        color_scheme = settings.get("color_scheme")
+        color_scheme = interface.get_option("rice.color_scheme", "native")
         self.style = merge_styles([
             default_style(),
             style_from_pygments(get_style_by_name(color_scheme))])
 
-        mp.app.auto_indentation = settings.get("auto_indentation") == 1
+        mp.app.auto_indentation = interface.get_option("rice.auto_indentation", 1) == 1
 
-        prompt = settings.get("prompt")
-        sys_prompt = interface.get_option("prompt")
+        prompt = interface.get_option("rice.prompt", None)
         if not prompt:
+            sys_prompt = interface.get_option("prompt")
             if sys_prompt == "> ":
                 prompt = PROMPT
             else:
@@ -169,12 +146,10 @@ class RiceApplication(object):
         mp.set_prompt_message("r", prompt)
 
         # print welcome message
-        printer(interface.r_version(), 0)
+        sys.stdout.write(interface.r_version())
 
     def run(self):
         mp = create_multi_prompt()
-
-        rinstance = Rinstance()
 
         def result_from_prompt(message):
             if not self.initialized:
@@ -182,7 +157,7 @@ class RiceApplication(object):
                 message = mp.prompt_message("r")
                 self.initialized = True
 
-            printer("\n")
+            sys.stdout.write("\n")
             text = None
             while text is None:
                 try:
@@ -203,10 +178,11 @@ class RiceApplication(object):
 
             return text
 
-        rinstance.read_console = create_read_console(result_from_prompt)
-        rinstance.write_console_ex = create_write_console_ex(printer)
-        rinstance.clean_up = clean_up
-        rinstance.show_message = show_message
+        rinstance = Rinstance()
+        rinstance.read_console = callbacks.create_read_console(result_from_prompt)
+        rinstance.write_console_ex = callbacks.write_console_ex
+        rinstance.clean_up = callbacks.clean_up
+        rinstance.show_message = callbacks.show_message
 
         # to make api work
         api.rinstance = rinstance
