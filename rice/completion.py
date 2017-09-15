@@ -89,25 +89,28 @@ class SmartPathCompleter(Completer):
         if len(text) == 0:
             return
 
-        if is_windows():
-            text = text.replace("\\", "/")
-
-        path = None
-        while not path and text:
-            try:
-                path = shlex.split(text, posix=not is_windows())[-1]
-            finally:
-                text = text[1:]
-        if not path:
+        # do not auto complete when typing
+        if not complete_event.completion_requested:
             return
 
-        if os.path.isabs(path):
-            dirname = os.path.dirname(path)
-            basename = os.path.basename(path)
-        else:
-            dirname = os.path.dirname(os.path.join(os.getcwd(), path))
-            basename = os.path.basename(path)
+        try:
+            path = ""
+            while not path and text:
+                try:
+                    path = shlex.split(text, posix=not is_windows())[-1]
+                finally:
+                    text = text[1:]
 
-        for c in os.listdir(dirname):
-            if c.lower().startswith(basename.lower()):
-                yield Completion(text_type(c), -len(basename))
+            if os.path.isabs(path):
+                dirname = os.path.dirname(path)
+                basename = os.path.basename(path)
+            else:
+                dirname = os.path.dirname(os.path.join(os.getcwd(), path))
+                basename = os.path.basename(path)
+
+            for c in os.listdir(dirname):
+                if c.lower().startswith(basename.lower()):
+                    yield Completion(text_type(c), -len(basename))
+
+        except Exception:
+            pass
