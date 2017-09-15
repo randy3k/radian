@@ -116,7 +116,7 @@ def create_multi_prompt():
 class RiceApplication(object):
     initialized = False
 
-    def r_initialize(self, mp):
+    def app_initialize(self, mp):
         if is_windows():
             cp = api.localecp()
             if cp and cp.value:
@@ -153,7 +153,7 @@ class RiceApplication(object):
 
         def result_from_prompt(message):
             if not self.initialized:
-                self.r_initialize(mp)
+                self.app_initialize(mp)
                 message = mp.prompt_message("r")
                 self.initialized = True
 
