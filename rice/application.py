@@ -75,10 +75,13 @@ class MultiPrompt(Prompt):
     def run_shell_command(self, command):
 
         def run_command():
-            scommand = shlex.split(command)
-            if scommand[0] == "cd" or (scommand[0] == "dir" and is_windows()):
+            scommand = command.split(" ", 1)
+            if len(scommand) > 1 and scommand[0] == "cd" or (scommand[0] == "dir" and is_windows()):
                 try:
-                    path = os.path.sep.join(scommand[1:])
+                    if is_windows():
+                        path = scommand[1]
+                    else:
+                        path = os.path.sep.join(shlex.split(scommand[1]))
                     path = os.path.expanduser(path)
                     path = os.path.expandvars(path)
                     os.chdir(path)
