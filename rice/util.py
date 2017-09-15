@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import ctypes
 from ctypes import c_char_p, c_void_p, cast
 import sys
 import shlex
@@ -24,15 +23,22 @@ def is_ascii(s):
     return all(ord(c) < 128 for c in s)
 
 
+def _split_args(cmd):
+    return shlex.split(cmd, posix=not sys.platform.startswith('win'))
+
+
 def split_args(cmd):
-    if sys.platform.startswith('win'):
-        # https://stackoverflow.com/questions/33560364
-        nargs = ctypes.c_int()
-        ctypes.windll.shell32.CommandLineToArgvW.restype = ctypes.POINTER(ctypes.c_wchar_p)
-        lpargs = ctypes.windll.shell32.CommandLineToArgvW(unicode(cmd), ctypes.byref(nargs))
-        args = [lpargs[i] for i in range(nargs.value)]
-        if ctypes.windll.kernel32.LocalFree(lpargs):
-            raise AssertionError
-        return args
-    else:
-        return shlex.split(cmd)
+    try:
+        return _split_args(cmd)
+    except Exception:
+        pass
+
+    try:
+        return _split_args(cmd + "\"")
+    except Exception:
+        pass
+
+    try:
+        return _split_args(cmd + "\'")
+    except Exception:
+        pass
