@@ -5,11 +5,12 @@ It replaces the use of the the default R console, similar to `ipython` in the `p
 
 _rice_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
 
-<img width="500px" src="https://user-images.githubusercontent.com/1690993/29305813-9e7d3eaa-8168-11e7-98b1-de0bae83c590.png"></img>
+<img width="600px" src="https://user-images.githubusercontent.com/1690993/30470592-5c4582d6-99c3-11e7-860e-2d4670987f57.png"></img>
 
 
 ## Features
 
+- [x] shell mode (hit `;` to enter and `<backspace>` to leave)
 - [x] lightweight, no compilation is required
 - [x] multiline editing
 - [x] syntax highlight
@@ -44,7 +45,7 @@ _rice_ can be customized by executing the `options` function in `.Rprofile` file
 ```r
 options(
     rice.color_scheme = "native",
-    rice.editing_mode = "emacs"
+    rice.editing_mode = "emacs",
     rice.auto_indentation = TRUE,
     rice.prompt = "r$> "
 )
