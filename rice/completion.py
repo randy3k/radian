@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
-from prompt_toolkit.utils import is_windows
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
 import os
 import re
+import sys
+import shlex
 
 from . import api
 from . import interface
@@ -83,6 +84,27 @@ class RCompleter(Completer):
                             yield Completion(comp, -len(token))
 
 
+def _split_args(cmd):
+    return shlex.split(cmd, posix=not sys.platform.startswith('win'))
+
+
+def split_args(cmd):
+    try:
+        return _split_args(cmd)
+    except Exception:
+        pass
+
+    try:
+        return _split_args(cmd + "\"")
+    except Exception:
+        pass
+
+    try:
+        return _split_args(cmd + "\'")
+    except Exception:
+        pass
+
+
 class SmartPathCompleter(Completer):
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
@@ -97,7 +119,7 @@ class SmartPathCompleter(Completer):
             path = ""
             while not path and text:
                 try:
-                    path = util.split_args(text)[-1]
+                    path = split_args(text)[-1]
                 finally:
                     text = text[1:]
 

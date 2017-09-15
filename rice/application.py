@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import subprocess
+import shlex
 
 from .session import RSession
 from . import interface
@@ -10,9 +11,10 @@ from . import api
 from . import callbacks
 from prompt_toolkit import Prompt
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop, run_in_executor
+from prompt_toolkit.application.current import get_app
 
 from prompt_toolkit.utils import is_windows
-from prompt_toolkit.layout.lexers import PygmentsLexer
+from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
 from pygments.lexers.r import SLexer
 from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
 from pygments.styles import get_style_by_name
@@ -74,8 +76,15 @@ class MultiPrompt(Prompt):
     def run_shell_command(self, command):
 
         def run_command():
-            scommand = command.strip().split(" ", 1)
-            if len(scommand) > 1 and scommand[0] == "cd":
+            if not command:
+                sys.stdout.write("\n")
+                return
+
+            scommand = shlex.split(command, posix=not sys.platform.startswith('win'))
+            if scommand[0] == "cd":
+                if len(scommand) != 2:
+                    sys.stdout.write("cd method only takes one argument\n\n")
+                    return
                 try:
                     path = scommand[1]
                     path = os.path.expanduser(path)
@@ -124,11 +133,18 @@ def create_multi_prompt():
 
     set_event_loop(create_event_loop(inputhook=process_events))
 
+    def get_lexer():
+        app = get_app(return_none=False)
+        if hasattr(app, "mp"):
+            if app.mp.prompt_mode in ["r", "help", "help_search"]:
+                return PygmentsLexer(SLexer)
+        return None
+
     mp = MultiPrompt(
         multiline=True,
         complete_while_typing=True,
         enable_suspend=True,
-        lexer=PygmentsLexer(SLexer),
+        lexer=DynamicLexer(get_lexer),
         completer=MultiPromptCompleter(),
         history=history,
         extra_key_bindings=create_keybindings(),

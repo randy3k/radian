@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 from ctypes import c_char_p, c_void_p, cast
-import sys
-import shlex
 
 
 def ccall(fname, lib, restype, argtypes, *args):
@@ -21,24 +19,3 @@ def cglobal(vname, lib, vtype=c_void_p):
 
 def is_ascii(s):
     return all(ord(c) < 128 for c in s)
-
-
-def _split_args(cmd):
-    return shlex.split(cmd, posix=not sys.platform.startswith('win'))
-
-
-def split_args(cmd):
-    try:
-        return _split_args(cmd)
-    except Exception:
-        pass
-
-    try:
-        return _split_args(cmd + "\"")
-    except Exception:
-        pass
-
-    try:
-        return _split_args(cmd + "\'")
-    except Exception:
-        pass
