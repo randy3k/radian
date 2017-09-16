@@ -8,7 +8,6 @@ import shlex
 
 from . import api
 from . import interface
-from . import util
 
 from six import text_type
 
@@ -132,7 +131,7 @@ class SmartPathCompleter(Completer):
 
             for c in os.listdir(dirname):
                 if c.lower().startswith(basename.lower()):
-                    yield Completion(text_type(c), -len(basename))
+                    yield Completion(text_type(c.replace(" ", "\\ ")), -len(basename))
 
         except Exception:
             pass

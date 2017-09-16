@@ -87,9 +87,15 @@ class MultiPrompt(Prompt):
                     return
                 try:
                     path = scommand[1]
-                    path = os.path.expanduser(path)
-                    path = os.path.expandvars(path)
-                    os.chdir(path)
+                    if path == "-":
+                        oldpwd = os.environ["OLDPWD"]
+                        os.environ["OLDPWD"] = os.getcwd()
+                        os.chdir(oldpwd)
+                    else:
+                        path = os.path.expanduser(path)
+                        path = os.path.expandvars(path)
+                        os.environ["OLDPWD"] = os.getcwd()
+                        os.chdir(path)
                 except Exception as e:
                     print(e)
                 finally:
