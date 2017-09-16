@@ -61,7 +61,7 @@ You could alias `r` to `rice` by putting
 ```bash
 alias r="rice"
 ```
-in `~/.profile` such that `r` would open `rice` and `R` would still open the tranditional R console.
+in `~/.bash_profile` such that `r` would open `rice` and `R` would still open the tranditional R console.
 (`R` is still useful, e.g, running `R CMD BUILD`.)
 
 ## FAQ
@@ -74,6 +74,7 @@ If _rice_ cannot locate the R installation files automatically. You can either e
 $ export R_HOME=/usr/local/lib/R
 $ rice
 ```
+Note that it should be the path to the R HOME, but the path to the R binary.
 
 If the above doesn't work, you may need to futher specify `LD_LIBRARY_PATH`,
 
@@ -86,7 +87,7 @@ $ rice
 
 _rice_ only provides a frontend to the R program, the actual running engine is identical to the traditional R console. There is no performance sacrifice while enjoying the benefits of this modern command line interface. 
 
-### Does it support Nvim-R?
+### Nvim-R support
 
 Just put
 ```vim
@@ -94,7 +95,7 @@ let g:R_app = "rice"
 let g:R_cmd = "R"
 let g:R_hl_term = 0
 ```
-in your vim config.
+in your vim config. You may also want to set `options(rice.auto_indentation = FALSE)` in `.Rprofile`.
 
 ### Error `libreadline.so.6: undefined symbol: PC`
 
