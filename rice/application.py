@@ -80,27 +80,36 @@ class MultiPrompt(Prompt):
                 sys.stdout.write("\n")
                 return
 
-            scommand = shlex.split(command, posix=not sys.platform.startswith('win'))
-            if scommand[0] == "cd":
-                if len(scommand) != 2:
-                    sys.stdout.write("cd method only takes one argument\n\n")
+            if sys.platform.startswith('win'):
+                cmd_list = command.strip().split(" ", 1)
+            else:
+                cmd_list = shlex.split(command)
+
+            if cmd_list[0] == "cd":
+                if len(cmd_list) != 2:
+                    sys.stdout.write("cd method takes one argument\n\n")
                     return
                 try:
-                    path = scommand[1]
+                    path = cmd_list[1].strip()
                     if path == "-":
-                        oldpwd = os.environ["OLDPWD"]
+                        oldpwd = os.environ["OLDPWD"] if "OLDPWD" in os.environ else os.getcwd()
                         os.environ["OLDPWD"] = os.getcwd()
                         os.chdir(oldpwd)
                     else:
+                        if sys.platform.startswith('win'):
+                            path = path.replace("\\", "/")
+                            if path.startswith('"') and path.endswith('"'):
+                                path = path[1:-1]
+
                         path = os.path.expanduser(path)
                         path = os.path.expandvars(path)
                         os.environ["OLDPWD"] = os.getcwd()
                         os.chdir(path)
-                except Exception as e:
-                    print(e)
-                finally:
+
                     sys.stdout.write(os.getcwd())
                     sys.stdout.write("\n")
+                except Exception as e:
+                    print(e)
 
             else:
                 if is_windows():

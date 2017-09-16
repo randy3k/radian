@@ -83,27 +83,6 @@ class RCompleter(Completer):
                             yield Completion(comp, -len(token))
 
 
-def _split_args(cmd):
-    return shlex.split(cmd, posix=not sys.platform.startswith('win'))
-
-
-def split_args(cmd):
-    try:
-        return _split_args(cmd)
-    except Exception:
-        pass
-
-    try:
-        return _split_args(cmd + "\"")
-    except Exception:
-        pass
-
-    try:
-        return _split_args(cmd + "\'")
-    except Exception:
-        pass
-
-
 class SmartPathCompleter(Completer):
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
@@ -118,20 +97,22 @@ class SmartPathCompleter(Completer):
             path = ""
             while not path and text:
                 try:
-                    path = split_args(text)[-1]
+                    path = shlex.split(text)[-1]
+                    dirname = os.path.dirname(path)
+                    if not os.path.isabs(dirname):
+                        dirname = os.path.join(os.getcwd(), dirname)
                 finally:
-                    text = text[1:]
+                    if not path:
+                        text = text[1:]
 
-            if os.path.isabs(path):
-                dirname = os.path.dirname(path)
-                basename = os.path.basename(path)
-            else:
-                dirname = os.path.dirname(os.path.join(os.getcwd(), path))
-                basename = os.path.basename(path)
+            basename = os.path.basename(path)
 
             for c in os.listdir(dirname):
                 if c.lower().startswith(basename.lower()):
-                    yield Completion(text_type(c.replace(" ", "\\ ")), -len(basename))
+                    if sys.platform.startswith('win'):
+                        yield Completion(text_type(c), -len(basename))
+                    else:
+                        yield Completion(text_type(c.replace(" ", "\\ ")), -len(basename))
 
         except Exception:
             pass

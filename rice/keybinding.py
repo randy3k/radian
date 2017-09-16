@@ -71,25 +71,25 @@ def create_keybindings():
 
     last_working_index = [-1]
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed)
-    @kb.add('enter', filter=insert_mode & default_focussed)
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r"))
+    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
     def _(event):
         should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
         event.current_buffer.newline(copy_margin=not in_paste_mode())
         if should_indent and event.app.auto_indentation:
             event.current_buffer.insert_text('    ')
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prase_complete)
-    @kb.add('enter', filter=insert_mode & default_focussed & prase_complete)
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
+    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     def _(event):
         last_working_index[0] = event.current_buffer.working_index
         event.current_buffer.validate_and_handle()
 
     # indentation
 
-    @kb.add('}', filter=insert_mode & default_focussed & auto_indentation)
-    @kb.add(']', filter=insert_mode & default_focussed & auto_indentation)
-    @kb.add(')', filter=insert_mode & default_focussed & auto_indentation)
+    @kb.add('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @kb.add(']', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @kb.add(')', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -103,18 +103,18 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
-    @kb.add('tab', filter=insert_mode & default_focussed & tab_should_insert_whitespaces)
+    @kb.add('tab', filter=insert_mode & default_focussed & prompt_mode("r") & tab_should_insert_whitespaces)
     def _(event):
         event.current_buffer.insert_text('    ')
 
     # history
 
-    @kb.add(Keys.Up, filter=default_focussed & is_end_of_buffer & ~last_history)
+    @kb.add(Keys.Up, filter=default_focussed & prompt_mode("r") & is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_backward(count=event.arg)
         event.current_buffer.cursor_position = len(event.current_buffer.text)
 
-    @kb.add(Keys.Down, filter=default_focussed & is_end_of_buffer & ~last_history)
+    @kb.add(Keys.Down, filter=default_focussed & prompt_mode("r") & is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_forward(count=event.arg)
         event.current_buffer.cursor_position = len(event.current_buffer.text)
@@ -126,7 +126,7 @@ def create_keybindings():
             last_working_index[0] = -1
 
     # bracketed paste
-    @kb.add(Keys.BracketedPaste, filter=default_focussed)
+    @kb.add(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r"))
     def _(event):
         data = event.data
 
