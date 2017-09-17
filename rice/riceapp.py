@@ -126,9 +126,12 @@ class RiceApplication(object):
             while text is None:
                 try:
                     if message == self.default_prompt:
+                        mp.prompt_mode = "r"
                         text = mp.readconsole(style=self.style)
                     else:
                         # invoked by `readline`
+                        mp.set_prompt_mode_message("readline", ANSI(message))
+                        mp.prompt_mode = "readline"
                         text = mp.readline(message)
 
                 except Exception as e:
