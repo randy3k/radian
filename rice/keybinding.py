@@ -147,7 +147,7 @@ def create_keybindings():
 
     @kb.add(';', filter=insert_mode & default_focussed & prompt_mode("r") & is_begining_of_buffer)
     def _(event):
-        event.app.mp.set_prompt_mode("shell")
+        event.app.mp.prompt_mode = "shell"
         event.app._redraw()
 
 
@@ -155,7 +155,7 @@ def create_keybindings():
 
     @kb.add('backspace', filter=insert_mode & default_focussed & prompt_mode("shell") & is_begining_of_buffer)
     def _(event):
-        event.app.mp.set_prompt_mode("r")
+        event.app.mp.prompt_mode = "r"
         event.app._redraw()
 
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("shell"))
