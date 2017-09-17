@@ -4,7 +4,7 @@ import sys
 
 from .util import ccall, cglobal
 
-# to be set by RoleApplication
+# to be set by RiceApplication
 rsession = None
 ENCODING = "utf-8"
 
