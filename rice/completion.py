@@ -93,6 +93,9 @@ class SmartPathCompleter(Completer):
         if not complete_event.completion_requested:
             return
 
+        if sys.platform.startswith('win'):
+            text = text.replace("\\", "/")
+
         try:
             path = ""
             while not path and text:
