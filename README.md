@@ -74,7 +74,7 @@ If _rice_ cannot locate the R installation files automatically. You can either e
 $ export R_HOME=/usr/local/lib/R
 $ rice
 ```
-Note that it should be the path to the R HOME, but the path to the R binary.
+Note that it should be the path to `R_HOME`, not the path to the R binary. The folder should contain a file called `COPYING`.
 
 If the above doesn't work, you may need to futher specify `LD_LIBRARY_PATH`,
 
