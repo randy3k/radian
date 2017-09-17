@@ -96,6 +96,13 @@ class SmartPathCompleter(Completer):
         if sys.platform.startswith('win'):
             text = text.replace("\\", "/")
 
+        directories_only = False
+        quoted = False
+
+        if text.lstrip().startswith("cd "):
+            directories_only = True
+            text = text.lstrip()[3:]
+
         try:
             path = ""
             while not path and text:
@@ -117,12 +124,14 @@ class SmartPathCompleter(Completer):
 
             path = os.path.expanduser(path)
             path = os.path.expandvars(path)
+            if not os.path.isabs(path):
+                path = os.path.join(os.getcwd(), path)
             basename = os.path.basename(path)
             dirname = os.path.dirname(path)
-            if not os.path.isabs(dirname):
-                dirname = os.path.join(os.getcwd(), dirname)
 
             for c in os.listdir(dirname):
+                if directories_only and not os.path.isdir(c):
+                    continue
                 if c.lower().startswith(basename.lower()):
                     if sys.platform.startswith('win') or quoted:
                         yield Completion(text_type(c), -len(basename))
