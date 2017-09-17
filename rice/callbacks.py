@@ -10,7 +10,7 @@ def create_read_console(get_text):
 
     def _read_console(p, buf, buflen, add_history):
         if not code[0]:
-            text = get_text(p.decode(ENCODING))
+            text = get_text(p.decode(ENCODING), add_history)
             if text is None:
                 return 0
             code[0] = text.encode(ENCODING)

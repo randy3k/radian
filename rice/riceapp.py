@@ -10,14 +10,12 @@ from . import callbacks
 from .multiprompt import MultiPrompt
 
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
-
-from prompt_toolkit.utils import is_windows
-from prompt_toolkit.layout.lexers import PygmentsLexer
+from prompt_toolkit.application.current import get_app
+from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
 from pygments.lexers.r import SLexer
 from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
 from pygments.styles import get_style_by_name
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
+# from prompt_toolkit.history import FileHistory
 
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.enums import EditingMode
@@ -30,20 +28,7 @@ PROMPT = "r$> "
 COLORED_PROMPT = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
 
 
-if not is_windows():
-    from prompt_toolkit.input.vt100 import Vt100Input
-
-    class CustomVt100Input(Vt100Input):
-        @property
-        def responds_to_cpr(self):
-            return False
-
-
 def create_multi_prompt():
-
-    history = FileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
-    if not is_windows():
-        vt100 = CustomVt100Input(sys.stdin)
 
     def process_events(context):
         while True:
@@ -54,16 +39,20 @@ def create_multi_prompt():
 
     set_event_loop(create_event_loop(inputhook=process_events))
 
+    def get_lexer():
+        app = get_app(return_none=False)
+        if hasattr(app, "mp"):
+            if app.mp.prompt_mode in ["r", "help", "help_search"]:
+                return PygmentsLexer(SLexer)
+        return None
+
+    # history = FileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
+
     mp = MultiPrompt(
-        multiline=True,
-        complete_while_typing=True,
-        enable_suspend=True,
-        lexer=PygmentsLexer(SLexer),
+        lexer=DynamicLexer(get_lexer),
         completer=MultiPromptCompleter(),
-        history=history,
-        extra_key_bindings=create_keybindings(),
-        extra_input_processor=HighlightMatchingBracketProcessor(),
-        input=vt100 if not is_windows() else None
+        history=None,
+        extra_key_bindings=create_keybindings()
     )
 
     # r mode message is set by RiceApplication.app_initialize()
@@ -77,7 +66,7 @@ class RiceApplication(object):
     initialized = False
 
     def app_initialize(self, mp):
-        if is_windows():
+        if sys.platform.startswith('win'):
             cp = api.localecp()
             if cp and cp.value:
                 api.ENCODING = "cp" + str(cp.value)
@@ -115,7 +104,7 @@ class RiceApplication(object):
     def run(self):
         mp = create_multi_prompt()
 
-        def result_from_prompt(message):
+        def result_from_prompt(message, add_history=True):
             if not self.initialized:
                 self.app_initialize(mp)
                 message = self.default_prompt
@@ -127,12 +116,18 @@ class RiceApplication(object):
                 try:
                     if message == self.default_prompt:
                         mp.prompt_mode = "r"
-                        text = mp.readconsole(style=self.style)
+                        text = mp.prompt(style=self.style)
                     else:
                         # invoked by `readline`
                         mp.set_prompt_mode_message("readline", ANSI(message))
                         mp.prompt_mode = "readline"
-                        text = mp.readline(message)
+                        text = mp.prompt(
+                            message,
+                            multiline=False,
+                            complete_while_typing=False,
+                            lexer=None,
+                            completer=None,
+                            extra_key_bindings=None)
 
                 except Exception as e:
                     if isinstance(e, EOFError):
