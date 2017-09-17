@@ -11,6 +11,7 @@ from prompt_toolkit.filters import Condition, has_focus, \
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
 from . import api
+from . import shell_cmd
 
 
 def prase_input_complete(text):
@@ -161,7 +162,7 @@ def create_keybindings():
     @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("shell"))
     def _(event):
         sys.stdout.write("\n")
-        event.app.mp.run_shell_command(event.current_buffer.text)
+        shell_cmd.run_shell_command(event.current_buffer.text)
         event.current_buffer.reset()
 
     # emit completion
