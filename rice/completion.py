@@ -130,7 +130,7 @@ class SmartPathCompleter(Completer):
             dirname = os.path.dirname(path)
 
             for c in os.listdir(dirname):
-                if directories_only and not os.path.isdir(c):
+                if directories_only and not os.path.isdir(os.path.join(dirname, c)):
                     continue
                 if c.lower().startswith(basename.lower()):
                     if sys.platform.startswith('win') or quoted:
