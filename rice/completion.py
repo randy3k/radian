@@ -96,20 +96,32 @@ class SmartPathCompleter(Completer):
         try:
             path = ""
             while not path and text:
+                quoted = False
                 try:
-                    path = shlex.split(text)[-1]
-                    dirname = os.path.dirname(path)
-                    if not os.path.isabs(dirname):
-                        dirname = os.path.join(os.getcwd(), dirname)
+                    if text.startswith('"'):
+                        path = shlex.split(text + "\"")[-1]
+                        quoted = True
+                    elif text.startswith("'"):
+                        path = shlex.split(text + "'")[-1]
+                        quoted = True
+                    else:
+                        path = shlex.split(text)[-1]
+                except Exception:
+                    pass
                 finally:
                     if not path:
                         text = text[1:]
 
+            path = os.path.expanduser(path)
+            path = os.path.expandvars(path)
             basename = os.path.basename(path)
+            dirname = os.path.dirname(path)
+            if not os.path.isabs(dirname):
+                dirname = os.path.join(os.getcwd(), dirname)
 
             for c in os.listdir(dirname):
                 if c.lower().startswith(basename.lower()):
-                    if sys.platform.startswith('win'):
+                    if sys.platform.startswith('win') or quoted:
                         yield Completion(text_type(c), -len(basename))
                     else:
                         yield Completion(text_type(c.replace(" ", "\\ ")), -len(basename))
