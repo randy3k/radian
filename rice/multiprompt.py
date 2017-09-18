@@ -482,12 +482,12 @@ class MultiPrompt(MultiPromptBase):
 
     def prompt(self, **kwargs):
 
-        _fields = set(kwargs.keys()).intersection(self.__dict__.keys())
+        _fields = set(kwargs.keys()).intersection(set(self.__dict__.keys()))
         backup = dict((name, getattr(self, name)) for name in _fields)
 
         # Take settings from 'prompt'-arguments.
         for name in _fields:
-            value = locals()[name]
+            value = kwargs[name]
             if value is not None:
                 setattr(self, name, value)
 
@@ -496,8 +496,7 @@ class MultiPrompt(MultiPromptBase):
                 self._default_buffer.reset(Document(self.default))
                 return self.app.run()
             finally:
-                " Restore original settings. "
-                for name in self._fields:
+                for name in _fields:
                     setattr(self, name, backup[name])
 
     @property

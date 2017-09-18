@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import sys
-import os
 import time
 
 from .session import RSession
@@ -122,7 +121,6 @@ class RiceApplication(object):
                         mp.set_prompt_mode_message("readline", ANSI(message))
                         mp.prompt_mode = "readline"
                         text = mp.prompt(
-                            message,
                             multiline=False,
                             complete_while_typing=False,
                             lexer=None,
@@ -134,7 +132,8 @@ class RiceApplication(object):
                         # todo: confirmation
                         return None
                     else:
-                        raise e
+                        print(e)
+                        return None
                 except KeyboardInterrupt:
                     pass
 

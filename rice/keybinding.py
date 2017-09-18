@@ -72,6 +72,12 @@ def create_keybindings():
 
     last_working_index = [-1]
 
+    # r mode
+    @kb.add(';', filter=insert_mode & default_focussed & prompt_mode("r") & is_begining_of_buffer)
+    def _(event):
+        event.app.mp.prompt_mode = "shell"
+        event.app._redraw()
+
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r"))
     @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
     def _(event):
@@ -87,7 +93,6 @@ def create_keybindings():
         event.current_buffer.validate_and_handle()
 
     # indentation
-
     @kb.add('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
     @kb.add(']', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
     @kb.add(')', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
@@ -109,7 +114,6 @@ def create_keybindings():
         event.current_buffer.insert_text('    ')
 
     # history
-
     @kb.add(Keys.Up, filter=default_focussed & prompt_mode("r") & is_end_of_buffer & ~last_history)
     def _(event):
         event.current_buffer.history_backward(count=event.arg)
@@ -120,7 +124,7 @@ def create_keybindings():
         event.current_buffer.history_forward(count=event.arg)
         event.current_buffer.cursor_position = len(event.current_buffer.text)
 
-    @kb.add(Keys.Down, filter=default_focussed & is_empty_buffer & last_history)
+    @kb.add(Keys.Down, filter=default_focussed & prompt_mode("r") & is_empty_buffer & last_history)
     def _(event):
         if last_working_index[0] >= 0:
             event.current_buffer.go_to_history(last_working_index[0] + 1)
@@ -143,16 +147,7 @@ def create_keybindings():
         else:
             event.current_buffer.insert_text(data)
 
-    # r mode
-
-    @kb.add(';', filter=insert_mode & default_focussed & prompt_mode("r") & is_begining_of_buffer)
-    def _(event):
-        event.app.mp.prompt_mode = "shell"
-        event.app._redraw()
-
-
     # shell mode
-
     @kb.add('backspace', filter=insert_mode & default_focussed & prompt_mode("shell") & is_begining_of_buffer)
     def _(event):
         event.app.mp.prompt_mode = "r"
@@ -165,8 +160,13 @@ def create_keybindings():
         shell_cmd.run_shell_command(event.current_buffer.text)
         event.current_buffer.reset()
 
-    # emit completion
+    # readline mode
+    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("readline"))
+    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
+    def _(event):
+        event.current_buffer.validate_and_handle()
 
+    # emit completion
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
     @kb.add('enter', filter=insert_mode & default_focussed & app.has_completions)
     def _(event):
