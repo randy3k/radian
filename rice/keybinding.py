@@ -159,9 +159,11 @@ def create_keybindings():
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("shell"))
     @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("shell"))
     def _(event):
+        last_working_index[0] = event.current_buffer.working_index
         sys.stdout.write("\n")
+        event.current_buffer.append_to_history()
         shell_cmd.run_shell_command(event.current_buffer.text)
-        event.current_buffer.reset(append_to_history=True)
+        event.current_buffer.reset()
 
     # readline mode
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("readline"))

@@ -32,6 +32,7 @@ from prompt_toolkit.styles import default_style, DynamicStyle, merge_styles
 from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.utils import is_windows
 
+from .modalbuffer import ModalBuffer
 
 import contextlib
 import threading
@@ -198,11 +199,11 @@ class ModalPrompt(ModalPromptBase):
         has_before_fragments, get_prompt_text_1, get_prompt_text_2 = \
             _split_multiline_prompt(self._get_prompt)
 
-        default_buffer = Buffer(
+        default_buffer = ModalBuffer(
             name=DEFAULT_BUFFER,
             complete_while_typing=True,
             completer=DynamicCompleter(lambda: self.completer),
-            history=DynamicHistory(lambda: self.history),
+            history=self.history,
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
