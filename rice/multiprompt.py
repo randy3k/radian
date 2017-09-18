@@ -6,7 +6,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.completion import DynamicCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
-from prompt_toolkit.filters import is_done, has_focus, to_filter, Condition, has_arg
+from prompt_toolkit.filters import has_focus, to_filter, Condition, has_arg
 from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.history import InMemoryHistory, DynamicHistory
 from prompt_toolkit.input.defaults import get_default_input
@@ -19,7 +19,7 @@ from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.lexers import DynamicLexer
-from prompt_toolkit.layout.margins import PromptMargin, ConditionalMargin
+from prompt_toolkit.layout.margins import PromptMargin
 from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.layout.processors import \
     DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, \
@@ -156,7 +156,6 @@ class MultiPrompt(MultiPromptBase):
     default = ""
     multiline = True
     enable_suspend = True
-    wrap_lines = True
     lexer = None
     enable_open_in_editor = False
     reserve_space_for_menu = 8
@@ -193,20 +192,6 @@ class MultiPrompt(MultiPromptBase):
         self.app.mp = self
 
     def _create_application(self, editing_mode):
-        def dyncond(attr_name):
-            """
-            Dynamically take this setting from this 'Prompt' class.
-            `attr_name` represents an attribute name of this class. Its value
-            can either be a boolean or a `Filter`.
-
-            This returns something that can be used as either a `Filter`
-            or `Filter`.
-            """
-            @Condition
-            def dynamic():
-                value = getattr(self, attr_name)
-                return to_filter(value)()
-            return dynamic
 
         # Create functions that will dynamically split the prompt. (If we have
         # a multiline prompt.)
@@ -232,6 +217,8 @@ class MultiPrompt(MultiPromptBase):
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
 
+        search_toolbar = SearchToolbar(search_buffer)
+
         input_processor = merge_processors([
             ConditionalProcessor(
                 HighlightSearchProcessor(preview_search=True),
@@ -241,17 +228,9 @@ class MultiPrompt(MultiPromptBase):
             DisplayMultipleCursors()
         ])
 
-        search_toolbar = SearchToolbar(search_buffer)
-        search_buffer_control = BufferControl(
-            buffer=search_buffer,
-            input_processor=merge_processors([
-                ReverseSearchProcessor(),
-                ShowArg(),
-            ]))
-
         default_buffer_control = BufferControl(
             buffer=default_buffer,
-            search_buffer_control=search_buffer_control,
+            search_buffer_control=search_toolbar.control,
             input_processor=input_processor,
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
@@ -260,14 +239,9 @@ class MultiPrompt(MultiPromptBase):
             default_buffer_control,
             height=self._get_default_buffer_control_height,
             left_margins=[
-                # In multiline mode, use the window margin to display
-                # the prompt and continuation fragments.
-                ConditionalMargin(
-                    PromptMargin(get_prompt_text_2, self._get_continuation),
-                    filter=dyncond('multiline'),
-                )
+                PromptMargin(get_prompt_text_2, self._get_continuation)
             ],
-            wrap_lines=dyncond('wrap_lines'))
+            wrap_lines=True)
 
         # Build the layout.
         layout = HSplit([
@@ -280,16 +254,7 @@ class MultiPrompt(MultiPromptBase):
                             dont_extend_height=True),
                         Condition(has_before_fragments)
                     ),
-                    ConditionalContainer(
-                        default_buffer_window,
-                        Condition(
-                            lambda: get_app().layout.current_control != search_buffer_control),
-                    ),
-                    ConditionalContainer(
-                        Window(search_buffer_control),
-                        Condition(
-                            lambda: get_app().layout.current_control == search_buffer_control),
-                    ),
+                    default_buffer_window,
                 ]),
                 [
                     # Completion menus.
@@ -326,7 +291,7 @@ class MultiPrompt(MultiPromptBase):
                 merge_key_bindings([
                     ConditionalKeyBindings(
                         open_in_editor_bindings,
-                        dyncond('enable_open_in_editor') & has_focus(DEFAULT_BUFFER)),
+                        to_filter(self.enable_open_in_editor) & has_focus(DEFAULT_BUFFER)),
                     prompt_bindings
                 ]),
                 DynamicKeyBindings(lambda: self.extra_key_bindings),
@@ -334,8 +299,6 @@ class MultiPrompt(MultiPromptBase):
             editing_mode=editing_mode,
             reverse_vi_search_direction=True,
             on_render=on_render,
-
-            # I/O.
             input=self.input,
             output=self.output)
 
@@ -344,9 +307,7 @@ class MultiPrompt(MultiPromptBase):
     @contextlib.contextmanager
     def _auto_refresh_context(self):
         " Return a context manager for the auto-refresh loop. "
-        done = [False]  # nonlocal
-
-        # Enter.
+        done = [False]
 
         def run():
             while not done[0]:
@@ -361,7 +322,6 @@ class MultiPrompt(MultiPromptBase):
         try:
             yield
         finally:
-            # Exit.
             done[0] = True
 
     def prompt(self, **kwargs):
