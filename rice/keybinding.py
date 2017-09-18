@@ -171,7 +171,6 @@ def create_keybindings():
         app = get_app()
         app.set_return_value(event.current_buffer.document.text)
         app.pre_run_callables.append(event.current_buffer.reset)
-        event.current_buffer.append_to_history()
 
     # emit completion
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
