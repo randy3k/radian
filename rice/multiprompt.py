@@ -148,7 +148,6 @@ class MultiPrompt(MultiPromptBase):
     rprompt = None
     bottom_toolbar = None
     mouse_support = False
-    erase_when_done = True
     tempfile_suffix = '.R'
     refresh_interval = 0
 
@@ -173,11 +172,11 @@ class MultiPrompt(MultiPromptBase):
         self.output = output or get_default_output()
 
         self.app, self._default_buffer, self._default_buffer_control = \
-            self._create_application(editing_mode, self.erase_when_done)
+            self._create_application(editing_mode)
 
         self.app.mp = self
 
-    def _create_application(self, editing_mode, erase_when_done):
+    def _create_application(self, editing_mode):
         def dyncond(attr_name):
             """
             Dynamically take this setting from this 'Prompt' class.
@@ -387,7 +386,6 @@ class MultiPrompt(MultiPromptBase):
             ]),
             mouse_support=dyncond('mouse_support'),
             editing_mode=editing_mode,
-            erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
             on_render=on_render,
 
