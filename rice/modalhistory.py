@@ -62,7 +62,7 @@ class ModalFileHistory(History):
             def write(t):
                 f.write(t.encode('utf-8'))
 
-            write('\n# time: %s UTC' % datetime.datetime.utcnow())
+            write('\n# time: %s UTC' % datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
             write('\n# mode: %s\n' % mode)
             for line in string.split('\n'):
                 write('+%s\n' % line)
