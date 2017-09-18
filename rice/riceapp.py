@@ -98,6 +98,9 @@ class RiceApplication(object):
         self.default_prompt = prompt
         interface.set_option("prompt", prompt)
 
+        # necessary on windows
+        interface.set_option("menu.graphics", False)
+
         # print welcome message
         sys.stdout.write(interface.r_version())
 
