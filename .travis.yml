@@ -22,6 +22,6 @@ deploy:
     tags: true
 
 notifications:
-    email:
-        on_success: change
-        on_failure: change
+  email:
+    on_success: change
+    on_failure: change
