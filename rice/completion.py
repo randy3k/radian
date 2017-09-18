@@ -15,9 +15,9 @@ from six import text_type
 LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
-class MultiPromptCompleter(Completer):
+class ModalPromptCompleter(Completer):
     def __init__(self, *args, **kwargs):
-        super(MultiPromptCompleter, self).__init__(*args, **kwargs)
+        super(ModalPromptCompleter, self).__init__(*args, **kwargs)
         self.rcompleter = RCompleter()
         self.path_completer = SmartPathCompleter()
 

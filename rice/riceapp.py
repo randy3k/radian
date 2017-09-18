@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 import sys
 import time
+import os
 
 from .session import RSession
 from . import interface
 from . import api
 from . import callbacks
-from .multiprompt import MultiPrompt
+from .modalprompt import ModalPrompt
+from .modalhistory import ModalFileHistory
 
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 from prompt_toolkit.application.current import get_app
@@ -14,12 +16,11 @@ from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
 from pygments.lexers.r import SLexer
 from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
 from pygments.styles import get_style_by_name
-# from prompt_toolkit.history import FileHistory
 
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.enums import EditingMode
 
-from .completion import MultiPromptCompleter
+from .completion import ModalPromptCompleter
 from .keybinding import create_keybindings
 
 
@@ -27,7 +28,7 @@ PROMPT = "r$> "
 COLORED_PROMPT = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
 
 
-def create_multi_prompt():
+def create_modal_prompt():
 
     def process_events(context):
         while True:
@@ -45,12 +46,14 @@ def create_multi_prompt():
                 return PygmentsLexer(SLexer)
         return None
 
-    # history = FileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
+    history = ModalFileHistory(
+        os.path.join(os.path.expanduser("~"), ".rice_history"),
+        exclude_modes=["readline"])
 
-    mp = MultiPrompt(
+    mp = ModalPrompt(
         lexer=DynamicLexer(get_lexer),
-        completer=MultiPromptCompleter(),
-        history=None,
+        completer=ModalPromptCompleter(),
+        history=history,
         extra_key_bindings=create_keybindings()
     )
 
@@ -101,7 +104,7 @@ class RiceApplication(object):
         sys.stdout.write(interface.r_version())
 
     def run(self):
-        mp = create_multi_prompt()
+        mp = create_modal_prompt()
 
         def result_from_prompt(message, add_history=True):
             if not self.initialized:

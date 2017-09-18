@@ -90,7 +90,10 @@ def create_keybindings():
     @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     def _(event):
         last_working_index[0] = event.current_buffer.working_index
-        event.current_buffer.validate_and_handle()
+        app = get_app()
+        app.set_return_value(event.current_buffer.document.text)
+        app.pre_run_callables.append(event.current_buffer.reset)
+        event.current_buffer.append_to_history()
 
     # indentation
     @kb.add('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
@@ -158,13 +161,17 @@ def create_keybindings():
     def _(event):
         sys.stdout.write("\n")
         shell_cmd.run_shell_command(event.current_buffer.text)
-        event.current_buffer.reset()
+        event.current_buffer.reset(append_to_history=True)
 
     # readline mode
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("readline"))
     @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
     def _(event):
-        event.current_buffer.validate_and_handle()
+        last_working_index[0] = event.current_buffer.working_index
+        app = get_app()
+        app.set_return_value(event.current_buffer.document.text)
+        app.pre_run_callables.append(event.current_buffer.reset)
+        event.current_buffer.append_to_history()
 
     # emit completion
     @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)

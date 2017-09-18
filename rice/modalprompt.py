@@ -118,7 +118,7 @@ def create_prompt_bindings():
     return kb
 
 
-class MultiPromptBase(object):
+class ModalPromptBase(object):
     _message = {}
     _prompt_mode = None
 
@@ -152,7 +152,7 @@ if not is_windows():
             return False
 
 
-class MultiPrompt(MultiPromptBase):
+class ModalPrompt(ModalPromptBase):
     default = ""
     multiline = True
     enable_suspend = True
@@ -198,21 +198,11 @@ class MultiPrompt(MultiPromptBase):
         has_before_fragments, get_prompt_text_1, get_prompt_text_2 = \
             _split_multiline_prompt(self._get_prompt)
 
-        # Create buffers list.
-        def accept(buff):
-            """ Accept the content of the default buffer. This is called when
-            the validation succeeds. """
-            self.app.set_return_value(buff.document.text)
-
-            # Reset content before running again.
-            self.app.pre_run_callables.append(buff.reset)
-
         default_buffer = Buffer(
             name=DEFAULT_BUFFER,
             complete_while_typing=True,
             completer=DynamicCompleter(lambda: self.completer),
             history=DynamicHistory(lambda: self.history),
-            accept_handler=accept,
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
