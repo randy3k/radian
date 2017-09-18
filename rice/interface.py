@@ -117,3 +117,11 @@ def r_version():
 
 def installed_packages():
     return rcopy(reval("row.names(installed.packages())"))
+
+
+def encoding():
+    cp = api.localecp()
+    if cp and cp.value:
+        return "cp" + str(cp.value)
+    else:
+        return "utf-8"

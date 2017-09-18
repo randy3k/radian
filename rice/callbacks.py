@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import ctypes
 import sys
 
-from .api import ENCODING
+ENCODING = "utf-8"
 
 
 def create_read_console(get_text):

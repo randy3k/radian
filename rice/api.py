@@ -6,7 +6,6 @@ from .util import ccall, cglobal
 
 # to be set by RiceApplication
 rsession = None
-ENCODING = "utf-8"
 
 """
 A minimum set of R api functions to make the repl works.

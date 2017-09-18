@@ -69,9 +69,7 @@ class RiceApplication(object):
 
     def app_initialize(self, mp):
         if sys.platform.startswith('win'):
-            cp = api.localecp()
-            if cp and cp.value:
-                api.ENCODING = "cp" + str(cp.value)
+            callbacks.ENCODING = interface.encoding()
 
         if interface.get_option("rice.editing_mode", "emacs") in ["vim", "vi"]:
             mp.app.editing_mode = EditingMode.VI
