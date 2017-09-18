@@ -8,7 +8,6 @@ from prompt_toolkit.clipboard import DynamicClipboard, InMemoryClipboard
 from prompt_toolkit.completion import DynamicCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
-from prompt_toolkit.eventloop import ensure_future, Return, From
 from prompt_toolkit.filters import is_done, has_focus, renderer_height_is_known, to_filter, Condition, has_arg
 from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.history import InMemoryHistory, DynamicHistory
@@ -17,7 +16,6 @@ from prompt_toolkit.key_binding.bindings.auto_suggest import load_auto_suggest_b
 from prompt_toolkit.key_binding.bindings.completion import display_completions_like_readline
 from prompt_toolkit.key_binding.bindings.open_in_editor import load_open_in_editor_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings, KeyBindingsBase
-from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import Window, HSplit, FloatContainer, Float
 from prompt_toolkit.layout.containers import ConditionalContainer, Align
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
@@ -30,7 +28,7 @@ from prompt_toolkit.layout.processors import Processor, DynamicProcessor, Passwo
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.layout.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
-from prompt_toolkit.styles import default_style, BaseStyle, DynamicStyle, merge_styles
+from prompt_toolkit.styles import default_style, DynamicStyle, merge_styles
 from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.validation import DynamicValidator
 from prompt_toolkit.utils import is_windows
@@ -537,8 +535,8 @@ class MultiPrompt(MultiPromptBase):
         return to_formatted_text(
             prompt_continuation, style='class:prompt-continuation')
 
-    def _get_arg_text(self, app):
-        arg = app.key_processor.arg
+    def _get_arg_text(self):
+        arg = self.app.key_processor.arg
         if arg == '-':
             arg = '-1'
 
