@@ -114,6 +114,7 @@ class RiceApplication(object):
                 self.initialized = True
 
             sys.stdout.write("\n")
+
             text = None
             while text is None:
                 try:

@@ -3,6 +3,7 @@ from prompt_toolkit.application.current import get_app
 
 
 class ModalBuffer(Buffer):
+    last_working_index = -1
 
     def _change_prompt_mode(self, index, redraw=True):
         if index < len(self.history.modes):
@@ -13,12 +14,22 @@ class ModalBuffer(Buffer):
                 if redraw:
                     app._redraw()
 
+    def _is_end_of_buffer(self):
+        return self.cursor_position == len(self.text)
+
+    def _is_last_history(self):
+        return self.working_index == len(self._working_lines) - 1
+
     def history_forward(self, count=1):
-        super(ModalBuffer, self).history_forward()
+        if len(self.text) == 0 and self._is_last_history() and self.last_working_index >= 0:
+            self.go_to_history(self.last_working_index)
+            self.last_working_index = -1
+
+        super(ModalBuffer, self).history_forward(count)
         self._change_prompt_mode(self.working_index)
 
     def history_backward(self, count=1):
-        super(ModalBuffer, self).history_backward()
+        super(ModalBuffer, self).history_backward(count)
         self._change_prompt_mode(self.working_index)
 
     def _search(self, *args, **kwargs):
@@ -30,3 +41,17 @@ class ModalBuffer(Buffer):
     def apply_search(self, *args, **kwargs):
         super(ModalBuffer, self).apply_search(*args, **kwargs)
         self._change_prompt_mode(self.working_index)
+
+    def auto_up(self, count=1, go_to_start_of_line_if_history_changes=False):
+        if not self._is_last_history() and self._is_end_of_buffer():
+            self.history_backward()
+            self.cursor_position = len(self.text)
+        else:
+            super(ModalBuffer, self).auto_up(count, go_to_start_of_line_if_history_changes)
+
+    def auto_down(self, count=1, go_to_start_of_line_if_history_changes=False):
+        if not self._is_last_history() and self._is_end_of_buffer():
+            self.history_forward()
+            self.cursor_position = len(self.text)
+        else:
+            super(ModalBuffer, self).auto_down(count, go_to_start_of_line_if_history_changes)

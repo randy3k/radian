@@ -8,11 +8,11 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
 from prompt_toolkit.filters import has_focus, to_filter, Condition, has_arg
 from prompt_toolkit.formatted_text import to_formatted_text
-from prompt_toolkit.history import InMemoryHistory, DynamicHistory
 from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.key_binding.bindings.open_in_editor import load_open_in_editor_bindings
 from prompt_toolkit.key_binding.key_bindings import \
     KeyBindings, DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings
+from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import Window, HSplit, FloatContainer, Float
 from prompt_toolkit.layout.containers import ConditionalContainer
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
@@ -165,7 +165,6 @@ class ModalPrompt(ModalPromptBase):
     history = None
     prompt_continuation = None
     tempfile_suffix = '.R'
-    refresh_interval = 0
 
     def __init__(
             self,
@@ -177,7 +176,7 @@ class ModalPrompt(ModalPromptBase):
             input=None,
             output=None):
 
-        self.history = history or InMemoryHistory()
+        self.history = history
         self.lexer = lexer
         self.completer = completer
         self.extra_key_bindings = extra_key_bindings
@@ -295,26 +294,6 @@ class ModalPrompt(ModalPromptBase):
 
         return application, default_buffer, default_buffer_control
 
-    @contextlib.contextmanager
-    def _auto_refresh_context(self):
-        " Return a context manager for the auto-refresh loop. "
-        done = [False]
-
-        def run():
-            while not done[0]:
-                time.sleep(self.refresh_interval)
-                self.app.invalidate()
-
-        if self.refresh_interval:
-            t = threading.Thread(target=run)
-            t.daemon = True
-            t.start()
-
-        try:
-            yield
-        finally:
-            done[0] = True
-
     def prompt(self, **kwargs):
 
         _fields = set(kwargs.keys()).intersection(set(self.__dict__.keys()))
@@ -326,13 +305,12 @@ class ModalPrompt(ModalPromptBase):
             if value is not None:
                 setattr(self, name, value)
 
-        with self._auto_refresh_context():
-            try:
-                self._default_buffer.reset(Document(self.default))
-                return self.app.run()
-            finally:
-                for name in _fields:
-                    setattr(self, name, backup[name])
+        try:
+            self._default_buffer.reset(Document(self.default))
+            return self.app.run()
+        finally:
+            for name in _fields:
+                setattr(self, name, backup[name])
 
     @property
     def editing_mode(self):

@@ -41,7 +41,7 @@ def tab_should_insert_whitespaces():
 
 
 @Condition
-def is_begining_of_buffer():
+def is_begin_of_buffer():
     return get_app().current_buffer.cursor_position == 0
 
 
@@ -52,53 +52,41 @@ def is_end_of_buffer():
 
 
 @Condition
-def is_empty_buffer():
-    return len(get_app().current_buffer.text) == 0
-
-
-@Condition
-def last_history():
-    app = get_app()
-    return app.current_buffer.working_index == len(app.current_buffer._working_lines) - 1
-
-
-@Condition
 def auto_indentation():
     return get_app().auto_indentation
 
 
 def create_keybindings():
     kb = KeyBindings()
-
-    last_working_index = [-1]
+    handle = kb.add
 
     # r mode
-    @kb.add(';', filter=insert_mode & default_focussed & prompt_mode("r") & is_begining_of_buffer)
+    @handle(';', filter=insert_mode & default_focussed & prompt_mode("r") & is_begin_of_buffer)
     def _(event):
         event.app.mp.prompt_mode = "shell"
         event.app._redraw()
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r"))
-    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
+    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r"))
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
     def _(event):
         should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
         event.current_buffer.newline(copy_margin=not in_paste_mode())
         if should_indent and event.app.auto_indentation:
             event.current_buffer.insert_text('    ')
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
-    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
+    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     def _(event):
-        last_working_index[0] = event.current_buffer.working_index
+        event.current_buffer.last_working_index = event.current_buffer.working_index
         app = get_app()
         app.set_return_value(event.current_buffer.document.text)
         app.pre_run_callables.append(event.current_buffer.reset)
         event.current_buffer.append_to_history()
 
     # indentation
-    @kb.add('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
-    @kb.add(']', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
-    @kb.add(')', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @handle('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @handle(']', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @handle(')', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -112,29 +100,12 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
-    @kb.add('tab', filter=insert_mode & default_focussed & prompt_mode("r") & tab_should_insert_whitespaces)
+    @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r") & tab_should_insert_whitespaces)
     def _(event):
         event.current_buffer.insert_text('    ')
 
-    # history
-    @kb.add(Keys.Up, filter=default_focussed & prompt_mode("r") & is_end_of_buffer & ~last_history)
-    def _(event):
-        event.current_buffer.history_backward(count=event.arg)
-        event.current_buffer.cursor_position = len(event.current_buffer.text)
-
-    @kb.add(Keys.Down, filter=default_focussed & prompt_mode("r") & is_end_of_buffer & ~last_history)
-    def _(event):
-        event.current_buffer.history_forward(count=event.arg)
-        event.current_buffer.cursor_position = len(event.current_buffer.text)
-
-    @kb.add(Keys.Down, filter=default_focussed & prompt_mode("r") & is_empty_buffer & last_history)
-    def _(event):
-        if last_working_index[0] >= 0:
-            event.current_buffer.go_to_history(last_working_index[0] + 1)
-            last_working_index[0] = -1
-
     # bracketed paste
-    @kb.add(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r"))
+    @handle(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r"))
     def _(event):
         data = event.data
 
@@ -151,32 +122,35 @@ def create_keybindings():
             event.current_buffer.insert_text(data)
 
     # shell mode
-    @kb.add('backspace', filter=insert_mode & default_focussed & prompt_mode("shell") & is_begining_of_buffer)
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("shell") & is_begin_of_buffer)
     def _(event):
         event.app.mp.prompt_mode = "r"
         event.app._redraw()
 
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("shell"))
-    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("shell"))
+    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("shell"))
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("shell"))
     def _(event):
-        last_working_index[0] = event.current_buffer.working_index
+        event.current_buffer.last_working_index = event.current_buffer.working_index
         sys.stdout.write("\n")
         event.current_buffer.append_to_history()
         shell_cmd.run_shell_command(event.current_buffer.text)
         event.current_buffer.reset()
 
     # readline mode
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("readline"))
-    @kb.add('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
+    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("readline"))
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
     def _(event):
-        last_working_index[0] = event.current_buffer.working_index
+        event.current_buffer.last_working_index = event.current_buffer.working_index
         app = get_app()
         app.set_return_value(event.current_buffer.document.text)
         app.pre_run_callables.append(event.current_buffer.reset)
 
+    handle('up', filter=prompt_mode("readline"))(lambda event: None)
+    handle('down', filter=prompt_mode("readline"))(lambda event: None)
+
     # emit completion
-    @kb.add(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
-    @kb.add('enter', filter=insert_mode & default_focussed & app.has_completions)
+    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
+    @handle('enter', filter=insert_mode & default_focussed & app.has_completions)
     def _(event):
         event.current_buffer.complete_state = None
 
