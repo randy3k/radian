@@ -55,3 +55,11 @@ class ModalBuffer(Buffer):
             self.cursor_position = len(self.text)
         else:
             super(ModalBuffer, self).auto_down(count, go_to_start_of_line_if_history_changes)
+
+    def append_to_history(self):
+        app = get_app()
+        mode = app.mp.prompt_mode
+        if self.text and \
+            (not len(self.history) or self.history[-1] != self.text or
+                mode != self.history.modes[-1]):
+            self.history.append(self.text)
