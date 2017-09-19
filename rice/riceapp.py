@@ -145,7 +145,9 @@ class RiceApplication(object):
                         print(e)
                         return None
                 except KeyboardInterrupt:
-                    pass
+                    if mp.prompt_mode == "readline":
+                        api.interrupts_pending(True)
+                        api.check_user_interrupt()
 
             return text
 

@@ -221,3 +221,14 @@ def localecp():
 
 def get_option1(s):
     return rccall("Rf_GetOption1", c_void_p, [c_void_p], s)
+
+
+def interrupts_pending(pending=True):
+    if sys.platform == "win32":
+        rcglobal("UserBreak", cast_type=c_int).value = int(pending)
+    else:
+        rcglobal("R_interrupts_pending", cast_type=c_int).value = int(pending)
+
+
+def check_user_interrupt():
+    rccall("R_CheckUserInterrupt", None, [])
