@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
 import os
 import re
@@ -13,23 +12,6 @@ from six import text_type
 
 
 LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
-
-
-class ModalPromptCompleter(Completer):
-    def __init__(self, *args, **kwargs):
-        super(ModalPromptCompleter, self).__init__(*args, **kwargs)
-        self.rcompleter = RCompleter()
-        self.path_completer = SmartPathCompleter()
-
-    def get_completions(self, document, complete_event):
-        app = get_app(return_none=True)
-        if app and hasattr(app, "mp"):
-            if app.mp.prompt_mode in ["r", "help", "help_search"]:
-                for c in self.rcompleter.get_completions(document, complete_event):
-                    yield c
-            elif app.mp.prompt_mode == "shell":
-                for c in self.path_completer.get_completions(document, complete_event):
-                    yield c
 
 
 class RCompleter(Completer):

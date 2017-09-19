@@ -13,6 +13,7 @@ from .modalhistory import ModalFileHistory
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
+from prompt_toolkit.completion import DynamicCompleter
 from pygments.lexers.r import SLexer
 from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
 from pygments.styles import get_style_by_name
@@ -20,8 +21,8 @@ from pygments.styles import get_style_by_name
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.enums import EditingMode
 
-from .completion import ModalPromptCompleter
 from .keybinding import create_keybindings
+from .completion import RCompleter, SmartPathCompleter
 
 
 PROMPT = "r$> "
@@ -42,8 +43,17 @@ def create_modal_prompt():
     def get_lexer():
         app = get_app(return_none=False)
         if hasattr(app, "mp"):
-            if app.mp.prompt_mode in ["r", "help", "help_search"]:
+            if app.mp.prompt_mode == "r":
                 return PygmentsLexer(SLexer)
+        return None
+
+    def get_completer():
+        app = get_app(return_none=False)
+        if hasattr(app, "mp"):
+            if app.mp.prompt_mode == "r":
+                return RCompleter()
+            elif app.mp.prompt_mode == "shell":
+                return SmartPathCompleter()
         return None
 
     history = ModalFileHistory(
@@ -52,7 +62,7 @@ def create_modal_prompt():
 
     mp = ModalPrompt(
         lexer=DynamicLexer(get_lexer),
-        completer=ModalPromptCompleter(),
+        completer=DynamicCompleter(get_completer),
         history=history,
         extra_key_bindings=create_keybindings()
     )
@@ -125,12 +135,7 @@ class RiceApplication(object):
                         # invoked by `readline`
                         mp.set_prompt_mode_message("readline", ANSI(message))
                         mp.prompt_mode = "readline"
-                        text = mp.prompt(
-                            multiline=False,
-                            complete_while_typing=False,
-                            lexer=None,
-                            completer=None,
-                            extra_key_bindings=None)
+                        text = mp.prompt()
 
                 except Exception as e:
                     if isinstance(e, EOFError):

@@ -28,6 +28,7 @@ from prompt_toolkit.layout.processors import \
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.layout.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
+from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.styles import default_style, DynamicStyle, merge_styles
 from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.utils import is_windows
@@ -38,41 +39,6 @@ import contextlib
 import threading
 import time
 import sys
-
-
-def _split_multiline_prompt(get_prompt_text):
-    """
-    Take a `get_prompt_text` function and return three new functions instead.
-    One that tells whether this prompt consists of multiple lines; one that
-    returns the fragments to be shown on the lines above the input; and another
-    one with the fragments to be shown at the first line of the input.
-    """
-    def has_before_fragments():
-        for fragment, char in get_prompt_text():
-            if '\n' in char:
-                return True
-        return False
-
-    def before():
-        result = []
-        found_nl = False
-        for fragment, char in reversed(explode_text_fragments(get_prompt_text())):
-            if found_nl:
-                result.insert(0, (fragment, char))
-            elif char == '\n':
-                found_nl = True
-        return result
-
-    def first_input_line():
-        result = []
-        for fragment, char in reversed(explode_text_fragments(get_prompt_text())):
-            if char == '\n':
-                break
-            else:
-                result.insert(0, (fragment, char))
-        return result
-
-    return has_before_fragments, before, first_input_line
 
 
 def create_prompt_bindings():
@@ -154,9 +120,7 @@ if not is_windows():
 
 
 class ModalPrompt(ModalPromptBase):
-    default = ""
     multiline = True
-    enable_suspend = True
     lexer = None
     enable_open_in_editor = False
     reserve_space_for_menu = 8
@@ -306,7 +270,7 @@ class ModalPrompt(ModalPromptBase):
                 setattr(self, name, value)
 
         try:
-            self._default_buffer.reset(Document(self.default))
+            self._default_buffer.reset(Document(""))
             return self.app.run()
         finally:
             for name in _fields:
@@ -327,10 +291,6 @@ class ModalPrompt(ModalPromptBase):
 
         if space and not get_app().is_done:
             buff = self._default_buffer
-
-            # Reserve the space, either when there are completions, or when
-            # `complete_while_typing` is true and we expect completions very
-            # soon.
             if buff.complete_while_typing() or buff.complete_state is not None:
                 return Dimension(min=space)
 
