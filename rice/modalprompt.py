@@ -138,7 +138,8 @@ class ModalPrompt(ModalPromptBase):
             completer=None,
             extra_key_bindings=None,
             input=None,
-            output=None):
+            output=None,
+            on_render=None):
 
         self.history = history
         self.lexer = lexer
@@ -149,6 +150,8 @@ class ModalPrompt(ModalPromptBase):
         else:
             self.input = input or get_default_input()
         self.output = output or get_default_output()
+
+        self.on_render = on_render
 
         self.app, self._default_buffer, self._default_buffer_control = \
             self._create_application(editing_mode)
@@ -230,10 +233,6 @@ class ModalPrompt(ModalPromptBase):
         open_in_editor_bindings = load_open_in_editor_bindings()
         prompt_bindings = create_prompt_bindings()
 
-        def on_render(app):
-            if app.is_aborting:
-                self.output.write("\n")
-
         # Create application
         application = Application(
             layout=Layout(layout, default_buffer_window),
@@ -252,7 +251,7 @@ class ModalPrompt(ModalPromptBase):
             ]),
             editing_mode=editing_mode,
             reverse_vi_search_direction=True,
-            on_render=on_render,
+            on_render=self.on_render,
             input=self.input,
             output=self.output)
 

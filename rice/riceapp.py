@@ -60,11 +60,16 @@ def create_modal_prompt():
         os.path.join(os.path.expanduser("~"), ".rice_history"),
         exclude_modes=["readline"])
 
+    def on_render(app):
+        if app.is_aborting and not app.mp.prompt_mode == "readline":
+            app.output.write("\n")
+
     mp = ModalPrompt(
         lexer=DynamicLexer(get_lexer),
         completer=DynamicCompleter(get_completer),
         history=history,
-        extra_key_bindings=create_keybindings()
+        extra_key_bindings=create_keybindings(),
+        on_render=on_render
     )
 
     # r mode message is set by RiceApplication.app_initialize()
@@ -116,6 +121,7 @@ class RiceApplication(object):
 
     def run(self):
         mp = create_modal_prompt()
+        mp.interrupted = False
 
         def result_from_prompt(message, add_history=True):
             if not self.initialized:
@@ -123,7 +129,10 @@ class RiceApplication(object):
                 message = self.default_prompt
                 self.initialized = True
 
-            sys.stdout.write("\n")
+            if mp.interrupted:
+                mp.interrupted = False
+            else:
+                sys.stdout.write("\n")
 
             text = None
             while text is None:
@@ -146,6 +155,7 @@ class RiceApplication(object):
                         return None
                 except KeyboardInterrupt:
                     if mp.prompt_mode == "readline":
+                        mp.interrupted = True
                         api.interrupts_pending(True)
                         api.check_user_interrupt()
 
