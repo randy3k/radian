@@ -125,6 +125,7 @@ class ModalPrompt(ModalPromptBase):
     enable_open_in_editor = False
     reserve_space_for_menu = 4
     completer = None
+    complete_while_typing = True
     style = None
     history = None
     prompt_continuation = None
@@ -167,7 +168,7 @@ class ModalPrompt(ModalPromptBase):
 
         default_buffer = ModalBuffer(
             name=DEFAULT_BUFFER,
-            complete_while_typing=True,
+            complete_while_typing=Condition(lambda: self.complete_while_typing),
             completer=DynamicCompleter(lambda: self.completer),
             history=self.history,
             get_tempfile_suffix=lambda: self.tempfile_suffix)

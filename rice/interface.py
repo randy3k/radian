@@ -24,7 +24,7 @@ def rcopy(s, simplify=False):
             ret.append(api.dataptr(api.string_elt(s, i)).value.decode("utf-8"))
         if simplify and len(ret) == 1:
             ret = ret[0]
-    elif typ == api.LGLSXP or api.INTSXP or api.REALSXP:
+    elif typ == api.LGLSXP or typ == api.INTSXP or typ == api.REALSXP:
         ret = []
         sp = api.dataptr(s)
         for i in range(api.length(s)):
@@ -102,9 +102,10 @@ def help_search(topic, try_all_packages=False):
 
 def get_option(key, default=None):
     ret = rcopy(api.get_option1(api.mk_symbol(key)), simplify=True)
-    if not ret:
-        ret = default
-    return ret
+    if ret is None:
+        return default
+    else:
+        return ret
 
 
 def set_option(key, value):

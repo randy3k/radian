@@ -47,6 +47,7 @@ options(
     rice.color_scheme = "native",
     rice.editing_mode = "emacs",
     rice.auto_indentation = TRUE,
+    rice.complete_while_typing = TRUE,
     rice.prompt = "\033[0;34mr$>\033[0m ",
     rice.shell_prompt = "\033[0;31m!%>\033[0m "
 )
