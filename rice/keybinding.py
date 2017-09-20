@@ -66,7 +66,7 @@ def create_keybindings():
         event.app.mp.prompt_mode = "shell"
         event.app._redraw()
 
-    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r"))
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
     def _(event):
         should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
@@ -74,7 +74,7 @@ def create_keybindings():
         if should_indent and event.app.auto_indentation:
             event.current_buffer.insert_text('    ')
 
-    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     def _(event):
         event.current_buffer.last_working_index = event.current_buffer.working_index
@@ -127,7 +127,7 @@ def create_keybindings():
         event.app.mp.prompt_mode = "r"
         event.app._redraw()
 
-    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("shell"))
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("shell"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("shell"))
     def _(event):
         event.current_buffer.last_working_index = event.current_buffer.working_index
@@ -137,7 +137,7 @@ def create_keybindings():
         event.current_buffer.reset()
 
     # readline mode
-    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & prompt_mode("readline"))
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("readline"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
     def _(event):
         event.current_buffer.last_working_index = event.current_buffer.working_index
@@ -149,7 +149,7 @@ def create_keybindings():
     handle('down', filter=prompt_mode("readline"))(lambda event: None)
 
     # emit completion
-    @handle(Keys.ControlJ, filter=insert_mode & default_focussed & app.has_completions)
+    @handle('c-j', filter=insert_mode & default_focussed & app.has_completions)
     @handle('enter', filter=insert_mode & default_focussed & app.has_completions)
     def _(event):
         event.current_buffer.complete_state = None
