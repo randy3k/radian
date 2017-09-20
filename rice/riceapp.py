@@ -25,8 +25,8 @@ from .keybinding import create_keybindings
 from .completion import RCompleter, SmartPathCompleter
 
 
-PROMPT = "r$> "
-COLORED_PROMPT = "\x1b[34m" + PROMPT.strip() + "\x1b[0m "
+PROMPT = "\x1b[34mr$>\x1b[0m "
+SHELL_PROMPT = "\x1b[31m!%>\x1b[0m "
 
 
 def create_modal_prompt():
@@ -104,15 +104,14 @@ class RiceApplication(object):
             sys_prompt = interface.get_option("prompt")
             if sys_prompt == "> ":
                 prompt = PROMPT
-                mp.set_prompt_mode_message("r", ANSI(COLORED_PROMPT))
             else:
                 prompt = sys_prompt
-                mp.set_prompt_mode_message("r", ANSI(prompt))
 
         self.default_prompt = prompt
+        mp.set_prompt_mode_message("r", ANSI(prompt))
         interface.set_option("prompt", prompt)
 
-        shell_prompt = interface.get_option("rice.shell_prompt", "\x1b[31m!%>\x1b[0m ")
+        shell_prompt = interface.get_option("rice.shell_prompt", SHELL_PROMPT)
         mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
 
         # necessary on windows
