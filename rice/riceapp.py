@@ -74,7 +74,6 @@ def create_modal_prompt():
 
     # r mode message is set by RiceApplication.app_initialize()
     mp.prompt_mode = "r"
-    mp.set_prompt_mode_message("shell", ANSI("\x1b[31m!%>\x1b[0m "))
 
     return mp
 
@@ -112,6 +111,9 @@ class RiceApplication(object):
 
         self.default_prompt = prompt
         interface.set_option("prompt", prompt)
+
+        shell_prompt = interface.get_option("rice.shell_prompt", "\x1b[31m!%>\x1b[0m ")
+        mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
 
         # necessary on windows
         interface.set_option("menu.graphics", False)
