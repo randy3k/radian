@@ -6,6 +6,7 @@ from prompt_toolkit.application.current import get_app
 
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.key_binding.bindings.named_commands import backward_delete_char
 from prompt_toolkit.filters import Condition, has_focus, \
     emacs_insert_mode, vi_insert_mode, in_paste_mode, app
 from prompt_toolkit.enums import DEFAULT_BUFFER
@@ -56,6 +57,10 @@ def auto_indentation():
     return get_app().auto_indentation
 
 
+def if_no_repeat(event):
+    return not event.is_repeat
+
+
 def create_keybindings():
     kb = KeyBindings()
     handle = kb.add
@@ -100,6 +105,18 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    def _(event):
+        document = event.current_buffer.document
+        text = document.current_line_before_cursor
+        if text.endswith("    ") and len(text.strip()) == 0 and event.arg == 1:
+            backward_delete_char(event)
+            backward_delete_char(event)
+            backward_delete_char(event)
+            backward_delete_char(event)
+        else:
+            backward_delete_char(event)
+
     @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r") & tab_should_insert_whitespaces)
     def _(event):
         event.current_buffer.insert_text('    ')
@@ -122,7 +139,10 @@ def create_keybindings():
             event.current_buffer.insert_text(data)
 
     # shell mode
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("shell") & is_begin_of_buffer)
+    @handle(
+        'backspace',
+        filter=insert_mode & default_focussed & prompt_mode("shell") & is_begin_of_buffer,
+        save_before=if_no_repeat)
     def _(event):
         event.app.mp.prompt_mode = "r"
         event.app._redraw()
