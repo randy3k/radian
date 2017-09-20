@@ -20,7 +20,7 @@ from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.lexers import DynamicLexer
 from prompt_toolkit.layout.margins import PromptMargin
-from prompt_toolkit.layout.menus import CompletionsMenu
+from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
     DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, \
     HighlightSearchProcessor, HighlightSelectionProcessor, HighlightMatchingBracketProcessor, \
@@ -123,7 +123,7 @@ class ModalPrompt(ModalPromptBase):
     multiline = True
     lexer = None
     enable_open_in_editor = False
-    reserve_space_for_menu = 8
+    reserve_space_for_menu = 4
     completer = None
     style = None
     history = None
@@ -217,9 +217,8 @@ class ModalPrompt(ModalPromptBase):
                     # Completion menus.
                     Float(xcursor=True,
                           ycursor=True,
-                          content=CompletionsMenu(
-                              max_height=16,
-                              scroll_offset=1,
+                          content=MultiColumnCompletionsMenu(
+                              show_meta=True,
                               extra_filter=has_focus(default_buffer)))
                 ]
             ),
