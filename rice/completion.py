@@ -39,7 +39,7 @@ class RCompleter(Completer):
         m = LIBRARY_PATTERN.match(text)
         if m:
             prefix = m.group(1)
-            if len(prefix) > 0:
+            if len(prefix) > 0 or complete_event.completion_requested:
                 for p in packages:
                     if p.lower().startswith(prefix.lower()):
                         yield Completion(p, -len(prefix))
@@ -58,7 +58,7 @@ class RCompleter(Completer):
             for c in completions:
                 yield Completion(c, -len(token))
 
-            if len(token) >= 3:
+            if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
                 for p in packages:
                     if p.startswith(token):
                         comp = p + "::"
