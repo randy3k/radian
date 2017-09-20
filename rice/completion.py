@@ -39,9 +39,10 @@ class RCompleter(Completer):
         m = LIBRARY_PATTERN.match(text)
         if m:
             prefix = m.group(1)
-            for p in packages:
-                if p.startswith(prefix):
-                    yield Completion(p, -len(prefix))
+            if len(prefix) > 0:
+                for p in packages:
+                    if p.lower().startswith(prefix.lower()):
+                        yield Completion(p, -len(prefix))
 
         else:
             completions = []
