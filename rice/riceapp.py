@@ -26,7 +26,7 @@ from .completion import RCompleter, SmartPathCompleter
 
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
-SHELL_PROMPT = "\x1b[31m!%>\x1b[0m "
+SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 
 
 def create_modal_prompt():
