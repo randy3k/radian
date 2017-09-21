@@ -84,7 +84,8 @@ def create_keybindings():
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
     def _(event):
         should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
-        event.current_buffer.newline(copy_margin=not in_paste_mode())
+        copy_margin = not in_paste_mode() and event.app.auto_indentation
+        event.current_buffer.newline(copy_margin=copy_margin)
         if should_indent and event.app.auto_indentation:
             event.current_buffer.insert_text('    ')
 
