@@ -87,7 +87,8 @@ def create_keybindings():
         copy_margin = not in_paste_mode() and event.app.auto_indentation
         event.current_buffer.newline(copy_margin=copy_margin)
         if should_indent and event.app.auto_indentation:
-            event.current_buffer.insert_text('    ')
+            tab_size = event.app.tab_size
+            event.current_buffer.insert_text(" " * tab_size)
 
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
@@ -111,21 +112,21 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r"))
     def _(event):
         document = event.current_buffer.document
         text = document.current_line_before_cursor
-        if text.endswith("    ") and len(text.strip()) == 0 and event.arg == 1:
-            backward_delete_char(event)
-            backward_delete_char(event)
-            backward_delete_char(event)
-            backward_delete_char(event)
+        tab_size = event.app.tab_size
+        if text.endswith(" " * tab_size) and len(text.strip()) == 0 and event.arg == 1:
+            for i in range(tab_size):
+                backward_delete_char(event)
         else:
             backward_delete_char(event)
 
     @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r") & tab_should_insert_whitespaces)
     def _(event):
-        event.current_buffer.insert_text('    ')
+        tab_size = event.app.tab_size
+        event.current_buffer.insert_text(" " * tab_size)
 
     # bracketed paste
     @handle(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r"))
