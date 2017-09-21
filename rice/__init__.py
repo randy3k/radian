@@ -5,7 +5,7 @@ import os
 from . import deps
 from .riceapp import RiceApplication
 
-__version__ = '0.0.23'
+__version__ = '0.0.24'
 
 
 def main():
