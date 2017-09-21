@@ -107,8 +107,10 @@ def create_keybindings():
             if m:
                 current_indentation = m.group(0)
                 previous_indentation = re.match(r"^\s*", textList[-2]).group(0)
-                if len(current_indentation) >= 4 and current_indentation == previous_indentation:
-                    event.current_buffer.delete_before_cursor(4)
+                tab_size = event.app.tab_size
+                if len(current_indentation) >= event.app.tab_size and \
+                        current_indentation == previous_indentation:
+                    event.current_buffer.delete_before_cursor(tab_size)
 
         event.current_buffer.insert_text(event.data)
 
@@ -118,8 +120,7 @@ def create_keybindings():
         text = document.current_line_before_cursor
         tab_size = event.app.tab_size
         if text.endswith(" " * tab_size) and len(text.strip()) == 0 and event.arg == 1:
-            for i in range(tab_size):
-                backward_delete_char(event)
+            event.current_buffer.delete_before_cursor(tab_size)
         else:
             backward_delete_char(event)
 
