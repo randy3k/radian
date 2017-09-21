@@ -35,7 +35,7 @@ Requirements:
 # install released version
 pip install -U rice
 # or the development version
-pip install -I git+https://github.com/randy3k/rice
+pip install -U git+https://github.com/randy3k/rice
 ```
 
 ## Settings
