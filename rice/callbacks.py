@@ -34,7 +34,7 @@ def write_console_ex(buf, buflen, otype):
         sys.stdout.flush()
     else:
         sys.stderr.write(output)
-        sys.stdout.flush()
+        sys.stderr.flush()
 
 
 def clean_up(save_type, status, runlast):
