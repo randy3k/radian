@@ -61,6 +61,15 @@ def if_no_repeat(event):
     return not event.is_repeat
 
 
+def handle_accept(event, append_to_history=True):
+    event.current_buffer.last_working_index = event.current_buffer.working_index
+    app = get_app()
+    app.set_return_value(event.current_buffer.document.text)
+    app.pre_run_callables.append(event.current_buffer.reset)
+    if append_to_history:
+        event.current_buffer.append_to_history()
+
+
 def create_keybindings():
     kb = KeyBindings()
     handle = kb.add
@@ -82,11 +91,7 @@ def create_keybindings():
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     def _(event):
-        event.current_buffer.last_working_index = event.current_buffer.working_index
-        app = get_app()
-        app.set_return_value(event.current_buffer.document.text)
-        app.pre_run_callables.append(event.current_buffer.reset)
-        event.current_buffer.append_to_history()
+        handle_accept(event)
 
     # indentation
     @handle('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
@@ -134,7 +139,7 @@ def create_keybindings():
         if shouldeval and prase_input_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
-            event.current_buffer.validate_and_handle()
+            handle_accept(event)
         else:
             event.current_buffer.insert_text(data)
 
@@ -160,10 +165,7 @@ def create_keybindings():
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("readline"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
     def _(event):
-        event.current_buffer.last_working_index = event.current_buffer.working_index
-        app = get_app()
-        app.set_return_value(event.current_buffer.document.text)
-        app.pre_run_callables.append(event.current_buffer.reset)
+        handle_accept(event, append_to_history=False)
 
     handle('up', filter=prompt_mode("readline"))(lambda event: None)
     handle('down', filter=prompt_mode("readline"))(lambda event: None)
