@@ -136,6 +136,7 @@ class ModalPrompt(ModalPromptBase):
             editing_mode=EditingMode.EMACS,
             history=None,
             lexer=None,
+            style=None,
             completer=None,
             extra_key_bindings=None,
             input=None,
@@ -144,6 +145,7 @@ class ModalPrompt(ModalPromptBase):
 
         self.history = history
         self.lexer = lexer
+        self.style = None
         self.completer = completer
         self.extra_key_bindings = extra_key_bindings
         if not is_windows():

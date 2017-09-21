@@ -91,9 +91,7 @@ class RiceApplication(object):
             mp.app.editing_mode = EditingMode.EMACS
 
         color_scheme = interface.get_option("rice.color_scheme", "native")
-        self.style = merge_styles([
-            default_style(),
-            style_from_pygments(get_style_by_name(color_scheme))])
+        self.style = style_from_pygments(get_style_by_name(color_scheme))
 
         mp.app.auto_indentation = interface.get_option("rice.auto_indentation", 1) == 1
         mp.complete_while_typing = interface.get_option("rice.complete_while_typing", 1) == 1
