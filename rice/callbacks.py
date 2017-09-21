@@ -31,8 +31,10 @@ def write_console_ex(buf, buflen, otype):
     output = buf.decode(ENCODING)
     if otype == 0:
         sys.stdout.write(output)
+        sys.stdout.flush()
     else:
         sys.stderr.write(output)
+        sys.stdout.flush()
 
 
 def clean_up(save_type, status, runlast):
@@ -41,3 +43,4 @@ def clean_up(save_type, status, runlast):
 
 def show_message(buf):
     sys.stdout.write(buf.decode(ENCODING))
+    sys.stdout.flush()
