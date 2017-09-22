@@ -50,7 +50,7 @@ options(
     rice.tab_size = 4,
     rice.complete_while_typing = TRUE,
     rice.prompt = "\033[0;34mr$>\033[0m ",
-    rice.shell_prompt = "\033[0;31m!%>\033[0m "
+    rice.shell_prompt = "\033[0;31m#!>\033[0m "
 )
 ```
 
