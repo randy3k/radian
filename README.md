@@ -5,7 +5,7 @@ It replaces the use of the the default R console, similar to `ipython` in the `p
 
 _rice_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
 
-<img width="600px" src="https://user-images.githubusercontent.com/1690993/30470592-5c4582d6-99c3-11e7-860e-2d4670987f57.png"></img>
+<img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
 
 ## Features
