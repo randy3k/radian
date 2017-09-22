@@ -114,6 +114,8 @@ def set_option(key, value):
         kwargs[key] = api.mk_string(value)
     elif isinstance(value, bool):
         kwargs[key] = api.scalar_integer(int(value))
+    elif isinstance(value, int):
+        kwargs[key] = api.scalar_integer(value)
 
     rcall(api.mk_symbol("options"), **kwargs)
 

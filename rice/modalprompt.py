@@ -141,7 +141,8 @@ class ModalPrompt(ModalPromptBase):
             extra_key_bindings=None,
             input=None,
             output=None,
-            on_render=None):
+            on_render=None,
+            on_resize=None):
 
         self.history = history
         self.lexer = lexer
@@ -155,6 +156,7 @@ class ModalPrompt(ModalPromptBase):
         self.output = output or get_default_output()
 
         self.on_render = on_render
+        self.on_resize = on_resize
 
         self.app, self._default_buffer, self._default_buffer_control = \
             self._create_application(editing_mode)
@@ -254,6 +256,7 @@ class ModalPrompt(ModalPromptBase):
             editing_mode=editing_mode,
             reverse_vi_search_direction=True,
             on_render=self.on_render,
+            on_resize=self.on_resize,
             input=self.input,
             output=self.output)
 
