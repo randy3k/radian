@@ -5,8 +5,7 @@ import os
 from . import deps
 from .riceapp import RiceApplication
 
-__version__ = '0.0.24'
-
+__version__ = '0.0.25'
 
 def main():
     parser = optparse.OptionParser("usage: rice")
