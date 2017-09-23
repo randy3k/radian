@@ -71,7 +71,7 @@ def create_modal_prompt():
             app.output.write("\n")
 
     def on_resize(app):
-        if app.mp.set_width_on_resize:
+        if app.mp.auto_width:
             terminal_width[0] = app.output.get_size().columns
 
     mp = ModalPrompt(
@@ -87,7 +87,7 @@ def create_modal_prompt():
     # r mode message is set by RiceApplication.app_initialize()
     mp.prompt_mode = "r"
 
-    mp.set_width_on_resize = False
+    mp.auto_width = False
 
     return mp
 
@@ -128,10 +128,10 @@ class RiceApplication(object):
         shell_prompt = interface.get_option("rice.shell_prompt", SHELL_PROMPT)
         mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
 
-        sys_set_width_on_resize = interface.get_option("setWidthOnResize", 1) == 1
-        mp.set_width_on_resize = interface.get_option("rice.auto_width", sys_set_width_on_resize)
+        set_width_on_resize = interface.get_option("setWidthOnResize", 1) == 1
+        mp.auto_width = interface.get_option("rice.auto_width", set_width_on_resize)
 
-        if mp.set_width_on_resize:
+        if mp.auto_width:
             interface.set_option("width", mp.app.output.get_size().columns)
 
         # necessary on windows
