@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import datetime
 import os
 from prompt_toolkit.history import History
