@@ -30,7 +30,7 @@ SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 
 
 def create_modal_prompt():
-    terminal_width = [None, None]
+    terminal_width = [None]
 
     def process_events(context):
         while True:
@@ -38,8 +38,10 @@ def create_modal_prompt():
                 break
             api.process_events()
 
-            if terminal_width[0] != terminal_width[1]:
-                terminal_width[1] = terminal_width[0]
+            app = get_app()
+            output_width = app.output.get_size().columns
+            if terminal_width[0] != output_width:
+                terminal_width[0] = output_width
                 interface.set_option("width", max(terminal_width[0], 20))
 
             time.sleep(1.0 / 30)
@@ -70,18 +72,13 @@ def create_modal_prompt():
         if app.is_aborting and not app.mp.prompt_mode == "readline":
             app.output.write("\n")
 
-    def on_resize(app):
-        if app.mp.auto_width:
-            terminal_width[0] = app.output.get_size().columns
-
     mp = ModalPrompt(
         lexer=DynamicLexer(get_lexer),
         completer=DynamicCompleter(get_completer),
         history=history,
         extra_key_bindings=create_keybindings(),
         tempfile_suffix=".R",
-        on_render=on_render,
-        on_resize=on_resize
+        on_render=on_render
     )
 
     # r mode message is set by RiceApplication.app_initialize()

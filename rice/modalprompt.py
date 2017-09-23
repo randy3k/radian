@@ -113,8 +113,7 @@ class ModalPrompt(object):
             tempfile_suffix=None,
             input=None,
             output=None,
-            on_render=None,
-            on_resize=None):
+            on_render=None):
 
         self.editing_mode = editing_mode
         self.history = history
@@ -130,7 +129,6 @@ class ModalPrompt(object):
         self.output = output or get_default_output()
 
         self.on_render = on_render
-        self.on_resize = on_resize
 
         self.create_layout()
         self.create_application()
@@ -283,7 +281,6 @@ class ModalPrompt(object):
             editing_mode=self.editing_mode,
             reverse_vi_search_direction=True,
             on_render=self.on_render,
-            on_resize=self.on_resize,
             input=self.input,
             output=self.output)
 
