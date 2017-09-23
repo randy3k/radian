@@ -621,11 +621,12 @@ class Application(object):
         """
         Called when we don't receive the cursor position response in time.
         """
-        def in_terminal():
-            self.output.write(
-                "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
-            self.output.flush()
-        self.run_in_terminal(in_terminal)
+        # def in_terminal():
+        #     self.output.write(
+        #         "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
+        #     self.output.flush()
+        # self.run_in_terminal(in_terminal)
+        pass
 
     def exit(self):
         " Set exit. When Control-D has been pressed. "
