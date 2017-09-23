@@ -79,6 +79,7 @@ def create_modal_prompt():
         completer=DynamicCompleter(get_completer),
         history=history,
         extra_key_bindings=create_keybindings(),
+        tempfile_suffix=".R",
         on_render=on_render,
         on_resize=on_resize
     )
@@ -104,7 +105,7 @@ class RiceApplication(object):
             mp.app.editing_mode = EditingMode.EMACS
 
         color_scheme = interface.get_option("rice.color_scheme", "native")
-        self.style = style_from_pygments(get_style_by_name(color_scheme))
+        mp.style = style_from_pygments(get_style_by_name(color_scheme))
 
         mp.app.auto_indentation = interface.get_option("rice.auto_indentation", 1) == 1
         mp.app.tab_size = int(interface.get_option("rice.tab_size", 4))
@@ -157,12 +158,12 @@ class RiceApplication(object):
                 try:
                     if message == self.default_prompt:
                         mp.prompt_mode = "r"
-                        text = mp.prompt(style=self.style)
                     else:
                         # invoked by `readline`
                         mp.set_prompt_mode_message("readline", ANSI(message))
                         mp.prompt_mode = "readline"
-                        text = mp.prompt()
+
+                    text = mp.run()
 
                 except Exception as e:
                     if isinstance(e, EOFError):
