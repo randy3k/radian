@@ -14,10 +14,15 @@ def run_shell_command(command):
             sys.stdout.write("\n")
             return
 
-        if sys.platform.startswith('win'):
-            cmd_list = command.strip().split(" ", 1)
-        else:
-            cmd_list = shlex.split(command)
+        try:
+            if sys.platform.startswith('win'):
+                cmd_list = command.strip().split(" ", 1)
+            else:
+                cmd_list = shlex.split(command)
+        except Exception as e:
+            print(e)
+            sys.stdout.write("\n")
+            return
 
         if cmd_list[0] == "cd":
             if len(cmd_list) != 2:
