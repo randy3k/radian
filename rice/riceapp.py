@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import sys
 import time
 import os
+import re
 
 from .session import RSession
 from . import interface
@@ -188,14 +189,14 @@ class RiceApplication(object):
                 try:
                     if message == mp.default_prompt:
                         mp.prompt_mode = "r"
-                    elif message.startswith("Browse"):
+                    elif re.match(r"Browse\[[0-9]+\]", message):
+                        mp.prompt_mode = "browse"
                         mp.set_prompt_mode_message(
                             "browse", ANSI("\x1b[33m" + message + "\x1b[0m "))
-                        mp.prompt_mode = "browse"
                     else:
                         # invoked by `readline`
-                        mp.set_prompt_mode_message("readline", ANSI(message))
                         mp.prompt_mode = "readline"
+                        mp.set_prompt_mode_message("readline", ANSI(message))
 
                     text = mp.run()
 
