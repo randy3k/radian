@@ -49,6 +49,8 @@ def run_shell_command(command):
                 sys.stdout.write("\n")
             except Exception as e:
                 print(e)
+                sys.stdout.write("\n")
+                return
 
         else:
             if sys.platform.startswith('win'):
@@ -58,6 +60,6 @@ def run_shell_command(command):
                 p = subprocess.Popen([shell, "-c", command], stdin=sys.stdin, stdout=sys.stdout)
 
             p.wait()
-        sys.stdout.write("\n")
+            sys.stdout.write("\n")
 
     return get_app().run_coroutine_in_terminal(lambda: run_in_executor(run_command))
