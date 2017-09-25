@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from . import api
 
+import sys
 from six import text_type
 
 """
@@ -19,9 +20,10 @@ def rcopy(s, simplify=False):
         for i in range(api.length(s)):
             ret[names[i]] = rcopy(api.vector_elt(s, i), simplify=simplify)
     elif typ == api.STRSXP:
+        enc = encoding() if sys.platform.startswith('win') else "utf-8"
         ret = []
         for i in range(api.length(s)):
-            ret.append(api.dataptr(api.string_elt(s, i)).value.decode(encoding()))
+            ret.append(api.dataptr(api.string_elt(s, i)).value.decode(enc))
         if simplify and len(ret) == 1:
             ret = ret[0]
     elif typ == api.LGLSXP:
