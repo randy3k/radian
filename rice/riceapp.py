@@ -73,9 +73,9 @@ class RiceApplication(object):
         color_scheme = interface.get_option("rice.color_scheme", "native")
         mp.style = style_from_pygments(get_style_by_name(color_scheme))
 
-        mp.app.auto_indentation = interface.get_option("rice.auto_indentation", 1) == 1
+        mp.app.auto_indentation = interface.get_option("rice.auto_indentation", True)
         mp.app.tab_size = int(interface.get_option("rice.tab_size", 4))
-        mp.complete_while_typing = interface.get_option("rice.complete_while_typing", 1) == 1
+        mp.complete_while_typing = interface.get_option("rice.complete_while_typing", True)
 
         prompt = interface.get_option("rice.prompt", None)
         if prompt:
@@ -94,7 +94,7 @@ class RiceApplication(object):
         shell_prompt = interface.get_option("rice.shell_prompt", SHELL_PROMPT)
         mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
 
-        set_width_on_resize = interface.get_option("setWidthOnResize", 1) == 1
+        set_width_on_resize = interface.get_option("setWidthOnResize", True)
         mp.auto_width = interface.get_option("rice.auto_width", set_width_on_resize)
 
         if mp.auto_width:
@@ -189,7 +189,8 @@ class RiceApplication(object):
                     if message == mp.default_prompt:
                         mp.prompt_mode = "r"
                     elif message.startswith("Browse"):
-                        mp.set_prompt_mode_message("browse", ANSI("\x1b[33m" + message + "\x1b[0m "))
+                        mp.set_prompt_mode_message(
+                            "browse", ANSI("\x1b[33m" + message + "\x1b[0m "))
                         mp.prompt_mode = "browse"
                     else:
                         # invoked by `readline`

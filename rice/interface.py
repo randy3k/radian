@@ -21,10 +21,24 @@ def rcopy(s, simplify=False):
     elif typ == api.STRSXP:
         ret = []
         for i in range(api.length(s)):
-            ret.append(api.dataptr(api.string_elt(s, i)).value.decode("utf-8"))
+            ret.append(api.dataptr(api.string_elt(s, i)).value.decode(encoding()))
         if simplify and len(ret) == 1:
             ret = ret[0]
-    elif typ == api.LGLSXP or typ == api.INTSXP or typ == api.REALSXP:
+    elif typ == api.LGLSXP:
+        ret = []
+        sp = api.dataptr(s)
+        for i in range(api.length(s)):
+            ret.append(bool(sp[i]))
+        if simplify and len(ret) == 1:
+            ret = ret[0]
+    elif typ == api.INTSXP:
+        ret = []
+        sp = api.dataptr(s)
+        for i in range(api.length(s)):
+            ret.append(int(sp[i]))
+        if simplify and len(ret) == 1:
+            ret = ret[0]
+    elif typ == api.REALSXP:
         ret = []
         sp = api.dataptr(s)
         for i in range(api.length(s)):
