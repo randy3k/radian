@@ -51,25 +51,24 @@ def create_modal_prompt():
     def get_lexer():
         app = get_app(return_none=False)
         if hasattr(app, "mp"):
-            if app.mp.prompt_mode == "r":
+            if app.mp.prompt_mode in ["r", "browse"]:
                 return PygmentsLexer(SLexer)
         return None
 
     def get_completer():
         app = get_app(return_none=False)
         if hasattr(app, "mp"):
-            if app.mp.prompt_mode == "r":
+            if app.mp.prompt_mode in ["r", "browse"]:
                 return RCompleter()
             elif app.mp.prompt_mode == "shell":
                 return SmartPathCompleter()
         return None
 
     history = ModalFileHistory(
-        os.path.join(os.path.expanduser("~"), ".rice_history"),
-        exclude_modes=["readline"])
+        os.path.join(os.path.expanduser("~"), ".rice_history"))
 
     def on_render(app):
-        if app.is_aborting and not app.mp.prompt_mode == "readline":
+        if app.is_aborting and app.mp.prompt_mode not in ["readline"]:
             app.output.write("\n")
 
     mp = ModalPrompt(
@@ -83,8 +82,10 @@ def create_modal_prompt():
 
     # r mode message is set by RiceApplication.app_initialize()
     mp.prompt_mode = "r"
+    mp.top_level_modes = ["r", "shell"]
 
     mp.auto_width = False
+    mp.add_history = False
 
     return mp
 
@@ -141,7 +142,7 @@ class RiceApplication(object):
         mp = create_modal_prompt()
         mp.interrupted = False
 
-        def result_from_prompt(message, add_history=True):
+        def result_from_prompt(message, add_history=1):
             if not self.initialized:
                 self.app_initialize(mp)
                 message = self.default_prompt
@@ -152,11 +153,16 @@ class RiceApplication(object):
             else:
                 sys.stdout.write("\n")
 
+            mp.add_history = add_history == 1
+
             text = None
             while text is None:
                 try:
                     if message == self.default_prompt:
                         mp.prompt_mode = "r"
+                    elif message.startswith("Browse"):
+                        mp.set_prompt_mode_message("browse", ANSI("\x1b[33m" + message + "\x1b[0m "))
+                        mp.prompt_mode = "browse"
                     else:
                         # invoked by `readline`
                         mp.set_prompt_mode_message("readline", ANSI(message))
@@ -166,13 +172,13 @@ class RiceApplication(object):
 
                 except Exception as e:
                     if isinstance(e, EOFError):
-                        # todo: confirmation
+                        # todo: confirmation in "r" mode
                         return None
                     else:
                         print(e)
                         return None
                 except KeyboardInterrupt:
-                    if mp.prompt_mode == "readline":
+                    if mp.prompt_mode in ["readline"]:
                         mp.interrupted = True
                         api.interrupts_pending(True)
                         api.check_user_interrupt()

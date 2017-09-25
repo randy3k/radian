@@ -23,8 +23,8 @@ default_focussed = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 
 
-def prompt_mode(mode):
-    return Condition(lambda: get_app().mp.prompt_mode == mode)
+def prompt_mode(*modes):
+    return Condition(lambda: get_app().mp.prompt_mode in modes)
 
 
 @Condition
@@ -61,12 +61,12 @@ def if_no_repeat(event):
     return not event.is_repeat
 
 
-def handle_accept(event, append_to_history=True):
+def handle_accept(event, add_history=True):
     event.current_buffer.last_working_index = event.current_buffer.working_index
-    app = get_app()
+    app = event.app
     app.set_return_value(event.current_buffer.document.text)
     app.pre_run_callables.append(event.current_buffer.reset)
-    if append_to_history:
+    if add_history and app.mp.add_history:
         event.current_buffer.append_to_history()
 
 
@@ -80,8 +80,8 @@ def create_keybindings():
         event.app.mp.prompt_mode = "shell"
         event.app._redraw()
 
-    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r"))
-    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r"))
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r", "browse"))
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r", "browse"))
     def _(event):
         should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
         copy_margin = not in_paste_mode() and event.app.auto_indentation
@@ -96,9 +96,9 @@ def create_keybindings():
         handle_accept(event)
 
     # indentation
-    @handle('}', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
-    @handle(']', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
-    @handle(')', filter=insert_mode & default_focussed & prompt_mode("r") & auto_indentation)
+    @handle('}', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
+    @handle(']', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
+    @handle(')', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -114,7 +114,7 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse"))
     def _(event):
         document = event.current_buffer.document
         text = document.current_line_before_cursor
@@ -124,13 +124,13 @@ def create_keybindings():
         else:
             backward_delete_char(event)
 
-    @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r") & tab_should_insert_whitespaces)
+    @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & tab_should_insert_whitespaces)
     def _(event):
         tab_size = event.app.tab_size
         event.current_buffer.insert_text(" " * tab_size)
 
     # bracketed paste
-    @handle(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r"))
+    @handle(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r", "browse"))
     def _(event):
         data = event.data
 
@@ -145,6 +145,15 @@ def create_keybindings():
             handle_accept(event)
         else:
             event.current_buffer.insert_text(data)
+
+    # browse mode
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("browse") & prase_complete)
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("browse") & prase_complete)
+    def _(event):
+        if event.current_buffer.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
+            handle_accept(event, add_history=False)
+        else:
+            handle_accept(event)
 
     # shell mode
     @handle(
@@ -168,10 +177,7 @@ def create_keybindings():
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("readline"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
     def _(event):
-        handle_accept(event, append_to_history=False)
-
-    handle('up', filter=prompt_mode("readline"))(lambda event: None)
-    handle('down', filter=prompt_mode("readline"))(lambda event: None)
+        handle_accept(event)
 
     # emit completion
     @handle('c-j', filter=insert_mode & default_focussed & app.has_completions)

@@ -8,12 +8,13 @@ class ModalBuffer(Buffer):
 
     def _change_prompt_mode(self, index, redraw=True):
         if index < len(self.history.modes):
-            mode = self.history.modes[index]
-            if mode:
-                app = get_app()
-                app.mp.prompt_mode = mode
-                if redraw:
-                    app._redraw()
+            app = get_app()
+            if app.mp.prompt_mode in app.mp.top_level_modes:
+                mode = self.history.modes[index]
+                if mode and mode in app.mp.top_level_modes:
+                    app.mp.prompt_mode = mode
+                    if redraw:
+                        app._redraw()
 
     def _is_end_of_buffer(self):
         return self.cursor_position == len(self.text)
