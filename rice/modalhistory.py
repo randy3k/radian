@@ -1,8 +1,29 @@
 from __future__ import unicode_literals
 import datetime
 import os
-from prompt_toolkit.history import History
+from prompt_toolkit.history import History, InMemoryHistory
 from prompt_toolkit.application.current import get_app
+
+
+class ModalInMemoryHistory(InMemoryHistory):
+
+    def __init__(self, include_modes=None, exclude_modes=[]):
+        self.strings = []
+        self.modes = []
+        self.include_modes = include_modes
+        self.exclude_modes = exclude_modes
+
+    def append(self, string):
+        mode = get_app().mp.prompt_mode
+        # don't append to history if this mode is excluced
+        if mode in self.exclude_modes:
+            return
+        # don't append to history if this mode is not included
+        if self.include_modes and mode not in self.include_modes:
+            return
+
+        self.strings.append(string)
+        self.modes.append(mode)
 
 
 class ModalFileHistory(History):
@@ -15,7 +36,6 @@ class ModalFileHistory(History):
         self.include_modes = include_modes
         self.exclude_modes = exclude_modes
         self.filename = filename
-
         self._load()
 
     def _load(self):

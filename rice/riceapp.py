@@ -8,14 +8,14 @@ from . import interface
 from . import api
 from . import callbacks
 from .modalprompt import ModalPrompt
-from .modalhistory import ModalFileHistory
+from .modalhistory import ModalInMemoryHistory, ModalFileHistory
 
 from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
 from prompt_toolkit.completion import DynamicCompleter
 from pygments.lexers.r import SLexer
-from prompt_toolkit.styles import default_style, merge_styles, style_from_pygments
+from prompt_toolkit.styles import style_from_pygments
 from pygments.styles import get_style_by_name
 
 from prompt_toolkit.formatted_text import ANSI
@@ -29,72 +29,37 @@ PROMPT = "\x1b[34mr$>\x1b[0m "
 SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 
 
-def create_modal_prompt():
-    terminal_width = [None]
-
-    def process_events(context):
-        while True:
-            if context.input_is_ready():
-                break
-            api.process_events()
-
-            app = get_app()
-            output_width = app.output.get_size().columns
-            if terminal_width[0] != output_width:
-                terminal_width[0] = output_width
-                interface.set_option("width", max(terminal_width[0], 20))
-
-            time.sleep(1.0 / 30)
-
-    set_event_loop(create_event_loop(inputhook=process_events))
-
-    def get_lexer():
-        app = get_app(return_none=False)
-        if hasattr(app, "mp"):
-            if app.mp.prompt_mode in ["r", "browse"]:
-                return PygmentsLexer(SLexer)
-        return None
-
-    def get_completer():
-        app = get_app(return_none=False)
-        if hasattr(app, "mp"):
-            if app.mp.prompt_mode in ["r", "browse"]:
-                return RCompleter()
-            elif app.mp.prompt_mode == "shell":
-                return SmartPathCompleter()
-        return None
-
-    if os.path.exists(".rice_history"):
-        history_file = os.path.abspath(".rice_history")
-    else:
-        history_file = os.path.join(os.path.expanduser("~"), ".rice_history")
-    history = ModalFileHistory(history_file)
-
-    def on_render(app):
-        if app.is_aborting and app.mp.prompt_mode not in ["readline"]:
-            app.output.write("\n")
-
-    mp = ModalPrompt(
-        lexer=DynamicLexer(get_lexer),
-        completer=DynamicCompleter(get_completer),
-        history=history,
-        extra_key_bindings=create_keybindings(),
-        tempfile_suffix=".R",
-        on_render=on_render
-    )
-
-    # r mode message is set by RiceApplication.app_initialize()
-    mp.prompt_mode = "r"
-    mp.top_level_modes = ["r", "shell"]
-
-    mp.auto_width = False
-    mp.add_history = False
-
-    return mp
-
-
 class RiceApplication(object):
     initialized = False
+
+    def set_cli_options(self, options):
+        if options.vanilla:
+            options.no_history = True
+            options.no_environ = True
+            options.no_site_file = True
+            options.no_init_file = True
+
+        if options.no_environ:
+            os.environ["R_ENVIRON"] = ""
+            os.environ["R_ENVIRON_USER"] = ""
+
+        if options.no_site_file:
+            os.environ["R_PROFILE"] = ""
+
+        if options.no_init_file:
+            os.environ["R_PROFILE_USER"] = ""
+
+        if options.local_history:
+            if not os.path.exists(".rice_history"):
+                open(".rice_history", 'w+').close()
+
+    def get_history(self, options):
+        if options.no_history:
+            return ModalInMemoryHistory()
+        elif not options.global_history and os.path.exists(".rice_history"):
+            return ModalFileHistory(os.path.abspath(".rice_history"))
+        else:
+            return ModalFileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
 
     def app_initialize(self, mp):
         if sys.platform.startswith('win'):
@@ -122,7 +87,7 @@ class RiceApplication(object):
             else:
                 prompt = sys_prompt
 
-        self.default_prompt = prompt
+        mp.default_prompt = prompt
         mp.set_prompt_mode_message("r", ANSI(prompt))
         interface.set_option("prompt", prompt)
 
@@ -141,14 +106,74 @@ class RiceApplication(object):
         # print welcome message
         sys.stdout.write(interface.r_version())
 
-    def run(self):
-        mp = create_modal_prompt()
+    def create_modal_prompt(self, options):
+        terminal_width = [None]
+
+        def process_events(context):
+            while True:
+                if context.input_is_ready():
+                    break
+                api.process_events()
+
+                app = get_app()
+                output_width = app.output.get_size().columns
+                if terminal_width[0] != output_width:
+                    terminal_width[0] = output_width
+                    interface.set_option("width", max(terminal_width[0], 20))
+
+                time.sleep(1.0 / 30)
+
+        set_event_loop(create_event_loop(inputhook=process_events))
+
+        def get_lexer():
+            app = get_app(return_none=False)
+            if hasattr(app, "mp"):
+                if app.mp.prompt_mode in ["r", "browse"]:
+                    return PygmentsLexer(SLexer)
+            return None
+
+        def get_completer():
+            app = get_app(return_none=False)
+            if hasattr(app, "mp"):
+                if app.mp.prompt_mode in ["r", "browse"]:
+                    return RCompleter()
+                elif app.mp.prompt_mode == "shell":
+                    return SmartPathCompleter()
+            return None
+
+        def on_render(app):
+            if app.is_aborting and app.mp.prompt_mode not in ["readline"]:
+                app.output.write("\n")
+
+        mp = ModalPrompt(
+            lexer=DynamicLexer(get_lexer),
+            completer=DynamicCompleter(get_completer),
+            history=self.get_history(options),
+            extra_key_bindings=create_keybindings(),
+            tempfile_suffix=".R",
+            on_render=on_render
+        )
+
+        # r mode message is set by RiceApplication.app_initialize()
+        mp.prompt_mode = "r"
+        mp.top_level_modes = ["r", "shell"]
+
+        mp.auto_width = False
+        mp.add_history = False
+
+        return mp
+
+    def run(self, options):
+
+        self.set_cli_options(options)
+
+        mp = self.create_modal_prompt(options)
         mp.interrupted = False
 
         def result_from_prompt(message, add_history=1):
             if not self.initialized:
                 self.app_initialize(mp)
-                message = self.default_prompt
+                message = mp.default_prompt
                 self.initialized = True
 
             if mp.interrupted:
@@ -161,7 +186,7 @@ class RiceApplication(object):
             text = None
             while text is None:
                 try:
-                    if message == self.default_prompt:
+                    if message == mp.default_prompt:
                         mp.prompt_mode = "r"
                     elif message.startswith("Browse"):
                         mp.set_prompt_mode_message("browse", ANSI("\x1b[33m" + message + "\x1b[0m "))
