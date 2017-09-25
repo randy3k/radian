@@ -37,6 +37,8 @@ Requirements:
 pip install -U rice
 # or the development version
 pip install -U git+https://github.com/randy3k/rice
+# to run rice
+rice
 ```
 
 ## Settings
@@ -87,6 +89,11 @@ If the above doesn't work, you may need to futher specify `LD_LIBRARY_PATH`,
 $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
 $ rice
 ```
+
+### History file
+
+_rice_ maintains its own history file `.rice_history` and doesn't use the `.Rhistory` file. A local `.rice_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rice_history` would be used. To override the default behavior, you could launch `rice` with the options: `rice --local-history`, `rice --global-history` or `rice --no-history`.
+
 
 ### Does it slow down my R program?
 
