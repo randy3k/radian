@@ -64,8 +64,11 @@ def create_modal_prompt():
                 return SmartPathCompleter()
         return None
 
-    history = ModalFileHistory(
-        os.path.join(os.path.expanduser("~"), ".rice_history"))
+    if os.path.exists(".rice_history"):
+        history_file = os.path.abspath(".rice_history")
+    else:
+        history_file = os.path.join(os.path.expanduser("~"), ".rice_history")
+    history = ModalFileHistory(history_file)
 
     def on_render(app):
         if app.is_aborting and app.mp.prompt_mode not in ["readline"]:
