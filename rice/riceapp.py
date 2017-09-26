@@ -189,10 +189,10 @@ class RiceApplication(object):
                 try:
                     if message == mp.default_prompt:
                         mp.prompt_mode = "r"
-                    elif re.match(r"Browse\[[0-9]+\]", message):
+                    elif re.match(r"Browse\[[0-9]+\]> ", message):
                         mp.prompt_mode = "browse"
                         mp.set_prompt_mode_message(
-                            "browse", ANSI("\x1b[33m" + message + "\x1b[0m "))
+                            "browse", ANSI("\x1b[33m" + message + "\x1b[0m"))
                     else:
                         # invoked by `readline`
                         mp.prompt_mode = "readline"
