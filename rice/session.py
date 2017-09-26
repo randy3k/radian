@@ -4,7 +4,7 @@ import subprocess
 import sys
 import ctypes
 from ctypes import c_char, c_char_p, c_int, c_size_t, c_void_p, \
-    cast, pointer, CDLL, CFUNCTYPE, POINTER
+    cast, pointer, PyDLL, CFUNCTYPE, POINTER
 from .util import ccall
 
 
@@ -67,7 +67,7 @@ class RSession(object):
         if not os.path.exists(libR_path):
             raise RuntimeError("Cannot locate R share library.")
 
-        self.libR = CDLL(str(libR_path))
+        self.libR = PyDLL(str(libR_path))
 
     def run(self):
 
