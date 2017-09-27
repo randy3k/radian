@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import optparse
 import os
+import sys
 
 from . import deps
 from .riceapp import RiceApplication
@@ -26,5 +27,6 @@ def main():
         return
 
     os.environ["RICE_VERSION"] = __version__
+    os.environ["RETICULATE_PYTHON"] = sys.executable
 
     RiceApplication().run(options)
