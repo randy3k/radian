@@ -3,13 +3,17 @@ import optparse
 import os
 import sys
 
-from . import deps
+from .deps import dependencies_loaded
 from .riceapp import RiceApplication
 
 __version__ = '0.0.27-dev'
 
 
 def main():
+    if not dependencies_loaded:
+        print("Dependencies not loaded.")
+        return
+
     parser = optparse.OptionParser("usage: rice")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
     parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
