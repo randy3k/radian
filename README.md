@@ -109,6 +109,11 @@ let g:R_hl_term = 0
 ```
 in your vim config. You may also want to set `options(rice.auto_indentation = FALSE)` in `.Rprofile`.
 
+### `reticulate` is not working
+
+You need to make sure that the python _rice_ uses and `reticulate` uses are the [same](https://github.com/randy3k/rice/wiki/Check-python-library-for-reticulate). Python 3 users may also need to reinstall `reticulate` from [this PR](https://github.com/rstudio/reticulate/pull/104) (depends on when the PR will be merged).
+
+
 ### Error `libreadline.so.6: undefined symbol: PC`
 
 If you are using conda and encounter this error, it is likely because the `readline` from conda is bugged. Install it again via `conda-forge`.
