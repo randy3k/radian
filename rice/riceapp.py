@@ -28,6 +28,8 @@ from .completion import RCompleter, SmartPathCompleter
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
 SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
+BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
+BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 
 class RiceApplication(object):
@@ -189,10 +191,12 @@ class RiceApplication(object):
                 try:
                     if message == mp.default_prompt:
                         mp.prompt_mode = "r"
-                    elif re.match(r"Browse\[[0-9]+\]> ", message):
+                    elif BROWSE_PATTERN.match(message):
+                        level = BROWSE_PATTERN.match(message).group(1)
                         mp.prompt_mode = "browse"
                         mp.set_prompt_mode_message(
-                            "browse", ANSI("\x1b[33m" + message + "\x1b[0m"))
+                            "browse",
+                            ANSI(BROWSE_PROMPT.format(level)))
                     else:
                         # invoked by `readline`
                         mp.prompt_mode = "readline"
