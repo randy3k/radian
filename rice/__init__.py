@@ -6,7 +6,7 @@ import sys
 from . import deps
 from .riceapp import RiceApplication
 
-__version__ = '0.0.27'
+__version__ = '0.0.27-dev'
 
 
 def main():
@@ -23,7 +23,12 @@ def main():
     options, args = parser.parse_args()
 
     if options.version:
-        print("version {}".format(__version__))
+        print("rice version: {}".format(__version__))
+        print("python version: {:d}.{:d}.{:d}".format(
+            sys.version_info.major,
+            sys.version_info.minor,
+            sys.version_info.micro))
+        print("python executable: {}".format(sys.executable))
         return
 
     os.environ["RICE_VERSION"] = __version__
