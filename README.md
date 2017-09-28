@@ -111,7 +111,11 @@ in your vim config. You may also want to set `options(rice.auto_indentation = FA
 
 ### `reticulate` is not working
 
-You need to make sure that the python _rice_ uses and `reticulate` uses are the [same](https://github.com/randy3k/rice/wiki/Check-python-library-for-reticulate). Python 3 users may also need to reinstall `reticulate` from [this PR](https://github.com/rstudio/reticulate/pull/104) (depends on when the PR will be merged).
+You need to make sure that you are using the latest `reticulate`. The current developing version can be install via
+
+```r
+devtools::install_github("rstudio/reticulate")
+```
 
 
 ### Error `libreadline.so.6: undefined symbol: PC`
