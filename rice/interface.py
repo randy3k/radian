@@ -152,3 +152,10 @@ def encoding():
         return "cp" + str(cp.value)
     else:
         return "utf-8"
+
+
+def reticulate_set_message(message):
+    reval("""
+    setHook(packageEvent("reticulate", "onLoad"),
+            function(...) message("{}"))
+    """.format(message.replace('"', '\\"')))

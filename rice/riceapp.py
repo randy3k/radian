@@ -32,6 +32,17 @@ BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 
+RETICULATE_MESSAGE = """
+The host python environment is {}
+and `rice` is forcing `reticulate` to use this version of python.
+Any python packages needed, e.g., `tensorflow` and `keras`,
+have to be available to the current python environment.
+
+File an issue at https://github.com/randy3k/rice if you encounter any
+difficulties in loading `reticulate`.
+""".format(sys.executable).strip()
+
+
 class RiceApplication(object):
     initialized = False
 
@@ -65,6 +76,10 @@ class RiceApplication(object):
             return ModalFileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
 
     def app_initialize(self, mp):
+
+        if not interface.get_option("rice.suppress_reticulate_message", False):
+            interface.reticulate_set_message(RETICULATE_MESSAGE)
+
         if sys.platform.startswith('win'):
             callbacks.ENCODING = interface.encoding()
 
