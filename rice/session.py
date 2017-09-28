@@ -71,7 +71,7 @@ class RSession(object):
 
     def run(self):
 
-        _argv = ["rice", "--no-save", "--quiet"]
+        _argv = ["rice", "--no-save", "--no-restore-data", "--quiet"]
         argn = len(_argv)
         argv = (c_char_p * argn)()
         for i, a in enumerate(_argv):
