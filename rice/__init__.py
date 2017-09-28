@@ -6,7 +6,7 @@ import sys
 from .deps import dependencies_loaded
 from .riceapp import RiceApplication
 
-__version__ = '0.0.27-dev'
+__version__ = '0.0.28'
 
 
 def main():
