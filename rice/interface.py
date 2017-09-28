@@ -157,5 +157,5 @@ def encoding():
 def reticulate_set_message(message):
     reval("""
     setHook(packageEvent("reticulate", "onLoad"),
-            function(...) message("{}"))
+            function(...) packageStartupMessage("{}"))
     """.format(message.replace('"', '\\"')))
