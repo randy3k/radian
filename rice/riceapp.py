@@ -77,14 +77,14 @@ class RiceApplication(object):
 
     def app_initialize(self, mp):
 
-        if not interface.get_option("rice.suppress_reticulate_message", False):
-            interface.reticulate_set_message(RETICULATE_MESSAGE)
-
         if sys.platform.startswith('win'):
             encoding = interface.encoding()
             callbacks.ENCODING = encoding
             interface.ENCODING = encoding
             api.ENCODING = encoding
+
+        if not interface.get_option("rice.suppress_reticulate_message", False):
+            interface.reticulate_set_message(RETICULATE_MESSAGE)
 
         if interface.get_option("rice.editing_mode", "emacs") in ["vim", "vi"]:
             mp.app.editing_mode = EditingMode.VI
