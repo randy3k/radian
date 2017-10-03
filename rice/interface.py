@@ -5,6 +5,9 @@ from . import api
 import sys
 from six import text_type
 
+# to be set by RiceApplication
+ENCODING = "utf-8"
+
 """
 High level functions to interact with R api.
 """

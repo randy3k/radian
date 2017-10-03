@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import ctypes
 import sys
 
+# to be set by RiceApplication
 ENCODING = "utf-8"
 
 

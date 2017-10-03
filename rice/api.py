@@ -6,6 +6,7 @@ from .util import ccall, cglobal
 
 # to be set by RiceApplication
 rsession = None
+ENCODING = "utf-8"
 
 """
 A minimum set of R api functions to make the repl works.
@@ -84,11 +85,11 @@ def unprotect(i):
 
 
 def mk_symbol(s):
-    return rccall("Rf_install", c_void_p, [c_char_p], s.encode("utf-8"))
+    return rccall("Rf_install", c_void_p, [c_char_p], s.encode(ENCODING))
 
 
 def mk_string(s):
-    return rccall("Rf_mkString", c_void_p, [c_char_p], s.encode("utf-8"))
+    return rccall("Rf_mkString", c_void_p, [c_char_p], s.encode(ENCODING))
 
 
 def scalar_integer(i):
@@ -106,7 +107,7 @@ def parse_vector(s):
 
 
 def parse_error_msg():
-    return cast(addressof(rcglobal("R_ParseErrorMsg", c_char)), c_char_p).value.decode("utf-8")
+    return cast(addressof(rcglobal("R_ParseErrorMsg", c_char)), c_char_p).value.decode(ENCODING)
 
 
 def length(s):

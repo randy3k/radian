@@ -40,7 +40,7 @@ have to be available to the current python environment.
 
 File an issue at https://github.com/randy3k/rice if you encounter any
 difficulties in loading `reticulate`.
-""".format(sys.executable).strip()
+""".format(sys.executable.replace("\\", "\\\\")).strip()
 
 
 class RiceApplication(object):
@@ -81,7 +81,10 @@ class RiceApplication(object):
             interface.reticulate_set_message(RETICULATE_MESSAGE)
 
         if sys.platform.startswith('win'):
-            callbacks.ENCODING = interface.encoding()
+            encoding = interface.encoding()
+            callbacks.ENCODING = encoding
+            interface.ENCODING = encoding
+            api.ENCODING = encoding
 
         if interface.get_option("rice.editing_mode", "emacs") in ["vim", "vi"]:
             mp.app.editing_mode = EditingMode.VI
