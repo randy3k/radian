@@ -3,10 +3,8 @@ from collections import OrderedDict
 from . import api
 
 import sys
+import re
 from six import text_type
-
-# to be set by RiceApplication
-ENCODING = "utf-8"
 
 """
 High level functions to interact with R api.
@@ -23,7 +21,7 @@ def rcopy(s, simplify=False):
         for i in range(api.length(s)):
             ret[names[i]] = rcopy(api.vector_elt(s, i), simplify=simplify)
     elif typ == api.STRSXP:
-        enc = encoding() if sys.platform.startswith('win') else "utf-8"
+        enc = api.encoding() if sys.platform.startswith('win') else "utf-8"
         ret = []
         for i in range(api.length(s)):
             ret.append(api.dataptr(api.string_elt(s, i)).value.decode(enc))
@@ -77,11 +75,22 @@ def rcall(*args, **kwargs):
     return val
 
 
+ESCAPE_PATTERN = re.compile(r"""\\[^nrtbafv\\'"xuU]""")
+
+
 def rparse(s):
+    if ESCAPE_PATTERN.match(s):
+        raise ValueError("Error: invalid escape character")
     val, status = api.parse_vector(api.mk_string(s))
     if status != 1:
         raise SyntaxError("Error: %s" % api.parse_error_msg())
     return val
+
+
+def prase_input_complete(s):
+    s = ESCAPE_PATTERN.sub("", s)
+    val, status = api.parse_vector(api.mk_string(s))
+    return status != 2
 
 
 def reval(s):
@@ -147,14 +156,6 @@ def r_version():
 
 def installed_packages():
     return rcopy(reval("row.names(installed.packages())"))
-
-
-def encoding():
-    cp = api.localecp()
-    if cp and cp.value:
-        return "cp" + str(cp.value)
-    else:
-        return "utf-8"
 
 
 def reticulate_set_message(message):

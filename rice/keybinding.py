@@ -11,12 +11,8 @@ from prompt_toolkit.filters import Condition, has_focus, \
     emacs_insert_mode, vi_insert_mode, in_paste_mode, app
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
-from . import api
+from . import interface
 from . import shell_cmd
-
-
-def prase_input_complete(text):
-    return api.parse_vector(api.mk_string(text))[1] != 2
 
 
 default_focussed = has_focus(DEFAULT_BUFFER)
@@ -30,7 +26,7 @@ def prompt_mode(*modes):
 @Condition
 def prase_complete():
     app = get_app()
-    return prase_input_complete(app.current_buffer.text)
+    return interface.prase_input_complete(app.current_buffer.text)
 
 
 @Condition

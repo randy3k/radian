@@ -78,10 +78,8 @@ class RiceApplication(object):
     def app_initialize(self, mp):
 
         if sys.platform.startswith('win'):
-            encoding = interface.encoding()
+            encoding = api.encoding()
             callbacks.ENCODING = encoding
-            interface.ENCODING = encoding
-            api.ENCODING = encoding
 
         if not interface.get_option("rice.suppress_reticulate_message", False):
             interface.reticulate_set_message(RETICULATE_MESSAGE)

@@ -6,7 +6,6 @@ from .util import ccall, cglobal
 
 # to be set by RiceApplication
 rsession = None
-ENCODING = "utf-8"
 
 """
 A minimum set of R api functions to make the repl works.
@@ -85,11 +84,11 @@ def unprotect(i):
 
 
 def mk_symbol(s):
-    return rccall("Rf_install", c_void_p, [c_char_p], s.encode(ENCODING))
+    return rccall("Rf_install", c_void_p, [c_char_p], s.encode(encoding()))
 
 
 def mk_string(s):
-    return rccall("Rf_mkString", c_void_p, [c_char_p], s.encode(ENCODING))
+    return rccall("Rf_mkString", c_void_p, [c_char_p], s.encode(encoding()))
 
 
 def scalar_integer(i):
@@ -107,7 +106,7 @@ def parse_vector(s):
 
 
 def parse_error_msg():
-    return cast(addressof(rcglobal("R_ParseErrorMsg", c_char)), c_char_p).value.decode(ENCODING)
+    return cast(addressof(rcglobal("R_ParseErrorMsg", c_char)), c_char_p).value.decode(encoding())
 
 
 def length(s):
@@ -218,6 +217,15 @@ def visible():
 
 def localecp():
     return rcglobal("localeCP", c_int)
+
+
+def encoding():
+    if sys.platform == "win32":
+        cp = localecp()
+        if cp and cp.value:
+            return "cp" + str(cp.value)
+
+    return "utf-8"
 
 
 def get_option1(s):
