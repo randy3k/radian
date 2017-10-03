@@ -131,16 +131,21 @@ class RiceApplication(object):
         terminal_width = [None]
 
         def process_events(context):
+            tic = 0
             while True:
                 if context.input_is_ready():
                     break
                 api.process_events()
 
                 app = get_app()
-                output_width = app.output.get_size().columns
-                if terminal_width[0] != output_width:
-                    terminal_width[0] = output_width
-                    interface.set_option("width", max(terminal_width[0], 20))
+                if tic == 10:
+                    tic = 0
+                    output_width = app.output.get_size().columns
+                    if terminal_width[0] != output_width:
+                        terminal_width[0] = output_width
+                        interface.set_option("width", max(terminal_width[0], 20))
+
+                tic += 1
 
                 time.sleep(1.0 / 30)
 
