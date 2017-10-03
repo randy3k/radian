@@ -75,11 +75,11 @@ def rcall(*args, **kwargs):
     return val
 
 
-ESCAPE_PATTERN = re.compile(r"""\\[^nrtbafv\\'"xuU]""")
+INVALID_ESCAPE_CHAR = re.compile(r"""\\[^nrtbafv\\'"xuU0-9]|\\[uU](?!=[{0-9abcdef])""")
 
 
 def rparse(s):
-    if ESCAPE_PATTERN.match(s):
+    if INVALID_ESCAPE_CHAR.match(s):
         raise ValueError("Error: invalid escape character")
     val, status = api.parse_vector(api.mk_string(s))
     if status != 1:
@@ -88,7 +88,7 @@ def rparse(s):
 
 
 def prase_input_complete(s):
-    s = ESCAPE_PATTERN.sub("", s)
+    s = INVALID_ESCAPE_CHAR.sub("", s)
     val, status = api.parse_vector(api.mk_string(s))
     return status != 2
 
