@@ -51,7 +51,10 @@ class RCompleter(Completer):
             interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
             token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
             if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
-                interface.rcall(self.completeToken)
+                try:
+                    interface.rcall(self.completeToken)
+                except Exception:
+                    return
                 completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
             api.unprotect(1)
 
@@ -99,7 +102,7 @@ class SmartPathCompleter(Completer):
                         quoted = True
                     else:
                         path = shlex.split(text)[-1]
-                except Exception:
+                except RuntimeError:
                     pass
                 finally:
                     if not path:
