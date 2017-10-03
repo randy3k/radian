@@ -10,6 +10,12 @@ High level functions to interact with R api.
 """
 
 
+INVALID_ESCAPE_CHAR = re.compile(
+    r"""\\[^nrtbafv\\'"xuU0-9]|\\[uU](?!=[{0-9abcdef])|\\x(?![0-9abcdef])""")
+
+INVALID_BACKTICK = re.compile(r"``")
+
+
 def rcopy(s, simplify=False):
     api.protect(s)
     ret = None
@@ -74,9 +80,6 @@ def rcall(*args, **kwargs):
     return val
 
 
-INVALID_ESCAPE_CHAR = re.compile(r"""\\[^nrtbafv\\'"xuU0-9]|\\[uU](?!=[{0-9abcdef])""")
-
-
 def rparse(s):
     if INVALID_ESCAPE_CHAR.match(s):
         raise ValueError("Error: invalid escape character")
@@ -87,7 +90,8 @@ def rparse(s):
 
 
 def prase_input_complete(s):
-    s = INVALID_ESCAPE_CHAR.sub("", s)
+    s = INVALID_BACKTICK.sub(r"`{}`", s)
+    s = INVALID_ESCAPE_CHAR.sub(r"\\\g<0>", s)
     val, status = api.parse_vector(api.mk_string(s))
     return status != 2
 
@@ -115,16 +119,6 @@ def rprint(s):
         rcall(api.mk_symbol("print"), s)
     finally:
         api.unprotect(1)
-
-
-def help(topic):
-    result = rcall(api.mk_symbol("help"), api.mk_symbol(topic))
-    rprint(result)
-
-
-def help_search(topic, try_all_packages=False):
-    result = rcall(api.mk_symbol("help.search"), api.mk_string(topic))
-    rprint(result)
 
 
 def get_option(key, default=None):
