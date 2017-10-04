@@ -21,8 +21,11 @@ _INVALID_ESCAPE_CHAR = re.compile(
 
 
 def _convert(m):
-    if m and m.group(0) != r"\\":
-        return "\\" + m.group(0)
+    if m:
+        if m.group(0) == r"\\":
+            return r"\\"
+        else:
+            return "\\" + m.group(0)
 
 
 def escape_invalid_char(s):
