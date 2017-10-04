@@ -8,6 +8,8 @@ from .session import RSession
 from . import interface
 from . import api
 from . import callbacks
+from . import shell_cmd
+
 from .modalprompt import ModalPrompt
 from .modalhistory import ModalInMemoryHistory, ModalFileHistory
 
@@ -171,13 +173,27 @@ class RiceApplication(object):
             if app.is_aborting and app.mp.prompt_mode not in ["readline"]:
                 app.output.write("\n")
 
+        def accept(buff):
+            buff.last_working_index = buff.working_index
+            app = get_app()
+            if app.mp.prompt_mode in ["r", "browse", "readline"]:
+                app.set_return_value(buff.document.text)
+                app.pre_run_callables.append(buff.reset)
+            elif app.mp.prompt_mode in ["shell"]:
+                buff.last_working_index = buff.working_index
+                sys.stdout.write("\n")
+                buff.append_to_history()
+                shell_cmd.run_shell_command(buff.text)
+                buff.reset()
+
         mp = ModalPrompt(
             lexer=DynamicLexer(get_lexer),
             completer=DynamicCompleter(get_completer),
             history=self.get_history(options),
             extra_key_bindings=create_keybindings(),
             tempfile_suffix=".R",
-            on_render=on_render
+            on_render=on_render,
+            accept=accept
         )
 
         # r mode message is set by RiceApplication.app_initialize()

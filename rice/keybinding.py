@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import re
-import sys
 
 from prompt_toolkit.application.current import get_app
 
@@ -12,7 +11,6 @@ from prompt_toolkit.filters import Condition, has_focus, \
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
 from . import interface
-from . import shell_cmd
 
 
 default_focussed = has_focus(DEFAULT_BUFFER)
@@ -57,15 +55,6 @@ def if_no_repeat(event):
     return not event.is_repeat
 
 
-def handle_accept(event, add_history=True):
-    event.current_buffer.last_working_index = event.current_buffer.working_index
-    app = event.app
-    app.set_return_value(event.current_buffer.document.text)
-    app.pre_run_callables.append(event.current_buffer.reset)
-    if add_history and app.mp.add_history:
-        event.current_buffer.append_to_history()
-
-
 def create_keybindings():
     kb = KeyBindings()
     handle = kb.add
@@ -89,7 +78,7 @@ def create_keybindings():
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r") & prase_complete)
     def _(event):
-        handle_accept(event)
+        event.current_buffer.validate_and_handle()
 
     # indentation
     @handle('}', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
@@ -138,7 +127,7 @@ def create_keybindings():
         if shouldeval and interface.prase_input_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
-            handle_accept(event)
+            event.current_buffer.validate_and_handle()
         else:
             event.current_buffer.insert_text(data)
 
@@ -147,9 +136,9 @@ def create_keybindings():
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("browse") & prase_complete)
     def _(event):
         if event.current_buffer.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
-            handle_accept(event, add_history=False)
-        else:
-            handle_accept(event)
+            event.app.mp.add_history = False
+        event.current_buffer.validate_and_handle()
+
 
     # shell mode
     @handle(
@@ -163,17 +152,13 @@ def create_keybindings():
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("shell"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("shell"))
     def _(event):
-        event.current_buffer.last_working_index = event.current_buffer.working_index
-        sys.stdout.write("\n")
-        event.current_buffer.append_to_history()
-        shell_cmd.run_shell_command(event.current_buffer.text)
-        event.current_buffer.reset()
+        event.current_buffer.validate_and_handle()
 
     # readline mode
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("readline"))
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("readline"))
     def _(event):
-        handle_accept(event)
+        event.current_buffer.validate_and_handle()
 
     # emit completion
     @handle('c-j', filter=insert_mode & default_focussed & app.has_completions)

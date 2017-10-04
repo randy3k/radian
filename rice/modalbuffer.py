@@ -60,8 +60,9 @@ class ModalBuffer(Buffer):
 
     def append_to_history(self):
         app = get_app()
-        mode = app.mp.prompt_mode
-        if self.text and \
-            (not len(self.history) or self.history[-1] != self.text or
-                mode != self.history.modes[-1]):
-            self.history.append(self.text)
+        if app.mp.add_history:
+            mode = app.mp.prompt_mode
+            if self.text and \
+                (not len(self.history) or self.history[-1] != self.text or
+                    mode != self.history.modes[-1]):
+                self.history.append(self.text)

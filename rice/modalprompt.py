@@ -113,7 +113,8 @@ class ModalPrompt(object):
             tempfile_suffix=None,
             input=None,
             output=None,
-            on_render=None):
+            on_render=None,
+            accept=None):
 
         self.editing_mode = editing_mode
         self.history = history
@@ -129,6 +130,8 @@ class ModalPrompt(object):
         self.output = output or get_default_output()
 
         self.on_render = on_render
+
+        self.accept = accept
 
         self.create_layout()
         self.create_application()
@@ -167,6 +170,7 @@ class ModalPrompt(object):
             complete_while_typing=Condition(lambda: self.complete_while_typing),
             completer=DynamicCompleter(lambda: self.completer),
             history=self.history,
+            accept_handler=self.accept,
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
