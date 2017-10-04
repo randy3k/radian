@@ -170,6 +170,7 @@ class ModalPrompt(object):
             complete_while_typing=Condition(lambda: self.complete_while_typing),
             completer=DynamicCompleter(lambda: self.completer),
             history=self.history,
+            enable_history_search=True,
             accept_handler=self.accept,
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
