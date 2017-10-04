@@ -11,7 +11,13 @@ High level functions to interact with R api.
 
 
 INVALID_ESCAPE_CHAR = re.compile(
-    r"""\\[^nrtbafv\\'"xuU0-9]|\\[uU](?!=[{0-9abcdef])|\\x(?![0-9abcdef])""")
+    r"""
+    \\[^nrtbafv\\'"xuU0-9] |
+    \\0(?!=[0-9]) |
+    \\00(?!=[0-9]) |
+    \\[uU](?!=[{0-9abcdef]) |
+    \\x(?![0-9abcdef])
+    """, re.VERBOSE)
 
 INVALID_BACKTICK = re.compile(r"``")
 
