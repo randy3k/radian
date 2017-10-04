@@ -113,6 +113,8 @@ class RiceApplication(object):
         shell_prompt = interface.get_option("rice.shell_prompt", SHELL_PROMPT)
         mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
 
+        mp.browse_prompt = interface.get_option("rice.browse_prompt", BROWSE_PROMPT)
+
         set_width_on_resize = interface.get_option("setWidthOnResize", True)
         mp.auto_width = interface.get_option("rice.auto_width", set_width_on_resize)
 
@@ -217,7 +219,7 @@ class RiceApplication(object):
                         mp.prompt_mode = "browse"
                         mp.set_prompt_mode_message(
                             "browse",
-                            ANSI(BROWSE_PROMPT.format(level)))
+                            ANSI(mp.browse_prompt.format(level)))
                     else:
                         # invoked by `readline`
                         mp.prompt_mode = "readline"
