@@ -12,7 +12,7 @@ High level functions to interact with R api.
 
 INVALID_ESCAPE_CHAR = re.compile(
     r"""
-    \\[^nrtbafv\\'"xuU0-9] |
+    \\[^nrtbafv\\`'"xuU0-9] |
     \\0(?!=[0-9]) |
     \\00(?!=[0-9]) |
     \\[uU](?!=[{0-9abcdef]) |
