@@ -135,7 +135,7 @@ def create_keybindings():
 
         shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
         # todo: allow partial prase complete
-        if shouldeval and prase_input_complete(data):
+        if shouldeval and interface.prase_input_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
             handle_accept(event)
