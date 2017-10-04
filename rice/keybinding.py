@@ -34,7 +34,7 @@ def tab_should_insert_whitespaces():
     app = get_app()
     b = app.current_buffer
     before_cursor = b.document.current_line_before_cursor
-    return bool(b.text and (not before_cursor or before_cursor.isspace()))
+    return bool(not b.text or (not before_cursor or before_cursor.isspace()))
 
 
 @Condition
