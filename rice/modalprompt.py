@@ -92,7 +92,7 @@ class ModalPrompt(object):
     multiline = True
     lexer = None
     enable_open_in_editor = False
-    reserve_space_for_menu = 4
+    reserve_space_for_menu = 6
     completer = None
     complete_while_typing = True
     style = None
