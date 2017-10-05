@@ -21,9 +21,8 @@ from prompt_toolkit.layout.lexers import DynamicLexer
 from prompt_toolkit.layout.margins import PromptMargin
 from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
-    DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, \
-    HighlightSearchProcessor, HighlightSelectionProcessor, HighlightMatchingBracketProcessor, \
-    DisplayMultipleCursors, BeforeInput, ReverseSearchProcessor, ShowArg, merge_processors
+    ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, \
+    HighlightMatchingBracketProcessor, DisplayMultipleCursors, merge_processors
 from prompt_toolkit.layout.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
