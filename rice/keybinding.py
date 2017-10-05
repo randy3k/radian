@@ -135,8 +135,6 @@ def create_keybindings():
     @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("browse") & prase_complete)
     @handle('enter', filter=insert_mode & default_focussed & prompt_mode("browse") & prase_complete)
     def _(event):
-        if event.current_buffer.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
-            event.app.mp.add_history = False
         event.current_buffer.validate_and_handle()
 
 

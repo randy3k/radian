@@ -176,10 +176,19 @@ class RiceApplication(object):
         def accept(buff):
             buff.last_working_index = buff.working_index
             app = get_app()
+
+            if app.mp.prompt_mode == "browse":
+                if buff.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
+                    app.mp.add_history = False
+
             if app.mp.prompt_mode in ["r", "browse", "readline"]:
                 app.set_return_value(buff.document.text)
                 app.pre_run_callables.append(buff.reset)
+
             elif app.mp.prompt_mode in ["shell"]:
+                # buffer will be reset to empty, we need to append history at this time point.
+                app.mp.add_history = True
+                buff.append_to_history()
                 sys.stdout.write("\n")
                 shell_cmd.run_shell_command(buff.text)
                 buff.reset()
