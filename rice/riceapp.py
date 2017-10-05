@@ -42,7 +42,7 @@ have to be available to the current python environment.
 
 File an issue at https://github.com/randy3k/rice if you encounter any
 difficulties in loading `reticulate`.
-""".format(sys.executable.replace("\\", "\\\\")).strip()
+""".format(sys.executable).strip()
 
 
 class RiceApplication(object):

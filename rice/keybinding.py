@@ -168,7 +168,7 @@ def create_keybindings():
 
     # cancle completion
     @handle('escape', 'escape', filter=insert_mode & default_focussed & app.has_completions)
-    @handle('c-c', filter=insert_mode & default_focussed & app.has_completions)
+    @handle('c-c', filter=default_focussed & app.has_completions)
     def _(event):
         event.current_buffer.cancel_completion()
 

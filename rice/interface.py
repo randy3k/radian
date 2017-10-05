@@ -181,4 +181,4 @@ def reticulate_set_message(message):
     reval("""
     setHook(packageEvent("reticulate", "onLoad"),
             function(...) packageStartupMessage("{}"))
-    """.format(message.replace('"', '\\"')))
+    """.format(message.replace('\\', '\\\\').replace('"', '\\"')))
