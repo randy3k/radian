@@ -180,9 +180,7 @@ class RiceApplication(object):
                 app.set_return_value(buff.document.text)
                 app.pre_run_callables.append(buff.reset)
             elif app.mp.prompt_mode in ["shell"]:
-                buff.last_working_index = buff.working_index
                 sys.stdout.write("\n")
-                buff.append_to_history()
                 shell_cmd.run_shell_command(buff.text)
                 buff.reset()
 
