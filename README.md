@@ -1,7 +1,6 @@
 # rice: 🍚 A 21 century R console
 
-_rice_ is a modern command line interface to the R program. It is a pure frontend so that an R installation is required.
-It replaces the use of the the default R console, similar to `ipython` in the `python` ecosystem. In fact, `rice` is built on top of the same technology which `ipython` uses. 
+_rice_ is a modern command line interface to the R program. It replaces the use of the the default R console, in the sense which is similar to `ipython` in the `python` ecosystem. In fact, `rice` is built on top of the same technology which `ipython` uses. 
 
 _rice_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
 
@@ -17,8 +16,7 @@ _rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] auto completion
 - [x] brackated paste mode
 - [x] cross platform, runs on Windows, macOS and Linux
-- [x] run on both python 2 and 3
-- [x] vi editing mode
+- [x] emacs/vi editing mode
 - [x] custom color scheme
 - [x] automiatically adjust to terminal width
 - [x] read more than 4096 bytes per line
@@ -28,8 +26,8 @@ _rice_ is still under active development, any feedbacks will be welcome. Users s
 
 Requirements:
 
-- An installation of R is required to use _rice_, R installation binary can be downloaded from https://cran.r-project.org.
-- `python` is also required to install _rice_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Although both version 2 and version 3 should work, I recommend using python 3.
+- An installation of R is required to use _rice_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
+- `python` is also required to install _rice_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended.
 - `pip` is optional but it makes the installation a bit easier.
 
 ```sh
@@ -43,7 +41,7 @@ rice
 
 ## Settings
 
-_rice_ can be customized by executing the `options` function in `.Rprofile` file. This file is usually located in your user home directory.
+_rice_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
 
 ```r
 options(
@@ -63,7 +61,7 @@ options(
 - color scheme: see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
 - editing mode: either  `"emacs"` (default) or `"vi"`.
 
-## Alias
+## Alias on unix system
 
 You could alias `r` to `rice` by putting
 
@@ -99,7 +97,7 @@ _rice_ maintains its own history file `.rice_history` and doesn't use the `.Rhis
 
 ### Does it slow down my R program?
 
-_rice_ only provides a frontend to the R program, the actual running engine is identical to the traditional R console. There is no performance sacrifice while enjoying the benefits of this modern command line interface. 
+_rice_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
 
 ### Nvim-R support
 
@@ -111,7 +109,7 @@ let g:R_hl_term = 0
 ```
 in your vim config. You may also want to set `options(rice.auto_indentation = FALSE)` in `.Rprofile`.
 
-### `reticulate` is not working
+### Package `reticulate` not working
 
 You need to make sure that you are using the latest `reticulate`. The current developing version can be install via
 
@@ -120,7 +118,11 @@ devtools::install_github("rstudio/reticulate")
 ```
 
 
-### Error `libreadline.so.6: undefined symbol: PC`
+### Readline Error
+
+```
+libreadline.so.6: undefined symbol: PC
+```
 
 If you are using conda and encounter this error, it is likely because the `readline` from conda is bugged. Install it again via `conda-forge`.
 ```python
