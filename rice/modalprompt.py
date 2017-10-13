@@ -132,7 +132,6 @@ class ModalPrompt(object):
 
         self.accept = accept
 
-        self.create_layout()
         self.create_application()
 
     def set_prompt_mode_message(self, mode, message):
