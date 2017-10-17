@@ -58,7 +58,10 @@ class RSession(object):
         os.environ["R_INCLUDE_DIR"] = os.path.join(Rhome, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(Rhome, "share")
         if sys.platform.startswith("win"):
-            libR_path = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32], "R.dll")
+            libR_dir = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
+            os.environ['PATH'] = os.environ['PATH'] + ";" + libR_dir
+
+            libR_path = os.path.join(libR_dir, "R.dll")
         elif sys.platform == "darwin":
             libR_path = os.path.join(Rhome, "lib", "libR.dylib")
         elif sys.platform.startswith("linux"):
