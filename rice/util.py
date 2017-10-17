@@ -1,5 +1,9 @@
 from __future__ import unicode_literals
 from ctypes import c_char_p, c_void_p, cast
+import sys
+
+if sys.platform.startswith('win'):
+    from winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_READ
 
 
 def ccall(fname, lib, restype, argtypes, *args):
@@ -19,3 +23,8 @@ def cglobal(vname, lib, vtype=c_void_p):
 
 def is_ascii(s):
     return all(ord(c) < 128 for c in s)
+
+
+def read_registry(key, valueex):
+    reg_key = OpenKey(HKEY_LOCAL_MACHINE, key, 0, KEY_READ)
+    return QueryValueEx(reg_key, valueex)

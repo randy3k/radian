@@ -5,7 +5,7 @@ import sys
 import ctypes
 from ctypes import c_char, c_char_p, c_int, c_size_t, c_void_p, \
     cast, pointer, PyDLL, CFUNCTYPE, POINTER
-from .util import ccall
+from .util import ccall, read_registry
 
 
 if sys.platform.startswith("win"):
@@ -50,13 +50,25 @@ class RSession(object):
 
     def __init__(self):
         if 'R_HOME' not in os.environ:
-            Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
+            try:
+                Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
+            except FileNotFoundError as e:
+                if sys.platform.startswith("win"):
+                    Rexe = os.path.join(
+                        read_registry("Software\\R-Core\\R", "InstallPath")[0],
+                        "bin",
+                        "R.exe")
+                    Rhome = subprocess.check_output([Rexe, "RHOME"]).decode("utf-8").strip()
+                else:
+                    raise e
+
             os.environ['R_HOME'] = Rhome
         else:
             Rhome = os.environ['R_HOME']
         os.environ["R_DOC_DIR"] = os.path.join(Rhome, "doc")
         os.environ["R_INCLUDE_DIR"] = os.path.join(Rhome, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(Rhome, "share")
+
         if sys.platform.startswith("win"):
             libR_dir = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
             os.environ['PATH'] = os.environ['PATH'] + ";" + libR_dir
