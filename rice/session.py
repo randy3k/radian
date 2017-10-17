@@ -71,7 +71,7 @@ class RSession(object):
 
         if sys.platform.startswith("win"):
             libR_dir = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
-            os.environ['PATH'] = os.environ['PATH'] + ";" + libR_dir
+            os.environ['PATH'] = libR_dir + ";" + os.environ['PATH']
 
             libR_path = os.path.join(libR_dir, "R.dll")
         elif sys.platform == "darwin":
