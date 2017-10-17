@@ -52,7 +52,7 @@ class RSession(object):
         if 'R_HOME' not in os.environ:
             try:
                 Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
-            except FileNotFoundError as e:
+            except Exception as e:
                 if sys.platform.startswith("win"):
                     Rexe = os.path.join(
                         read_registry("Software\\R-Core\\R", "InstallPath")[0],

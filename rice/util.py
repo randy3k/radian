@@ -3,7 +3,10 @@ from ctypes import c_char_p, c_void_p, cast
 import sys
 
 if sys.platform.startswith('win'):
-    from winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_READ
+    if sys.version_info[0] >= 3:
+        from winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_READ
+    else:
+        from _winreg import OpenKey, QueryValueEx, HKEY_LOCAL_MACHINE, KEY_READ
 
 
 def ccall(fname, lib, restype, argtypes, *args):
