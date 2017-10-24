@@ -174,7 +174,7 @@ class RiceApplication(object):
                 app.output.write("\n")
 
         def accept(buff):
-            buff.last_working_index = buff.working_index
+            buff.last_working_index = buff.working_index + 1
             app = get_app()
 
             if app.mp.prompt_mode == "browse":
