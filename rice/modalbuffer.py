@@ -25,6 +25,7 @@ class ModalBuffer(Buffer):
     def history_forward(self, count=1):
         if len(self.text) == 0 and self._is_last_history() and self.last_working_index >= 0:
             self.go_to_history(self.last_working_index)
+            self.history_search_text = ""
             self.last_working_index = -1
 
         super(ModalBuffer, self).history_forward(count)
