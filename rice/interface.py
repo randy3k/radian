@@ -1,22 +1,51 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 from . import api
-from ctypes import py_object
 
+import re
 from six import text_type
 
 """
 High level functions to interact with R api.
 """
 
+# this also treats \\ as invalid to make \\0 valid
+_INVALID_ESCAPE_CHAR = re.compile(
+    r"""
+    \\[^nrtbafv`'"xuU0-9] |
+    \\0(?!=[0-9]) |
+    \\00(?!=[0-9]) |
+    \\[uU](?!=[{0-9abcdef]) |
+    \\x(?![0-9abcdef])
+    """, re.VERBOSE)
+
+
+def _convert(m):
+    if m:
+        if m.group(0) == r"\\":
+            return r"\\"
+        else:
+            return "\\" + m.group(0)
+
+
+def escape_invalid_char(s):
+    return _INVALID_ESCAPE_CHAR.sub(_convert, s)
+
+
+def search_invalid_char(s):
+    results = _INVALID_ESCAPE_CHAR.findall(s)
+    for r in results:
+        if r != r"\\":
+            return True
+    return False
+
 
 def prase_input_complete(s):
-    # use R_ToplevelExec to evaluate R_ParseVector as R_ParseVector may longjmp
-    ret = py_object()
-    if api.toplevel_exec_ret(api.parse_vector, (s,), ret) == 0:
-        return True
-    else:
-        return ret.value[1] != 2
+    # we need to escape invalid chars to prevent R_ParseVector to longjmp
+    s = re.sub(r"``", r"` `", s)
+    s = escape_invalid_char(s)
+    val, status = api.parse_vector(api.mk_string(s))
+    return status != 2
 
 
 def rcopy(s, simplify=False):
@@ -84,15 +113,13 @@ def rcall(*args, **kwargs):
 
 
 def rparse(s):
-    # use R_ToplevelExec to evaluate R_ParseVector as R_ParseVector may longjmp
-    ret = py_object()
-    if api.toplevel_exec_ret(api.parse_vector, (s,), ret) == 0:
-        raise SyntaxError("Error:")
-    else:
-        val, status = api.parse_vector(api.mk_string(s))
-        if status != 1:
-            raise SyntaxError("Error: %s" % api.parse_error_msg())
-        return val
+    # todo: search for empty backticks
+    if search_invalid_char(s):
+        raise ValueError("Error: invalid escape character")
+    val, status = api.parse_vector(api.mk_string(s))
+    if status != 1:
+        raise SyntaxError("Error: %s" % api.parse_error_msg())
+    return val
 
 
 def reval(s):
