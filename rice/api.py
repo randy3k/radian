@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
-from ctypes import c_char_p, c_char, c_int, c_double, c_void_p, cast, addressof, POINTER
+from ctypes import c_char_p, c_char, c_int, c_double, c_void_p, py_object, \
+    cast, byref, pointer, addressof, CFUNCTYPE, POINTER
 import sys
 
 from .util import ccall, cglobal
@@ -93,6 +94,22 @@ def mk_string(s):
 
 def scalar_integer(i):
     return rccall("Rf_ScalarInteger", c_void_p, [c_int], i)
+
+
+def toplevel_exec(fun, data):
+    def _fun(dptr):
+        fun(dptr.contents.value)
+
+    functype = CFUNCTYPE(None, POINTER(py_object))
+    return rccall("R_ToplevelExec", c_int, [functype, POINTER(py_object)],
+                  functype(_fun), byref(py_object(data)))
+
+
+def toplevel_exec_ret(fun, args, ret):
+    def _fun(data):
+        data[1].value = fun(*data[0])
+
+    return toplevel_exec(_fun, (args, ret))
 
 
 def parse_vector(s):

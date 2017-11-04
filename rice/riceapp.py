@@ -78,7 +78,6 @@ class RiceApplication(object):
             return ModalFileHistory(os.path.join(os.path.expanduser("~"), ".rice_history"))
 
     def app_initialize(self, mp):
-
         if sys.platform.startswith('win'):
             encoding = api.encoding()
             callbacks.ENCODING = encoding
