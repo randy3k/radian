@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from ctypes import c_char_p, c_char, c_int, c_double, c_void_p, py_object, \
-    cast, byref, pointer, addressof, CFUNCTYPE, POINTER
+    cast, byref, addressof, CFUNCTYPE, POINTER
 import sys
 
 from .util import ccall, cglobal
@@ -96,20 +96,26 @@ def scalar_integer(i):
     return rccall("Rf_ScalarInteger", c_void_p, [c_int], i)
 
 
+toplevel_exec_functype = CFUNCTYPE(None, POINTER(py_object))
+
+
 def toplevel_exec(fun, data):
-    def _fun(dptr):
-        fun(dptr.contents.value)
-
-    functype = CFUNCTYPE(None, POINTER(py_object))
-    return rccall("R_ToplevelExec", c_int, [functype, POINTER(py_object)],
-                  functype(_fun), byref(py_object(data)))
+    return rccall("R_ToplevelExec", c_int, [toplevel_exec_functype, POINTER(py_object)],
+                  toplevel_exec_functype(lambda a: fun(*a.contents.value)), byref(py_object(data)))
 
 
-def toplevel_exec_ret(fun, args, ret):
-    def _fun(data):
-        data[1].value = fun(*data[0])
+try_catch_error_functype = CFUNCTYPE(c_void_p, POINTER(py_object))
+try_catch_error_errtype = CFUNCTYPE(c_void_p, c_void_p, POINTER(py_object))
 
-    return toplevel_exec(_fun, (args, ret))
+
+def try_catch_error(fun, args, err, eargs):
+    return rccall(
+        "R_tryCatchError", c_void_p,
+        [try_catch_error_functype, POINTER(py_object), try_catch_error_errtype, POINTER(py_object)],
+        try_catch_error_functype(lambda a: fun(*a.contents.value)),
+        byref(py_object(args)),
+        try_catch_error_errtype(lambda c, a: err(c, *a.contents.value)),
+        byref(py_object(eargs)))
 
 
 def parse_vector(s):
@@ -120,6 +126,20 @@ def parse_vector(s):
         [c_void_p, c_int, POINTER(c_int), c_void_p],
         s, -1, status, rcglobal("R_NilValue"))
     return val, status.value
+
+
+def safe_parse_vector(s):
+    def f(st, r):
+        r[:] = parse_vector(st)
+        return rcglobal("R_NilValue").value
+
+    r = [None, 0]
+    ret = try_catch_error(f, (s, r), lambda c, a: c, (None,))
+
+    if typeof(ret) == 0:
+        return tuple(r)
+    else:
+        return (None, 3)
 
 
 def parse_error_msg():
