@@ -26,7 +26,7 @@ _rice_ is still under active development, any feedbacks will be welcome. Users s
 
 Requirements:
 
-- An installation of R is required to use _rice_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
+- An installation of R (version 3.4.0 or above) is required to use _rice_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
 - `python` is also required to install _rice_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended.
 - `pip` is optional but it makes the installation a bit easier.
 

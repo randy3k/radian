@@ -83,6 +83,8 @@ class RSession(object):
             raise RuntimeError("Cannot locate R share library.")
 
         self.libR = PyDLL(str(libR_path))
+        if not hasattr(self.libR, "R_tryCatchError"):
+            raise RuntimeError("rice requires R 3.4.0 or above.")
 
     def run(self):
 
