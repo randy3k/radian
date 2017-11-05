@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from . import api
 
+import os
+import time
 from six import text_type
 
 """
@@ -136,8 +138,24 @@ def r_version():
         info["version.string"], info["nickname"], info["platform"])
 
 
-def installed_packages():
-    return rcopy(reval("row.names(installed.packages())"))
+def make_installed_packages():
+    last_time = [0]
+    _packages = [None]
+
+    def f():
+        if time.time() - last_time[0] > 5:
+            paths = rcopy(reval("base::.libPaths()"))
+            _packages[0] = []
+
+            for path in paths:
+                _packages[0] = _packages[0] + \
+                    [d for d in os.listdir(path)
+                        if os.path.exists(os.path.join(path, d, "DESCRIPTION"))]
+        return _packages[0]
+    return f
+
+
+installed_packages = make_installed_packages()
 
 
 def reticulate_set_message(message):
