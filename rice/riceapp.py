@@ -129,6 +129,8 @@ class RiceApplication(object):
         if interface.rcopy(interface.reval("rc.settings('ipck')")) is None:
             interface.reval("rc.settings(ipck = TRUE)")
 
+        interface.installed_packages()
+
         # print welcome message
         sys.stdout.write(interface.r_version())
 
