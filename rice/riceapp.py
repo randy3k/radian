@@ -125,6 +125,10 @@ class RiceApplication(object):
         # necessary on windows
         interface.set_option("menu.graphics", False)
 
+        # enables completion of installed package names
+        if interface.rcopy(interface.reval("rc.settings('ipck')")) is None:
+            interface.reval("rc.settings(ipck = TRUE)")
+
         # print welcome message
         sys.stdout.write(interface.r_version())
 

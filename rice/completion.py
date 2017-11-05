@@ -11,9 +11,6 @@ from . import interface
 from six import text_type
 
 
-LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
-
-
 class RCompleter(Completer):
     initialized = False
 
@@ -34,39 +31,30 @@ class RCompleter(Completer):
         if not self.initialized:
             self.initialize()
         token = ""
-        packages = interface.installed_packages()
         text = document.current_line_before_cursor
-        m = LIBRARY_PATTERN.match(text)
-        if m:
-            prefix = m.group(1)
-            if len(prefix) > 0 or complete_event.completion_requested:
-                for p in packages:
-                    if p.lower().startswith(prefix.lower()):
-                        yield Completion(p, -len(prefix))
+        completions = []
+        s = api.protect(api.mk_string(text))
+        interface.rcall(self.assignLinebuffer, s)
+        interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
+        token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
+        if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
+            try:
+                interface.rcall(self.completeToken)
+            except Exception:
+                return
+            completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
+        api.unprotect(1)
 
-        else:
-            completions = []
-            s = api.protect(api.mk_string(text))
-            interface.rcall(self.assignLinebuffer, s)
-            interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
-            token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
-            if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
-                try:
-                    interface.rcall(self.completeToken)
-                except Exception:
-                    return
-                completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
-            api.unprotect(1)
+        for c in completions:
+            yield Completion(c, -len(token))
 
-            for c in completions:
-                yield Completion(c, -len(token))
-
-            if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
-                for p in packages:
-                    if p.startswith(token):
-                        comp = p + "::"
-                        if comp not in completions:
-                            yield Completion(comp, -len(token))
+        packages = interface.installed_packages()
+        if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
+            for p in packages:
+                if p.startswith(token):
+                    comp = p + "::"
+                    if comp not in completions:
+                        yield Completion(comp, -len(token))
 
 
 class SmartPathCompleter(Completer):
