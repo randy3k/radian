@@ -29,13 +29,17 @@ def create_read_console(get_text):
 
 
 def write_console_ex(buf, buflen, otype):
-    output = buf.decode(ENCODING)
-    if otype == 0:
-        sys.stdout.write(output)
-        sys.stdout.flush()
-    else:
-        sys.stderr.write(output)
-        sys.stderr.flush()
+    try:
+        output = buf.decode(ENCODING)
+        if otype == 0:
+            sys.stdout.write(output)
+            sys.stdout.flush()
+        else:
+            sys.stderr.write(output)
+            sys.stderr.flush()
+    except UnicodeEncodeError as e:
+        # catch print error when terminal doesn't support unicode
+        pass
 
 
 def clean_up(save_type, status, runlast):
