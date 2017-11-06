@@ -46,7 +46,7 @@ def run_shell_command(command):
                     os.chdir(path)
 
                 sys.stdout.write(os.getcwd())
-                sys.stdout.write("\n")
+                sys.stdout.write("\n\n")
             except Exception as e:
                 print(e)
                 sys.stdout.write("\n")
