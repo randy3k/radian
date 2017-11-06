@@ -35,6 +35,7 @@ class RCompleter(Completer):
         completions = []
         s = api.protect(api.mk_string(text))
         interface.rcall(self.assignLinebuffer, s)
+        api.unprotect(1)
         interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
         token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
         if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
@@ -43,7 +44,6 @@ class RCompleter(Completer):
             except Exception:
                 return
             completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
-        api.unprotect(1)
 
         for c in completions:
             yield Completion(c, -len(token))
