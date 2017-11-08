@@ -51,6 +51,7 @@ options(
     rice.tab_size = 4,
     rice.complete_while_typing = TRUE,
     rice.auto_width = TRUE,
+    rice.history_search_no_duplicates = FALSE,
     rice.prompt = "\033[0;34mr$>\033[0m ",
     rice.shell_prompt = "\033[0;31m#!>\033[0m ",
     rice.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
