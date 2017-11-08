@@ -26,6 +26,7 @@ from prompt_toolkit.search_state import SearchState
 from prompt_toolkit.styles import BaseStyle, default_style, merge_styles, DynamicStyle
 from prompt_toolkit.utils import Event, in_main_thread
 from .current import set_app
+from .run_in_terminal import run_in_terminal, run_coroutine_in_terminal
 
 from subprocess import Popen
 from traceback import format_tb
@@ -60,10 +61,10 @@ class Application(object):
     :param min_redraw_interval: Number of seconds to wait between redraws. Use
         this for applications where `invalidate` is called a lot. This could cause
         a lot of terminal output, which some terminals are not able to process.
-
+        
         `None` means that every `invalidate` will be scheduled right away
         (which is usually fine).
-
+        
         When one `invalidate` is called, but a scheduled redraw of a previous
         `invalidate` call has not been executed yet, nothing will happen in any
         case.
@@ -551,6 +552,12 @@ class Application(object):
                             if has_sigwinch:
                                 loop.add_signal_handler(signal.SIGWINCH, previous_winch_handler)
 
+                            # Wait for the run-in-terminals to terminate.
+                            previous_run_in_terminal_f = self._running_in_terminal_f
+
+                            if previous_run_in_terminal_f:
+                                yield From(previous_run_in_terminal_f)
+
                             # Store unprocessed input as typeahead for next time.
                             store_typeahead(self.input, self.key_processor.flush())
 
@@ -600,7 +607,7 @@ class Application(object):
                 print('Exception %s' % (context.get('exception'), ))
 
                 yield From(_do_wait_for_enter('Press ENTER to continue...'))
-            self.run_coroutine_in_terminal(print_exception)
+            run_coroutine_in_terminal(print_exception)
 
         if set_exception_handler:
             # Run with patched exception handler.
@@ -617,12 +624,14 @@ class Application(object):
         """
         Called when we don't receive the cursor position response in time.
         """
-        # def in_terminal():
-        #     self.output.write(
-        #         "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
-        #     self.output.flush()
-        # self.run_in_terminal(in_terminal)
-        pass
+        if not self.input.responds_to_cpr:
+            return # We know about this already.
+
+        def in_terminal():
+            self.output.write(
+                "WARNING: your terminal doesn't support cursor position requests (CPR).\r\n")
+            self.output.flush()
+        run_in_terminal(in_terminal)
 
     def exit(self):
         " Set exit. When Control-D has been pressed. "
@@ -634,7 +643,7 @@ class Application(object):
         self._abort_flag = True
         self.future.set_exception(KeyboardInterrupt)
 
-    def set_return_value(self, value):
+    def set_result(self, value):
         """
         Set a return value. The eventloop can retrieve the result it by calling
         `return_value`.
@@ -644,85 +653,7 @@ class Application(object):
         else:
             raise Exception('Return value already set.')
 
-    def run_in_terminal(self, func, render_cli_done=False, in_executor=False):
-        """
-        Run function on the terminal above the prompt.
-
-        What this does is first hiding the prompt, then running this callable
-        (which can safely output to the terminal), and then again rendering the
-        prompt which causes the output of this function to scroll above the
-        prompt.
-
-        :param func: The callable to execute.
-        :param render_cli_done: When True, render the interface in the
-                'Done' state first, then execute the function. If False,
-                erase the interface first.
-        :param in_executor: When True, run in executor. (Use this for long
-            blocking functions, when you don't want to block the event loop.)
-
-        :returns: A `Future`.
-        """
-        if in_executor:
-            def async_func():
-                f = run_in_executor(func)
-                return f
-        else:
-            def async_func():
-                result = func()
-                return Future.succeed(result)
-
-        return self.run_coroutine_in_terminal(async_func, render_cli_done=render_cli_done)
-
-    def run_coroutine_in_terminal(self, async_func, render_cli_done=False):
-        """
-        `async_func` can be a coroutine or a function that returns a Future.
-
-        :param async_func: A function that returns either a Future or coroutine
-            when called.
-        :returns: A `Future`.
-        """
-        assert callable(async_func)
-        loop = get_event_loop()
-
-        # When a previous `run_in_terminal` call was in progress. Wait for that
-        # to finish, before starting this one. Chain to previous call.
-        previous_run_in_terminal_f = self._running_in_terminal_f
-        new_run_in_terminal_f = loop.create_future()
-        self._running_in_terminal_f = new_run_in_terminal_f
-
-        def _run_in_t():
-            " Coroutine. "
-            # Wait for the previous `run_in_terminal` to finish.
-            if previous_run_in_terminal_f is not None:
-                yield previous_run_in_terminal_f
-
-            # Draw interface in 'done' state, or erase.
-            if render_cli_done:
-                self._redraw(render_as_done=True)
-            else:
-                self.renderer.erase()
-
-            # Disable rendering.
-            self._running_in_terminal = True
-
-            # Detach input.
-            try:
-                with self.input.detach():
-                    with self.input.cooked_mode():
-                        result = yield From(async_func())
-
-                raise Return(result)  # Same as: "return result"
-            finally:
-                # Redraw interface again.
-                try:
-                    self._running_in_terminal = False
-                    self.renderer.reset()
-                    self._request_absolute_cursor_position()
-                    self._redraw()
-                finally:
-                    new_run_in_terminal_f.set_result(None)
-
-        return ensure_future(_run_in_t())
+    set_return_value = set_result  # For backwards-compatibility.
 
     def _request_absolute_cursor_position(self):
         """
@@ -774,7 +705,7 @@ class Application(object):
             if wait_for_enter:
                 yield From(_do_wait_for_enter(wait_text))
 
-        return self.run_coroutine_in_terminal(run)
+        return run_coroutine_in_terminal(run)
 
     def suspend_to_background(self, suspend_group=True):
         """
@@ -798,7 +729,7 @@ class Application(object):
                 else:
                     os.kill(os.getpid(), signal.SIGTSTP)
 
-            self.run_in_terminal(run)
+            run_in_terminal(run)
 
     def print_text(self, text, style=None):
         """
@@ -911,7 +842,7 @@ def _do_wait_for_enter(wait_text):
 
     @key_bindings.add('enter')
     def _(event):
-        event.app.set_return_value(None)
+        event.app.set_result(None)
 
     @key_bindings.add(Keys.Any)
     def _(event):
