@@ -31,7 +31,7 @@ class ModalBuffer(Buffer):
     def reset(self, document=None, append_to_history=False):
         self.last_search_history = None
         self.search_history = []
-        super().reset(document, append_to_history)
+        super(ModalBuffer, self).reset(document, append_to_history)
 
     def history_forward(self, count=1):
         if len(self.text) == 0 and self._is_last_history() and self.last_working_index >= 0:
