@@ -4,7 +4,6 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.search_state import SearchState
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import SearchDirection
-from contextlib import redirect_stdout
 
 
 class ModalBuffer(Buffer):
