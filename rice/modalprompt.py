@@ -174,7 +174,9 @@ class ModalPrompt(object):
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
 
-        search_toolbar = SearchToolbar(search_buffer)
+        search_toolbar = SearchToolbar(
+            search_buffer,
+            get_search_state=lambda: default_buffer_control.get_search_state())
 
         input_processor = merge_processors([
             ConditionalProcessor(
