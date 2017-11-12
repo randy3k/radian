@@ -180,6 +180,7 @@ def try_eval(s, env=None):
     status = c_int()
     if not env:
         env = rcglobal("R_GlobalEnv")
+    protect(s)
     protect(env)
     val = rccall(
         "R_tryEval",
@@ -188,7 +189,7 @@ def try_eval(s, env=None):
         s,
         env,
         status)
-    unprotect(1)
+    unprotect(2)
     return val, status.value
 
 

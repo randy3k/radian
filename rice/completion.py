@@ -14,8 +14,11 @@ class RCompleter(Completer):
     initialized = False
 
     def get_utils_func(self, fname):
-        f = interface.rlang(api.mk_symbol(":::"), api.mk_string("utils"), api.mk_string(fname))
+        utils = api.protect(api.mk_string("utils"))
+        f = api.protect(api.mk_string(fname))
+        f = interface.rlang(api.mk_symbol(":::"), utils, f)
         api.preserve_object(f)
+        api.unprotect(2)
         return f
 
     def initialize(self):
