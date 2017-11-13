@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from collections import OrderedDict
 from . import api
+from ctypes import c_int
 
 import os
 import time
@@ -12,8 +13,9 @@ High level functions to interact with R api.
 
 
 def prase_input_complete(s):
-    _, status = api.safe_parse_vector(api.mk_string(s))
-    return status != 2
+    status = c_int()
+    api.safe_parse_vector(api.mk_string(s), status)
+    return status.value != 2
 
 
 def rcopy(s, simplify=False):
@@ -74,15 +76,17 @@ def rlang(*args, **kwargs):
 
 
 def rcall(*args, **kwargs):
-    val, status = api.try_eval(rlang(*args, **kwargs))
-    if status != 0:
+    status = c_int()
+    val = api.try_eval(rlang(*args, **kwargs), status=status)
+    if status.value != 0:
         raise RuntimeError("R eval error.")
     return val
 
 
 def rparse(s):
-    val, status = api.parse_vector(api.mk_string(s))
-    if status != 1:
+    status = c_int()
+    val = api.parse_vector(api.mk_string(s), status)
+    if status.value != 1:
         raise SyntaxError("Error: %s" % api.parse_error_msg())
     return val
 
@@ -93,11 +97,12 @@ def reval(s):
     except Exception as e:
         raise e
     api.protect(exprs)
+    status = c_int()
     val = None
     try:
         for i in range(0, api.length(exprs)):
-            val, status = api.try_eval(api.vector_elt(exprs, i))
-            if status != 0:
+            val = api.try_eval(api.vector_elt(exprs, i), status)
+            if status.value != 0:
                 raise RuntimeError("R eval error.")
     finally:
         api.unprotect(1)  # exprs

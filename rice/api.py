@@ -118,28 +118,22 @@ def try_catch_error(fun, args, err, eargs):
         byref(py_object(eargs)))
 
 
-def parse_vector(s):
-    status = c_int()
+def parse_vector(s, status):
     val = rccall(
         "R_ParseVector",
         c_void_p,
         [c_void_p, c_int, POINTER(c_int), c_void_p],
         s, -1, status, rcglobal("R_NilValue"))
-    return val, status.value
+    return val
 
 
-def safe_parse_vector(s):
-    def f(st, r):
-        r[:] = parse_vector(st)
-        return rcglobal("R_NilValue").value
-
-    r = [None, 0]
-    ret = try_catch_error(f, (s, r), lambda c, a: c, (None,))
-
-    if typeof(ret) == 0:
-        return tuple(r)
-    else:
-        return (None, 3)
+def safe_parse_vector(s, status):
+    ret = try_catch_error(
+        lambda: parse_vector(s, status).value,
+        (),
+        lambda c, a: c,
+        (None,))
+    return ret
 
 
 def parse_error_msg():
@@ -176,8 +170,7 @@ def string_elt(s, i):
     return rccall("STRING_ELT", c_void_p, [c_void_p, c_int], s, i)
 
 
-def try_eval(s, env=None):
-    status = c_int()
+def try_eval(s, env=None, status=c_int()):
     if not env:
         env = rcglobal("R_GlobalEnv")
     protect(s)
@@ -190,7 +183,7 @@ def try_eval(s, env=None):
         env,
         status)
     unprotect(2)
-    return val, status.value
+    return val
 
 
 def lang1(s):
