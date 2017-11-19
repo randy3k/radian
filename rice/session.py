@@ -184,13 +184,13 @@ class RSession(object):
 
         if self.clean_up:
             ptr = c_void_p.in_dll(self.libR, 'ptr_R_CleanUp')
-            R_CleanUp = CFUNCTYPE(None, c_int, c_int, c_int)(ptr.value)
+            R_CleanUp = ctypes.PYFUNCTYPE(None, c_int, c_int, c_int)(ptr.value)
 
             def _handler(save_type, status, runlast):
                 self.clean_up(save_type, status, runlast)
                 R_CleanUp(save_type, status, runlast)
 
-            self.ptr_r_clean_up = CFUNCTYPE(None, c_int, c_int, c_int)(_handler)
+            self.ptr_r_clean_up = ctypes.PYFUNCTYPE(None, c_int, c_int, c_int)(_handler)
             ptr.value = cast(self.ptr_r_clean_up, c_void_p).value
 
         # ptr_R_ShowFiles
