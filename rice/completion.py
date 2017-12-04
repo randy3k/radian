@@ -50,13 +50,14 @@ class RCompleter(Completer):
         for c in completions:
             yield Completion(c, -len(token))
 
-        packages = interface.installed_packages()
-        if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
-            for p in packages:
-                if p.startswith(token):
-                    comp = p + "::"
-                    if comp not in completions:
-                        yield Completion(comp, -len(token))
+        if token:
+            if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
+                packages = interface.installed_packages()
+                for p in packages:
+                    if p.startswith(token):
+                        comp = p + "::"
+                        if comp not in completions:
+                            yield Completion(comp, -len(token))
 
 
 class SmartPathCompleter(Completer):
