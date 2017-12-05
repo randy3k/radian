@@ -3,11 +3,15 @@ from prompt_toolkit.completion import Completer, Completion
 import os
 import sys
 import shlex
+import re
 
 from . import api
 from . import interface
 
 from six import text_type
+
+
+LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
 class RCompleter(Completer):
@@ -50,7 +54,7 @@ class RCompleter(Completer):
         for c in completions:
             yield Completion(c, -len(token))
 
-        if token:
+        if token and not LIBRARY_PATTERN.match(text):
             if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
                 packages = interface.installed_packages()
                 for p in packages:

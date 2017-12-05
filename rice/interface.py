@@ -148,7 +148,7 @@ def make_installed_packages():
     _packages = [None]
 
     def f():
-        if time.time() - last_time[0] > 5:
+        if time.time() - last_time[0] > 30:
             paths = rcopy(reval("base::.libPaths()"))
             _packages[0] = []
 
