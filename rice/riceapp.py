@@ -82,6 +82,7 @@ class RiceApplication(object):
         mp.app.tab_size = int(interface.get_option("rice.tab_size", 4))
         mp.complete_while_typing = interface.get_option("rice.complete_while_typing", True)
         mp.history_search_no_duplicates = interface.get_option("rice.history_search_no_duplicates", False)
+        mp.insert_new_line = interface.get_option("rice.insert_new_line", True)
 
         prompt = interface.get_option("rice.prompt", None)
         if prompt:
@@ -159,7 +160,7 @@ class RiceApplication(object):
 
             if mp.interrupted:
                 mp.interrupted = False
-            else:
+            elif mp.insert_new_line:
                 sys.stdout.write("\n")
 
             mp.add_history = add_history == 1
