@@ -11,13 +11,13 @@ from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.key_binding.bindings.open_in_editor import load_open_in_editor_bindings
 from prompt_toolkit.key_binding.key_bindings import \
-    KeyBindings, DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings
+    DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings
 from prompt_toolkit.layout import Window, HSplit, FloatContainer, Float
 from prompt_toolkit.layout.containers import ConditionalContainer
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.layout.lexers import DynamicLexer
+from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
 from prompt_toolkit.layout.margins import PromptMargin
 from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
@@ -27,55 +27,17 @@ from prompt_toolkit.layout.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.styles import default_style, DynamicStyle, merge_styles
-from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.utils import is_windows
 
 import sys
+import os
+from pygments.lexers.r import SLexer
 
 from .modalbuffer import ModalBuffer
-
-
-def create_prompt_bindings():
-    """
-    Create the KeyBindings for a prompt application.
-    """
-    kb = KeyBindings()
-    handle = kb.add
-    default_focussed = has_focus(DEFAULT_BUFFER)
-
-    @handle('enter', filter=default_focussed)
-    def _(event):
-        " Accept input when enter has been pressed. "
-        event.current_buffer.validate_and_handle()
-
-    @handle('c-c', filter=default_focussed)
-    def _(event):
-        " Abort when Control-C has been pressed. "
-        event.app.abort()
-
-    @Condition
-    def ctrl_d_condition():
-        """ Ctrl-D binding is only active when the default buffer is selected
-        and empty. """
-        app = get_app()
-        return (app.current_buffer.name == DEFAULT_BUFFER and
-                not app.current_buffer.text)
-
-    @handle('c-d', filter=ctrl_d_condition & default_focussed)
-    def _(event):
-        " Exit when Control-D has been pressed. "
-        event.app.exit()
-
-    suspend_supported = Condition(suspend_to_background_supported)
-
-    @handle('c-z', filter=suspend_supported)
-    def _(event):
-        """
-        Suspend process to background.
-        """
-        event.app.suspend_to_background()
-
-    return kb
+from .modalhistory import ModalInMemoryHistory, ModalFileHistory
+from . import shell_cmd
+from .keybinding import create_prompt_bindings, create_keybindings
+from .completion import RCompleter, SmartPathCompleter
 
 
 if not is_windows():
@@ -306,3 +268,69 @@ class ModalPrompt(object):
         finally:
             for name in _fields:
                 setattr(self, name, backup[name])
+
+
+def create_modal_prompt(options, history_file):
+
+    def get_lexer():
+        if mp.prompt_mode in ["r", "browse"]:
+            return PygmentsLexer(SLexer)
+        return None
+
+    def get_completer():
+        if mp.prompt_mode in ["r", "browse"]:
+            return RCompleter()
+        elif mp.prompt_mode == "shell":
+            return SmartPathCompleter()
+        return None
+
+    def get_history():
+        if options.no_history:
+            return ModalInMemoryHistory()
+        elif not options.global_history and os.path.exists(history_file):
+            return ModalFileHistory(os.path.abspath(history_file))
+        else:
+            return ModalFileHistory(os.path.join(os.path.expanduser("~"), history_file))
+
+    def on_render(app):
+        if app.is_aborting and app.mp.prompt_mode not in ["readline"]:
+            app.output.write("\n")
+
+    def accept(buff):
+        buff.last_working_index = buff.working_index
+        app = get_app()
+
+        if app.mp.prompt_mode == "browse":
+            if buff.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
+                app.mp.add_history = False
+
+        if app.mp.prompt_mode in ["r", "browse", "readline"]:
+            app.set_return_value(buff.document.text)
+            app.pre_run_callables.append(buff.reset)
+
+        elif app.mp.prompt_mode in ["shell"]:
+            # buffer will be reset to empty, we need to append history at this time point.
+            app.mp.add_history = True
+            buff.append_to_history()
+            sys.stdout.write("\n")
+            shell_cmd.run_shell_command(buff.text)
+            buff.reset()
+
+    mp = ModalPrompt(
+        lexer=DynamicLexer(get_lexer),
+        completer=DynamicCompleter(get_completer),
+        history=get_history(),
+        extra_key_bindings=create_keybindings(),
+        tempfile_suffix=".R",
+        on_render=on_render,
+        accept=accept
+    )
+
+    # r mode message is set by RiceApplication.app_initialize()
+    mp.prompt_mode = "r"
+    mp.top_level_modes = ["r", "shell"]
+
+    mp.auto_width = False
+    mp.add_history = False
+
+    return mp
