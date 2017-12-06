@@ -4,7 +4,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.cache import SimpleCache
 from prompt_toolkit.clipboard import Clipboard, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
-from prompt_toolkit.eventloop import get_event_loop, ensure_future, Return, run_in_executor, run_until_complete, call_from_executor, From, Future
+from prompt_toolkit.eventloop import get_event_loop, ensure_future, Return, run_in_executor, run_until_complete, call_from_executor, From
 from prompt_toolkit.eventloop.base import get_traceback_from_context
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.input.base import Input
@@ -61,10 +61,10 @@ class Application(object):
     :param min_redraw_interval: Number of seconds to wait between redraws. Use
         this for applications where `invalidate` is called a lot. This could cause
         a lot of terminal output, which some terminals are not able to process.
-        
+
         `None` means that every `invalidate` will be scheduled right away
         (which is usually fine).
-        
+
         When one `invalidate` is called, but a scheduled redraw of a previous
         `invalidate` call has not been executed yet, nothing will happen in any
         case.
@@ -193,6 +193,7 @@ class Application(object):
         #: key from for instance the left-arrow key, if we don't know what follows
         #: after "\x1b". This little timer will consider "\x1b" to be escape if
         #: nothing did follow in this time span.
+        #: This seems to work like the `ttimeoutlen` option in Vim.
         self.input_timeout = .5
 
         #: The `Renderer` instance.
@@ -411,7 +412,8 @@ class Application(object):
         self._invalidate_events = list(gather_events())
 
         # Attach invalidate event handler.
-        invalidate = lambda sender: self.invalidate()
+        def invalidate(sender):
+            self.invalidate()
 
         for ev in self._invalidate_events:
             ev += invalidate
@@ -559,7 +561,7 @@ class Application(object):
                                 yield From(previous_run_in_terminal_f)
 
                             # Store unprocessed input as typeahead for next time.
-                            store_typeahead(self.input, self.key_processor.flush())
+                            store_typeahead(self.input, self.key_processor.empty_queue())
 
                 raise Return(result)
 
@@ -625,7 +627,7 @@ class Application(object):
         Called when we don't receive the cursor position response in time.
         """
         if not self.input.responds_to_cpr:
-            return # We know about this already.
+            return  # We know about this already.
 
         def in_terminal():
             self.output.write(

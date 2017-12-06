@@ -21,7 +21,7 @@ import string
 
 try:
     from itertools import accumulate
-except ImportError: # < Python 3.2
+except ImportError:  # < Python 3.2
     def accumulate(iterable):
         " Super simpel 'accumulate' implementation. "
         total = 0
@@ -729,7 +729,6 @@ def load_vi_bindings():
             selection_state.type = SelectionType.BLOCK
         else:
             event.current_buffer.exit_selection()
-
 
     @handle('a', 'w', filter=vi_selection_mode)
     @handle('a', 'W', filter=vi_selection_mode)
@@ -1556,7 +1555,7 @@ def load_vi_bindings():
 
         # Shift all cursor positions.
         new_cursor_positions = [
-            p + i + 1 for i, p in enumerate(buff.multiple_cursor_positions)]
+            pos + i + 1 for i, pos in enumerate(buff.multiple_cursor_positions)]
 
         # Set result.
         buff.text = ''.join(text)
@@ -1629,7 +1628,6 @@ def load_vi_bindings():
             buff.multiple_cursor_positions = new_cursor_positions
         else:
             event.app.output.bell()
-
 
     @handle('c-x', 'c-l', filter=vi_insert_mode)
     def _(event):

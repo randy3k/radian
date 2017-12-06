@@ -4,23 +4,27 @@ Each progress bar consists of a list of these formatters.
 """
 from __future__ import unicode_literals
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass
+from six import with_metaclass, text_type
 import time
 
 from prompt_toolkit.formatted_text import HTML, to_formatted_text
 from prompt_toolkit.layout.dimension import D
+from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.layout.utils import fragment_list_width
 from prompt_toolkit.utils import get_cwidth
 
 __all__ = (
     'Formatter',
     'Text',
-    'TaskName',
+    'Label',
     'Percentage',
     'Bar',
     'Progress',
-    'ElapsedTime',
-    'ETA',
+    'TimeElapsed',
+    'TimeLeft',
+    'IterationsPerSecond',
+    'SpinningWheel',
+    'Rainbow',
 )
 
 
@@ -40,8 +44,8 @@ class Text(Formatter):
     """
     Display plain text.
     """
-    def __init__(self, text):
-        self.text = to_formatted_text(text)
+    def __init__(self, text, style=''):
+        self.text = to_formatted_text(text, style=style)
 
     def format(self, progress_bar, progress, width):
         return self.text
@@ -50,36 +54,45 @@ class Text(Formatter):
         return fragment_list_width(self.text)
 
 
-class TaskName(Formatter):
+class Label(Formatter):
     """
     Display the name of the current task.
 
-    If `width` is given, use this width. Scroll the text if it doesn't fit in
-    this width.
+    :param width: If a `width` is given, use this width. Scroll the text if it
+        doesn't fit in this width.
+    :param suffix: String suffix to be added after the task name, e.g. ': '.
+        If no task name was given, no suffix will be added.
     """
-    template = '<taskname>{name}</taskname>'
+    template = '<label>{label}</label>'
 
-    def __init__(self, width=None):
+    def __init__(self, width=None, suffix=''):
+        assert isinstance(suffix, text_type)
         self.width = width
+        self.suffix = suffix
+
+    def _add_suffix(self, label):
+        if label:
+            label += self.suffix
+        return label
 
     def format(self, progress_bar, progress, width):
-        task_name = progress.task_name
-        cwidth = get_cwidth(task_name)
+        label = self._add_suffix(progress.label)
+        cwidth = get_cwidth(label)
 
         if cwidth > width:
             # It doesn't fit -> scroll task name.
             max_scroll = cwidth - width
             current_scroll = int(time.time() * 3 % max_scroll)
-            task_name = task_name[current_scroll:]
+            label = label[current_scroll:]
 
         # It does fit.
-        return HTML(self.template).format(name=task_name)
+        return HTML(self.template).format(label=label)
 
     def get_width(self, progress_bar):
         if self.width:
             return self.width
 
-        all_names = [c.task_name for c in progress_bar.counters]
+        all_names = [self._add_suffix(c.label) for c in progress_bar.counters]
         if all_names:
             max_widths = max(get_cwidth(name) for name in all_names)
             return D(preferred=max_widths, max=max_widths)
@@ -99,13 +112,15 @@ class Percentage(Formatter):
 
 
 class Bar(Formatter):
-    template = '<bar>|<bar-a>{bar_a}</bar-a><bar-b>{bar_b}</bar-b><bar-c>{bar_c}</bar-c>|</bar>'
+    template = '<bar>{start}<bar-a>{bar_a}</bar-a><bar-b>{bar_b}</bar-b><bar-c>{bar_c}</bar-c>{end}</bar>'
 
-    def __init__(self, sym_a='=', sym_b='>', sym_c=' ', unknown='#'):
+    def __init__(self, start='[', end=']', sym_a='=', sym_b='>', sym_c=' ', unknown='#'):
         assert len(sym_a) == 1
         assert len(sym_b) == 1
         assert len(sym_c) == 1
 
+        self.start = start
+        self.end = end
         self.sym_a = sym_a
         self.sym_b = sym_b
         self.sym_c = sym_c
@@ -127,6 +142,8 @@ class Bar(Formatter):
             bar_c = self.sym_c * (width - pb_a)
 
         return HTML(self.template).format(
+            start=self.start,
+            end=self.end,
             bar_a=bar_a,
             bar_b=bar_b,
             bar_c=bar_c)
@@ -149,30 +166,61 @@ class Progress(Formatter):
         return D.exact(max(all_lengths) * 2 + 1)
 
 
-class ElapsedTime(Formatter):
+def _format_timedelta(timedelta):
+    """
+    Return hh:mm:ss, or mm:ss if the amount of hours is zero.
+    """
+    result = '{0}'.format(timedelta).split('.')[0]
+    if result.startswith('0:'):
+        result = result[2:]
+    return result
+
+
+class TimeElapsed(Formatter):
     def format(self, progress_bar, progress, width):
-        return HTML('<time-elapsed>{time_elapsed}</time-elapsed>').format(
-            time_elapsed=progress.time_elapsed)
+        text = _format_timedelta(progress.time_elapsed).rjust(width)
+        return HTML('<time-elapsed>{time_elapsed}</time-elapsed>').format(time_elapsed=text)
 
     def get_width(self, progress_bar):
-        return D.exact(8)
+        all_values = [len(_format_timedelta(c.time_elapsed)) for c in progress_bar.counters]
+        if all_values:
+            return max(all_values)
+        return 0
 
 
-class ETA(Formatter):
-    template = '<eta>eta [<value>{eta}</value>]</eta>'
+class TimeLeft(Formatter):
+    template = '<time-left>{time_left}</time-left>'
     unknown = '?:??:??'
 
     def format(self, progress_bar, progress, width):
         if progress.total:
-            eta = '{0}'.format(progress.eta).split('.')[0]
+            time_left = _format_timedelta(progress.time_left)
         else:
-            eta = self.unknown
+            time_left = self.unknown
 
-        return HTML(self.template).format(eta=eta)
+        return HTML(self.template).format(time_left=time_left.rjust(width))
 
     def get_width(self, progress_bar):
-        text = to_formatted_text(HTML(self.template).format(eta=self.unknown))
-        return fragment_list_width(text)
+        all_values = [len(_format_timedelta(c.time_left)) if c.total else 7
+                      for c in progress_bar.counters]
+        if all_values:
+            return max(all_values)
+        return 0
+
+
+class IterationsPerSecond(Formatter):
+    template = '<iterations-per-second>{iterations_per_second:.2f}</iterations-per-second>'
+
+    def format(self, progress_bar, progress, width):
+        value = progress.current / progress.time_elapsed.total_seconds()
+        return HTML(self.template.format(iterations_per_second=value))
+
+    def get_width(self, progress_bar):
+        all_values = [len('{0:.2f}'.format(c.current / c.time_elapsed.total_seconds()))
+                      for c in progress_bar.counters]
+        if all_values:
+            return max(all_values)
+        return 0
 
 
 class SpinningWheel(Formatter):
@@ -184,3 +232,50 @@ class SpinningWheel(Formatter):
 
     def get_width(self, progress_bar):
         return D.exact(1)
+
+
+def _hue_to_rgb(hue):
+    " Take hue between 0 and 1, return (r, g, b). "
+    i = int(hue * 6.)
+    f = (hue * 6.) - i
+
+    q = int(255 * (1. - f))
+    t = int(255 * (1. - (1. - f)))
+
+    i %= 6
+
+    return [
+        (255, t, 0),
+        (q, 255, 0),
+        (0, 255, t),
+        (0, q, 255),
+        (t, 0, 255),
+        (255, 0, q),
+    ][i]
+
+
+class Rainbow(Formatter):
+    """
+    For the fun. Add rainbow colors to any of the other formatters.
+    """
+    colors = ['#%.2x%.2x%.2x' % _hue_to_rgb(h / 100.) for h in range(0, 100)]
+
+    def __init__(self, formatter):
+        self.formatter = formatter
+
+    def format(self, progress_bar, progress, width):
+        # Get formatted text from nested formatter, and explode it in
+        # text/style tuples.
+        result = self.formatter.format(progress_bar, progress, width)
+        result = explode_text_fragments(to_formatted_text(result))
+
+        # Insert colors.
+        result2 = []
+        shift = int(time.time() * 3) % len(self.colors)
+
+        for i, (style, text) in enumerate(result):
+            result2.append((style + ' ' + self.colors[(i + shift) % len(self.colors)], text))
+        return result2
+
+    def get_width(self, progress_bar):
+        return self.formatter.get_width(progress_bar)

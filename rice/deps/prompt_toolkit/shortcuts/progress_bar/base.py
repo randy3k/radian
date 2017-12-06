@@ -12,21 +12,24 @@ from prompt_toolkit.application import Application
 from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.filters import Condition, is_done, renderer_height_is_known
 from prompt_toolkit.formatted_text import to_formatted_text
+from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import Layout, Window, ConditionalContainer, FormattedTextControl, HSplit, VSplit
 from prompt_toolkit.layout.controls import UIControl, UIContent
+from prompt_toolkit.layout.dimension import D
+from prompt_toolkit.output.defaults import create_output
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.utils import in_main_thread
-
-from functools import partial
 
 import contextlib
 import datetime
 import os
 import signal
+import six
 import threading
 import time
 import traceback
+import sys
 
 from . import formatters as f
 
@@ -56,7 +59,7 @@ def create_key_bindings():
 
 def create_default_formatters():
     return [
-        f.TaskName(),
+        f.Label(),
         f.Text(' '),
         f.Percentage(),
         f.Text(' '),
@@ -64,7 +67,9 @@ def create_default_formatters():
         f.Text(' '),
         f.Progress(),
         f.Text(' '),
-        f.ETA(),
+        f.Text('eta [', style='class:time-left'),
+        f.TimeLeft(),
+        f.Text(']', style='class:time-left'),
         f.Text(' '),
     ]
 
@@ -86,9 +91,15 @@ class progress_bar(object):
         This can be a callable or formatted text.
     :param style: `prompt_toolkit` ``Style`` instance.
     :param key_bindings: `KeyBindings` instance.
+    :param file: The file object used for rendering, by default `sys.stderr` is used.
+
+    :param output: `prompt_toolkit` `Output` instance.
+    :param input: `prompt_toolkit` `Input` instance.
     """
-    def __init__(self, title=None, formatters=None, bottom_toolbar=None, style=None, key_bindings=None):
-        assert formatters is None or (isinstance(formatters, list) and all(isinstance(fo, f.Formatter) for fo in formatters))
+    def __init__(self, title=None, formatters=None, bottom_toolbar=None,
+                 style=None, key_bindings=None, file=None, output=None, input=None):
+        assert formatters is None or (
+            isinstance(formatters, list) and all(isinstance(fo, f.Formatter) for fo in formatters))
         assert style is None or isinstance(style, BaseStyle)
         assert key_bindings is None or isinstance(key_bindings, KeyBindings)
 
@@ -98,6 +109,9 @@ class progress_bar(object):
         self.counters = []
         self.style = style
         self.key_bindings = key_bindings
+
+        self.output = output or create_output(stdout=file or sys.stderr)
+        self.input = input or get_default_input()
 
         self._thread = None
 
@@ -119,8 +133,11 @@ class progress_bar(object):
             filter=~is_done & renderer_height_is_known &
                 Condition(lambda: self.bottom_toolbar is not None))
 
+        def width_for_formatter(formatter):
+            return formatter.get_width(progress_bar=self)
+
         progress_controls = [
-            Window(content=_ProgressControl(self, f), width=partial(f.get_width, progress_bar=self))
+            Window(content=_ProgressControl(self, f), width=width_for_formatter(f))
             for f in self.formatters
         ]
 
@@ -129,12 +146,16 @@ class progress_bar(object):
             layout=Layout(HSplit([
                 title_toolbar,
                 VSplit(progress_controls,
-                       height=lambda: len(self.counters)),
+                       height=lambda: D(
+                           preferred=len(self.counters),
+                           max=len(self.counters))),
                 Window(),
                 bottom_toolbar,
             ])),
             style=self.style,
-            key_bindings=self.key_bindings)
+            key_bindings=self.key_bindings,
+            output=self.output,
+            input=self.input)
 
         # Run application in different thread.
         def run():
@@ -168,16 +189,20 @@ class progress_bar(object):
 
         self._thread.join()
 
-    def __call__(self, data=None, task_name='', remove_when_done=False, total=None):
+    def __call__(self, data=None, label='', remove_when_done=False, total=None):
         """
         Start a new counter.
 
+        :param label: Title text or description for this progress.
         :param remove_when_done: When `True`, hide this progress bar.
         :param total: Specify the maximum value if it can't be calculated by
             calling ``len``.
         """
+        assert isinstance(label, six.text_type)
+        assert isinstance(remove_when_done, bool)
+
         counter = ProgressBarCounter(
-            self, data, task_name=task_name, remove_when_done=remove_when_done, total=total)
+            self, data, label=label, remove_when_done=remove_when_done, total=total)
         self.counters.append(counter)
         return counter
 
@@ -224,12 +249,12 @@ class ProgressBarCounter(object):
     """
     An individual counter (A progress bar can have multiple counters).
     """
-    def __init__(self, progress_bar, data=None, task_name='', remove_when_done=False, total=None):
+    def __init__(self, progress_bar, data=None, label='', remove_when_done=False, total=None):
         self.start_time = datetime.datetime.now()
         self.progress_bar = progress_bar
         self.data = data
         self.current = 0
-        self.task_name = task_name
+        self.label = label
         self.remove_when_done = remove_when_done
         self.done = False
 
@@ -268,14 +293,14 @@ class ProgressBarCounter(object):
         return datetime.datetime.now() - self.start_time
 
     @property
-    def eta(self):
+    def time_left(self):
         """
-        Timedelta representing the ETA.
+        Timedelta representing the time left.
         """
         if self.total is None:
             return None
         else:
-            return self.time_elapsed / self.percentage * (100 - self.percentage)
+            return self.time_elapsed * (100 - self.percentage) / self.percentage
 
 
 @contextlib.contextmanager

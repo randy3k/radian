@@ -177,16 +177,23 @@ class UIContent(object):
 class FormattedTextControl(UIControl):
     """
     Control that displays formatted text. This can be either plain text, an
-    ``HTML`` object an ``ANSI`` object or a list of (style_str, text) tuples,
-    depending on how you prefer to do the formatting. See
-    ``prompt_toolkit.layout.formatted_text`` for more information.
+    :class:`~prompt_toolkit.formatted_text.HTML` object an
+    :class:`~prompt_toolkit.formatted_text.ANSI` object or a list of
+    ``(style_str, text)`` tuples, depending on how you prefer to do the
+    formatting. See ``prompt_toolkit.layout.formatted_text`` for more
+    information.
 
     (It's mostly optimized for rather small widgets, like toolbars, menus, etc...)
 
     When this UI control has the focus, the cursor will be shown in the upper
-    left corner of this control, unless `get_fragment` returns a
-    ``'[SetCursorPosition]'`` fragment somewhere in the fragment list, then the
-    cursor will be shown there.
+    left corner of this control by default. There are two ways for specifying the cursor position:
+
+    - Pass a `get_cursor_position` function which returns a `Point` instance
+      with the current cursor position.
+
+    - If the (formatted) text is passed as a list of ``(style, text)`` tuples
+      and there is one that looks like ``('[SetCursorPosition]', '')``, then
+      this will specify the cursor position.
 
     Mouse support:
 
@@ -201,16 +208,21 @@ class FormattedTextControl(UIControl):
 
     :param text: Text or formatted text to be displayed.
     :param style: Style string applied to the content. (If you want to style
-        the whole ``Window``, pass the style to the ``Window`` instead.)
-    :param key_bindings: a `KeyBindings` object.
+        the whole :class:`~prompt_toolkit.layout.containers.Window`, pass the
+        style to the :class:`~prompt_toolkit.layout.containers.Window`
+        instead.)
+    :param key_bindings: a :class:`~prompt_toolkit.key_binding.key_bindings.KeyBindings` object.
+    :param get_cursor_position: A callable that returns the cursor position as
+        a `Point` instance.
     """
     def __init__(self, text='', style='', focussable=False, key_bindings=None,
-                 show_cursor=True, modal=False):
+                 show_cursor=True, modal=False, get_cursor_position=None):
         from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
         assert isinstance(style, six.text_type)
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
         assert isinstance(show_cursor, bool)
         assert isinstance(modal, bool)
+        assert get_cursor_position is None or callable(get_cursor_position)
 
         self.text = text  # No type check on 'text'. This is done dynamically.
         self.style = style
@@ -220,6 +232,7 @@ class FormattedTextControl(UIControl):
         self.key_bindings = key_bindings
         self.show_cursor = show_cursor
         self.modal = modal
+        self.get_cursor_position = get_cursor_position
 
         #: Cache for the content.
         self._content_cache = SimpleCache(maxsize=18)
@@ -291,14 +304,16 @@ class FormattedTextControl(UIControl):
         def get_menu_position():
             return get_cursor_position('[SetMenuPosition]')
 
+        cursor_position = (self.get_cursor_position or get_cursor_position)()
+
         # Create content, or take it from the cache.
-        key = (tuple(fragments_with_mouse_handlers), width)
+        key = (tuple(fragments_with_mouse_handlers), width, cursor_position)
 
         def get_content():
             return UIContent(get_line=lambda i: fragment_lines[i],
                              line_count=len(fragment_lines),
                              show_cursor=self.show_cursor,
-                             cursor_position=get_cursor_position(),
+                             cursor_position=cursor_position,
                              menu_position=get_menu_position())
 
         return self._content_cache.get(key, get_content)
@@ -390,7 +405,7 @@ class BufferControl(UIControl):
     :param key_bindings: a `KeyBindings` object.
     """
     def __init__(self,
-                 buffer,
+                 buffer=None,
                  input_processor=None,
                  lexer=None,
                  preview_search=False,
@@ -402,7 +417,7 @@ class BufferControl(UIControl):
                  focus_on_click=False,
                  key_bindings=None):
         from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
-        assert isinstance(buffer, Buffer)
+        assert buffer is None or isinstance(buffer, Buffer)
         assert input_processor is None or isinstance(input_processor, Processor)
         assert menu_position is None or callable(menu_position)
         assert lexer is None or isinstance(lexer, Lexer)
@@ -415,6 +430,7 @@ class BufferControl(UIControl):
         # Default search state.
         if get_search_state is None:
             search_state = SearchState()
+
             def get_search_state():
                 return search_state
 
@@ -432,7 +448,7 @@ class BufferControl(UIControl):
         self.focus_on_click = to_filter(focus_on_click)
 
         self.input_processor = input_processor
-        self.buffer = buffer
+        self.buffer = buffer or Buffer()
         self.menu_position = menu_position
         self.lexer = lexer or SimpleLexer()
         self.get_search_buffer_control = get_search_buffer_control

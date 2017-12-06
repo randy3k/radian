@@ -10,6 +10,7 @@ import six
 __all__ = (
     'Layout',
     'InvalidLayoutError',
+    'walk',
 )
 
 
@@ -57,22 +58,58 @@ class Layout(object):
 
     def focus(self, value):
         """
-        Focus the given object.
+        Focus the given UI element.
 
-        :param value: `UIControl` or `Window` instance.
+        `value` can be either:
+        - a `UIControl`
+        - a `Buffer` instance or the name of a `Buffer`
+        - a `Window`
+        - Any container object. In this case we will focus the first focussable
+          `UIControl` within the container.
         """
-        if isinstance(value, UIControl):
+        # BufferControl by buffer name.
+        if isinstance(value, six.text_type):
+            for control in self.find_all_controls():
+                if isinstance(control, BufferControl) and control.buffer.name == value:
+                    self.focus(control)
+                    return
+            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+
+        # BufferControl by buffer object.
+        elif isinstance(value, Buffer):
+            for control in self.find_all_controls():
+                if isinstance(control, BufferControl) and control.buffer == value:
+                    self.focus(control)
+                    return
+            raise ValueError("Couldn't find Buffer in the current layout: %r." % (value, ))
+
+        # Focus UIControl.
+        elif isinstance(value, UIControl):
+            if value not in self.find_all_controls():
+                raise ValueError('Invalid value. Container does not appear in the layout.')
+            if not value.is_focussable():
+                raise ValueError('Invalid value. UIControl is not focussable.')
+
             self.current_control = value
+
+        # Otherwise, expecting any Container object.
         else:
             value = to_container(value)
+
             if isinstance(value, Window):
+                if value not in self.find_all_windows():
+                    raise ValueError('Invalid value. Window does not appear in the layout: %r' %
+                            (value, ))
+
                 self.current_window = value
             else:
                 # Take the first window of this container.
-                for c in self._walk(value):
+                for c in walk(value):
                     if isinstance(c, Window) and c.content.is_focussable():
                         self.current_window = c
-                        break
+                        return
+
+                raise ValueError('Invalid value. Container cannot be focussed: %r' % (value, ))
 
     def has_focus(self, value):
         """
@@ -163,16 +200,8 @@ class Layout(object):
         """
         Walk through all the layout nodes (and their children) and yield them.
         """
-        return self._walk(self.container)
-
-    @classmethod
-    def _walk(cls, container):
-        " Walk, starting at this container. "
-        yield container
-        for c in container.get_children():
-            # yield from _walk(c)
-            for i in cls._walk(c):
-                yield i
+        for i in walk(self.container):
+            yield i
 
     def walk_through_modal_area(self):
         """
@@ -185,7 +214,7 @@ class Layout(object):
         while not root.is_modal() and root in self._child_to_parent:
             root = self._child_to_parent[root]
 
-        for container in self._walk(root):
+        for container in walk(root):
             yield container
 
     def update_parents_relations(self):
@@ -226,3 +255,14 @@ class Layout(object):
 class InvalidLayoutError(Exception):
     pass
 
+
+def walk(container):
+    """
+    Walk through layout, starting at this container.
+    """
+    yield container
+
+    for c in container.get_children():
+        # yield from walk(c)
+        for i in walk(c):
+            yield i

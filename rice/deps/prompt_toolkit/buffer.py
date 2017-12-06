@@ -459,6 +459,15 @@ class Buffer(object):
         :param bypass_readonly: When True, don't raise an
                                 :class:`.EditReadOnlyBuffer` exception, even
                                 when the buffer is read-only.
+
+        .. warning::
+
+            When this buffer is read-only and `bypass_readonly` was not passed,
+            the `EditReadOnlyBuffer` exception will be caught by the
+            `KeyProcessor` and is silently suppressed. This is important to
+            keep in mind when writing key bindings, because it won't do what
+            you expect, and there won't be a stack trace. Use try/finally
+            around this function if you need some cleanup code.
         """
         assert isinstance(value, Document)
 
@@ -692,7 +701,7 @@ class Buffer(object):
             a = self.text[pos - 2]
             b = self.text[pos - 1]
 
-            self.text = self.text[:pos-2] + b + a + self.text[pos:]
+            self.text = self.text[:pos - 2] + b + a + self.text[pos:]
 
     def go_to_history(self, index):
         """
@@ -718,7 +727,7 @@ class Buffer(object):
                 if disable_wrap_around:
                     return
             else:
-                index = min(completions_count-1, self.complete_state.complete_index + count)
+                index = min(completions_count - 1, self.complete_state.complete_index + count)
             self.go_to_completion(index)
 
     def complete_previous(self, count=1, disable_wrap_around=False):
@@ -802,9 +811,9 @@ class Buffer(object):
 
                         # Create completion.
                         if i == self.working_index:
-                            display_meta = "Current, line %s" % (j+1)
+                            display_meta = "Current, line %s" % (j + 1)
                         else:
-                            display_meta = "History %s, line %s" % (i+1, j+1)
+                            display_meta = "History %s, line %s" % (i + 1, j + 1)
 
                         completions.append(Completion(
                             l,
