@@ -157,11 +157,12 @@ class RiceApplication(object):
                 self.app_initialize(mp)
                 message = mp.default_prompt
                 self.initialized = True
-
-            if mp.interrupted:
-                mp.interrupted = False
-            elif mp.insert_new_line:
                 sys.stdout.write("\n")
+            else:
+                if mp.interrupted:
+                    mp.interrupted = False
+                if mp.insert_new_line:
+                    sys.stdout.write("\n")
 
             mp.add_history = add_history == 1
 
