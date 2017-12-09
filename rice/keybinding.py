@@ -28,12 +28,24 @@ def prase_complete():
     return interface.prase_input_complete(app.current_buffer.text)
 
 
-@Condition
-def tab_should_insert_whitespaces():
-    app = get_app()
-    b = app.current_buffer
-    before_cursor = b.document.current_line_before_cursor
-    return bool(not b.text or (not before_cursor or before_cursor.isspace()))
+def preceding_text(pattern):
+    m = re.compile(pattern)
+
+    def _preceding_text():
+        app = get_app()
+        return bool(m.match(app.current_buffer.document.current_line_before_cursor))
+
+    return Condition(_preceding_text)
+
+
+def following_text(pattern):
+    m = re.compile(pattern)
+
+    def _following_text():
+        app = get_app()
+        return bool(m.match(app.current_buffer.document.current_line_after_cursor))
+
+    return Condition(_following_text)
 
 
 @Condition
@@ -50,6 +62,11 @@ def is_end_of_buffer():
 @Condition
 def auto_indentation():
     return get_app().auto_indentation
+
+
+@Condition
+def auto_match():
+    return get_app().auto_match
 
 
 def if_no_repeat(event):
@@ -124,10 +141,53 @@ def create_keybindings():
     def _(event):
         event.current_buffer.validate_and_handle()
 
+    # auto match
+    @handle('(', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    def _(event):
+        event.current_buffer.insert_text("()")
+        event.current_buffer.cursor_left()
+
+    @handle('[', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    def _(event):
+        event.current_buffer.insert_text("[]")
+        event.current_buffer.cursor_left()
+
+    @handle('{', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    def _(event):
+        event.current_buffer.insert_text("{}")
+        event.current_buffer.cursor_left()
+
+    @handle('"', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    def _(event):
+        event.current_buffer.insert_text('""')
+        event.current_buffer.cursor_left()
+
+    @handle("'", filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    def _(event):
+        event.current_buffer.insert_text("''")
+        event.current_buffer.cursor_left()
+
+    @handle(')', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"^\)"))
+    @handle(']', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"^\]"))
+    @handle('}', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"^\}"))
+    @handle('"', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text("^\""))
+    @handle("'", filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text("^'"))
+    def _(event):
+        event.current_buffer.cursor_right()
+
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\($") & following_text(r"^\)"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\[$") & following_text(r"^\]"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\{$") & following_text(r"^\}"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text('.*"') & following_text('^"'))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*'") & following_text(r"^'"))
+    def _(event):
+        event.current_buffer.delete()
+        event.current_buffer.delete_before_cursor()
+
     # indentation
-    @handle('}', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
-    @handle(']', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
-    @handle(')', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation)
+    @handle('}', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation & preceding_text(r"^\s*$"))
+    @handle(']', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation & preceding_text(r"^\s*$"))
+    @handle(')', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_indentation & preceding_text(r"^\s*$"))
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -143,17 +203,12 @@ def create_keybindings():
 
         event.current_buffer.insert_text(event.data)
 
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r"^\s+$"))
     def _(event):
-        document = event.current_buffer.document
-        text = document.current_line_before_cursor
         tab_size = event.app.tab_size
-        if text.endswith(" " * tab_size) and len(text.strip()) == 0 and event.arg == 1:
-            event.current_buffer.delete_before_cursor(tab_size)
-        else:
-            backward_delete_char(event)
+        event.current_buffer.delete_before_cursor(tab_size)
 
-    @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & tab_should_insert_whitespaces)
+    @handle('tab', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r"^\s*$"))
     def _(event):
         tab_size = event.app.tab_size
         event.current_buffer.insert_text(" " * tab_size)

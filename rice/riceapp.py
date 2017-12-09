@@ -78,6 +78,7 @@ class RiceApplication(object):
         color_scheme = interface.get_option("rice.color_scheme", "native")
         mp.style = style_from_pygments(get_style_by_name(color_scheme))
 
+        mp.app.auto_match = interface.get_option("rice.auto_match", False)
         mp.app.auto_indentation = interface.get_option("rice.auto_indentation", True)
         mp.app.tab_size = int(interface.get_option("rice.tab_size", 4))
         mp.complete_while_typing = interface.get_option("rice.complete_while_typing", True)

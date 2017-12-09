@@ -14,6 +14,7 @@ _rice_ is still under active development, any feedbacks will be welcome. Users s
 - [x] multiline editing
 - [x] syntax highlight
 - [x] auto completion
+- [x] auto matching parens/quotes.
 - [x] brackated paste mode
 - [x] cross platform, runs on Windows, macOS and Linux
 - [x] emacs/vi editing mode
@@ -47,6 +48,7 @@ _rice_ can be customized via `options` in `.Rprofile` file. This file is usually
 options(
     rice.color_scheme = "native",
     rice.editing_mode = "emacs",
+    rice.auto_match = FALSE,
     rice.auto_indentation = TRUE,
     rice.tab_size = 4,
     rice.complete_while_typing = TRUE,
