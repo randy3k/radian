@@ -117,14 +117,6 @@ in your vim config.
 
 Requires https://github.com/jalvesaq/Nvim-R/pull/258 to work seamlessly, otherwise auto indentation and auto bracket match will behave strangely.
 
-### Package `reticulate` not working
-
-You need to make sure that you are using the latest `reticulate`. The current developing version can be install via
-
-```r
-devtools::install_github("rstudio/reticulate")
-```
-
 
 ### Readline Error
 
