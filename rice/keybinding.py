@@ -68,6 +68,12 @@ def auto_indentation():
 def auto_match():
     return get_app().auto_match
 
+@Condition
+def has_complete_index():
+    app = get_app()
+    cs = app.current_buffer.complete_state
+    return cs and cs.complete_index is not None
+
 
 def if_no_repeat(event):
     return not event.is_repeat
@@ -267,5 +273,10 @@ def create_keybindings():
     @handle('c-c', filter=default_focussed & app.has_completions)
     def _(event):
         event.current_buffer.cancel_completion()
+
+    # # tab to completion
+    # @handle('tab', filter=insert_mode & default_focussed & app.has_completions & has_complete_index)
+    # def _(event):
+    #     event.current_buffer.complete_state = None
 
     return kb

@@ -105,13 +105,17 @@ _rice_ only provides a frontend to the R program, the actual running eventloop i
 
 ### Nvim-R support
 
-Just put
+Put
 ```vim
-let g:R_app = "rice"
-let g:R_cmd = "R"
-let g:R_hl_term = 0
+let R_app = "rice"
+let R_cmd = "R"
+let R_hl_term = 0
+let R_args = []  " if you had set any
+let R_bracketed_paste = 1
 ```
-in your vim config. You may also want to set `options(rice.auto_indentation = FALSE)` in `.Rprofile`.
+in your vim config. 
+
+Requires https://github.com/jalvesaq/Nvim-R/pull/258 to work seamlessly, otherwise auto indentation and auto bracket match will behave strangely.
 
 ### Package `reticulate` not working
 
