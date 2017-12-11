@@ -46,24 +46,40 @@ _rice_ can be customized via `options` in `.Rprofile` file. This file is usually
 
 ```r
 options(
+    # color scheme see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
     rice.color_scheme = "native",
+
+    # either  `"emacs"` (default) or `"vi"`.
     rice.editing_mode = "emacs",
+
+    # auto match brackets and quotes
     rice.auto_match = FALSE,
+
+    # auto indentation for new line and curly braces
     rice.auto_indentation = TRUE,
     rice.tab_size = 4,
+
+    # pop up completion while typing
     rice.complete_while_typing = TRUE,
+
+    # automatically adjust R buffer size based on terminal width
     rice.auto_width = TRUE,
+
+    # insert new line between prompts
     rice.insert_new_line = TRUE,
+
+    # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
     rice.history_search_no_duplicates = FALSE,
+
+    # custom prompt for different modes
     rice.prompt = "\033[0;34mr$>\033[0m ",
     rice.shell_prompt = "\033[0;31m#!>\033[0m ",
     rice.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
+
+    # supress the loading message for reticulate
     rice.suppress_reticulate_message = FALSE
 )
 ```
-
-- color scheme: see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
-- editing mode: either  `"emacs"` (default) or `"vi"`.
 
 ## Alias on unix system
 
