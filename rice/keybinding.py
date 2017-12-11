@@ -142,27 +142,27 @@ def create_keybindings():
         event.current_buffer.validate_and_handle()
 
     # auto match
-    @handle('(', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    @handle('(', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & ~(preceding_text(r".*[#'\"]") & following_text(r".*['\"]")))
     def _(event):
         event.current_buffer.insert_text("()")
         event.current_buffer.cursor_left()
 
-    @handle('[', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    @handle('[', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & ~(preceding_text(r".*[#'\"]") & following_text(r".*['\"]")))
     def _(event):
         event.current_buffer.insert_text("[]")
         event.current_buffer.cursor_left()
 
-    @handle('{', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    @handle('{', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & ~(preceding_text(r".*[#'\"]") & following_text(r".*['\"]")))
     def _(event):
         event.current_buffer.insert_text("{}")
         event.current_buffer.cursor_left()
 
-    @handle('"', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    @handle('"', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & ~(preceding_text(r".*[#'\"]") & following_text(r".*['\"]")))
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match)
+    @handle("'", filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & ~(preceding_text(r".*[#'\"]") & following_text(r".*['\"]")))
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
@@ -178,8 +178,8 @@ def create_keybindings():
     @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\($") & following_text(r"^\)"))
     @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\[$") & following_text(r"^\]"))
     @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\{$") & following_text(r"^\}"))
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text('.*"') & following_text('^"'))
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*'") & following_text(r"^'"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text('.*"$') & following_text('^"'))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*'$") & following_text(r"^'"))
     def _(event):
         event.current_buffer.delete()
         event.current_buffer.delete_before_cursor()
