@@ -131,8 +131,6 @@ let R_bracketed_paste = 1
 ```
 in your vim config. 
 
-Requires https://github.com/jalvesaq/Nvim-R/pull/258 to work seamlessly, otherwise auto indentation and auto bracket match will behave strangely.
-
 
 ### Readline Error
 
