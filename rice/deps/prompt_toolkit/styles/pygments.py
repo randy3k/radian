@@ -11,7 +11,8 @@ from .style import Style
 
 __all__ = (
     'style_from_pygments',
-    'token_list_to_formatted_text',
+    'style_from_pygments_dict',
+    'pygments_token_to_classname',
 )
 
 
@@ -32,16 +33,24 @@ def style_from_pygments(pygments_style_cls=None):
     from pygments.style import Style as pygments_Style
     assert issubclass(pygments_style_cls, pygments_Style)
 
+    return style_from_pygments_dict(pygments_style_cls.styles)
+
+
+def style_from_pygments_dict(pygments_dict):
+    """
+    Create a :class:`.Style` instance from a Pygments style dictionary.
+    (One that maps Token objects to style strings.)
+    """
+    assert isinstance(pygments_dict, dict)
     pygments_style = []
 
-    if pygments_style_cls is not None:
-        for token, style in pygments_style_cls.styles.items():
-            pygments_style.append((_pygments_token_to_classname(token), style))
+    for token, style in pygments_dict.items():
+        pygments_style.append((pygments_token_to_classname(token), style))
 
     return Style(pygments_style)
 
 
-def _pygments_token_to_classname(token):
+def pygments_token_to_classname(token):
     """
     Turn e.g. `Token.Name.Exception` into `'pygments.name.exception'`.
 
@@ -49,16 +58,3 @@ def _pygments_token_to_classname(token):
     prompt_toolkit list of fragments that match these styling rules.)
     """
     return 'pygments.' + '.'.join(token).lower()
-
-
-def token_list_to_formatted_text(token_list):
-    """
-    Turn a pygments token list into a list of prompt_toolkit text fragments
-    (``(style_str, text)`` tuples).
-    """
-    result = []
-
-    for token, text in token_list:
-        result.append(('class:' + _pygments_token_to_classname(token), text))
-
-    return result

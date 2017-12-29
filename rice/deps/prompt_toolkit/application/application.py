@@ -6,7 +6,7 @@ from prompt_toolkit.clipboard import Clipboard, InMemoryClipboard
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.eventloop import get_event_loop, ensure_future, Return, run_in_executor, run_until_complete, call_from_executor, From
 from prompt_toolkit.eventloop.base import get_traceback_from_context
-from prompt_toolkit.filters import to_filter
+from prompt_toolkit.filters import to_filter, Condition
 from prompt_toolkit.input.base import Input
 from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.input.typeahead import store_typeahead, get_typeahead
@@ -83,8 +83,9 @@ class Application(object):
     :param enable_page_navigation_bindings: When `True`, enable the page
         navigation key bindings. These include both Emacs and Vi bindings like
         page-up, page-down and so on to scroll through pages. Mostly useful for
-        creating an editor. Probably, you don't want this for the
-        implementation of a REPL.
+        creating an editor or other full screen applications. Probably, you
+        don't want this for the implementation of a REPL. By default, this is
+        enabled if `full_screen` is set.
 
     Callbacks (all of these should accept a
     :class:`~prompt_toolkit.application.Application` object as input.)
@@ -108,7 +109,8 @@ class Application(object):
                  style=None,
                  key_bindings=None, clipboard=None,
                  full_screen=False, mouse_support=False,
-                 enable_page_navigation_bindings=False,
+
+                 enable_page_navigation_bindings=None,  # Can be None, True or False.
 
                  paste_mode=False,
                  editing_mode=EditingMode.EMACS,
@@ -121,6 +123,11 @@ class Application(object):
 
                  # I/O.
                  input=None, output=None):
+
+        # If `enable_page_navigation_bindings` is not specified, enable it in
+        # case of full screen applications only. This can be overriden by the user.
+        if enable_page_navigation_bindings is None:
+            enable_page_navigation_bindings = Condition(lambda: self.full_screen)
 
         paste_mode = to_filter(paste_mode)
         mouse_support = to_filter(mouse_support)
@@ -254,27 +261,6 @@ class Application(object):
             return ui_control.search_state
         else:
             return SearchState()  # Dummy search state.  (Don't return None!)
-
-    @property
-    def visible_windows(self):
-        """
-        Return a list of `Window` objects that represent visible user controls.
-        """
-        last_screen = self.renderer.last_rendered_screen
-        if last_screen is not None:
-            return last_screen.visible_windows
-        else:
-            return []
-
-    @property
-    def focussable_windows(self):
-        """
-        Return a list of `Window` objects that are focussable.
-        """
-        # Focussable windows are windows that are visible, but also part of the modal container.
-        # Make sure to keep the ordering.
-        visible_windows = self.visible_windows
-        return [w for w in self.layout.get_focussable_windows() if w in visible_windows]
 
     def reset(self):
         """
@@ -466,10 +452,6 @@ class Application(object):
             self.key_processor.feed_multiple(get_typeahead(self.input))
             self.key_processor.process_keys()
 
-            def feed_keys(keys):
-                self.key_processor.feed_multiple(keys)
-                self.key_processor.process_keys()
-
             def read_from_input():
                 # Ignore when we aren't running anymore. This callback will
                 # removed from the loop next time. (It could be that it was
@@ -577,19 +559,20 @@ class Application(object):
 
         return ensure_future(_run_async2())
 
-    def run(self, pre_run=None, set_exception_handler=True):
+    def run(self, pre_run=None, set_exception_handler=True, inputhook=None):
         """
         A blocking 'run' call that waits until the UI is finished.
 
         :param set_exception_handler: When set, in case of an exception, go out
             of the alternate screen and hide the application, display the
             exception, and wait for the user to press ENTER.
+        :param inputhook: None or a callable that takes an `InputHookContext`.
         """
         loop = get_event_loop()
 
         def run():
             f = self.run_async(pre_run=pre_run)
-            run_until_complete(f)
+            run_until_complete(f, inputhook=inputhook)
             return f.result()
 
         def handle_exception(context):

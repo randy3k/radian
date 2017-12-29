@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 from prompt_toolkit.filters import to_filter, Condition
 from prompt_toolkit.layout.screen import Size
 from prompt_toolkit.output import Output
-from prompt_toolkit.styles import ANSI_COLOR_NAMES
+from prompt_toolkit.styles.base import ANSI_COLOR_NAMES
 
 from six.moves import range
 import array
@@ -297,7 +297,7 @@ class _EscapeCodeCache(dict):
         def get(color, bg):
             table = BG_ANSI_COLORS if bg else FG_ANSI_COLORS
 
-            if color is None:
+            if not color:
                 return ()
 
             # 16 ANSI colors. (Given by name.)

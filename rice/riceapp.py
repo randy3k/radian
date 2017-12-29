@@ -122,7 +122,7 @@ class RiceApplication(object):
         # print welcome message
         sys.stdout.write(interface.r_version())
 
-    def set_process_event(self):
+    def get_inputhook(self):
         terminal_width = [None]
 
         def process_events(context):
@@ -144,13 +144,12 @@ class RiceApplication(object):
 
                 time.sleep(1.0 / 30)
 
-        set_event_loop(create_event_loop(inputhook=process_events))
+        return process_events
 
     def run(self, options):
-        self.set_process_event()
         self.set_cli_options(options)
 
-        mp = create_modal_prompt(options, history_file=".rice_history")
+        mp = create_modal_prompt(options, history_file=".rice_history", inputhook=self.get_inputhook())
         mp.interrupted = False
 
         def result_from_prompt(message, add_history=1):

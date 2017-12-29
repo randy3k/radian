@@ -59,6 +59,7 @@ class ModalPrompt(object):
     style = None
     history = None
     prompt_continuation = None
+    inputhook = None
 
     _message = {}
     _prompt_mode = None
@@ -75,7 +76,8 @@ class ModalPrompt(object):
             input=None,
             output=None,
             on_render=None,
-            accept=None):
+            accept=None,
+            inputhook=None):
 
         self.editing_mode = editing_mode
         self.history = history
@@ -93,6 +95,8 @@ class ModalPrompt(object):
         self.on_render = on_render
 
         self.accept = accept
+
+        self.inputhook = inputhook
 
         self.create_application()
 
@@ -264,13 +268,13 @@ class ModalPrompt(object):
 
         try:
             self.app.current_buffer.reset(Document(""))
-            return self.app.run()
+            return self.app.run(inputhook=self.inputhook)
         finally:
             for name in _fields:
                 setattr(self, name, backup[name])
 
 
-def create_modal_prompt(options, history_file):
+def create_modal_prompt(options, history_file, inputhook):
 
     def get_lexer():
         if mp.prompt_mode in ["r", "browse"]:
@@ -324,7 +328,8 @@ def create_modal_prompt(options, history_file):
         extra_key_bindings=create_keybindings(),
         tempfile_suffix=".R",
         on_render=on_render,
-        accept=accept
+        accept=accept,
+        inputhook=inputhook
     )
 
     # r mode message is set by RiceApplication.app_initialize()

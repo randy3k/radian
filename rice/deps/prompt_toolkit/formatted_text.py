@@ -1,17 +1,19 @@
 """
 Many places in prompt_toolkit can take either plain text, or formatted text.
-For instance the ``shortcuts.prompt()`` function takes either plain text or
-formatted text for the prompt. The ``FormattedTextControl`` can also take
+For instance the ``prompt_toolkit.shortcuts.prompt`` function takes either
+plain text or formatted text for the prompt. The
+:class:`~prompt_toolkit.layout.controls.FormattedTextControl` can also take
 either plain text or formatted text.
 
 In any case, there is an input that can either be just plain text (a string),
-an `HTML` object, an `ANSI` object or a sequence of ``(style_string, text)``
-tuples. The ``to_formatted_text`` conversion function takes any of these and
-turns all of them into such a tuple sequence.
+an :class:`.HTML` object, an :class:`.ANSI` object or a sequence of
+`(style_string, text)` tuples. The :func:`.to_formatted_text` conversion
+function takes any of these and turns all of them into such a tuple sequence.
 """
 from __future__ import unicode_literals
 from prompt_toolkit.output.vt100 import FG_ANSI_COLORS, BG_ANSI_COLORS
 from prompt_toolkit.output.vt100 import _256_colors as _256_colors_table
+from prompt_toolkit.styles.pygments import pygments_token_to_classname
 
 import six
 import xml.dom.minidom as minidom
@@ -24,6 +26,7 @@ __all__ = (
     'FormattedText',
     'HTML',
     'ANSI',
+    'PygmentsTokens',
 )
 
 
@@ -49,8 +52,11 @@ def to_formatted_text(value, style='', auto_convert=False):
         result = [('', value)]
     elif isinstance(value, list):
         if len(value):
-            assert isinstance(value[0][0], six.text_type)
-            assert isinstance(value[0][1], six.text_type)
+            assert isinstance(value[0][0], six.text_type), \
+                'Expecting string, got: %r' % (value[0][0], )
+            assert isinstance(value[0][1], six.text_type), \
+                'Expecting string, got: %r' % (value[0][1], )
+
         result = value
     elif hasattr(value, '__pt_formatted_text__'):
         result = value.__pt_formatted_text__()
@@ -108,6 +114,23 @@ class FormattedText(object):
 
     def __repr__(self):
         return 'FormattedText(%r)' % (self.data, )
+
+
+def PygmentsTokens(object):
+    """
+    Turn a pygments token list into a list of prompt_toolkit text fragments
+    (``(style_str, text)`` tuples).
+    """
+    def __init__(self, token_list):
+        self.token_list = token_list
+
+    def __pt_formatted_text__(self):
+        result = []
+
+        for token, text in self.token_list:
+            result.append(('class:' + pygments_token_to_classname(token), text))
+
+        return result
 
 
 class Template(object):
@@ -273,12 +296,12 @@ class ANSI(object):
 
     ::
 
-        ANSI('\x1b[31mhello \x1b[32mworld')
+        ANSI('\\x1b[31mhello \\x1b[32mworld')
 
-    Characters between \001 and \002 are supposed to have a zero width when
-    printed, but these are literally sent to the terminal output. This can be
-    used for instance, for inserting Final Term prompt commands.
-    They will be translated into a prompt_toolkit '[ZeroWidthEscape]' fragment.
+    Characters between ``\\001`` and ``\\002`` are supposed to have a zero width
+    when printed, but these are literally sent to the terminal output. This can
+    be used for instance, for inserting Final Term prompt commands.  They will
+    be translated into a prompt_toolkit '[ZeroWidthEscape]' fragment.
     """
     def __init__(self, value):
         self.value = value

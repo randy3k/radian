@@ -37,10 +37,16 @@ class Win32AsyncioEventLoop(EventLoop):
         # was not created here.
         self.closed = True
 
-    def run_until_complete(self, future):
+    def run_until_complete(self, future, inputhook=None):
+        if inputhook:
+            raise ValueError("Win32AsyncioEventLoop doesn't support input hooks.")
+
         return self.loop.run_until_complete(future)
 
-    def run_forever(self):
+    def run_forever(self, inputhook=None):
+        if inputhook:
+            raise ValueError("Win32AsyncioEventLoop doesn't support input hooks.")
+
         self.loop.run_forever()
 
     def run_in_executor(self, callback, _daemon=False):
@@ -98,7 +104,7 @@ class Win32AsyncioEventLoop(EventLoop):
         # (Use an executor for this, the Windows asyncio event loop doesn't
         # allow us to wait for handles like stdin.)
         def wait():
-            if self._handle_callbacks[handle] != callback:
+            if self._handle_callbacks.get(handle) != callback:
                 return
 
             wait_for_handles([handle])
