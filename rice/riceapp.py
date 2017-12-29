@@ -9,7 +9,6 @@ from . import interface
 from . import api
 from . import callbacks
 
-from prompt_toolkit.eventloop import create_event_loop, set_event_loop
 from prompt_toolkit.application.current import get_app
 
 from prompt_toolkit.styles import style_from_pygments
