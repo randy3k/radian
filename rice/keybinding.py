@@ -148,27 +148,27 @@ def create_keybindings():
         event.current_buffer.validate_and_handle()
 
     # auto match
-    @handle('(', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[^(\[{\"'\w]|$"))
+    @handle('(', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text("()")
         event.current_buffer.cursor_left()
 
-    @handle('[', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[^(\[{\"'\w]|$"))
+    @handle('[', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text("[]")
         event.current_buffer.cursor_left()
 
-    @handle('{', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[^(\[{\"'\w]|$"))
+    @handle('{', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text("{}")
         event.current_buffer.cursor_left()
 
-    @handle('"', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[^(\[{\"'\w]|$"))
+    @handle('"', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[^(\[{\"'\w]|$"))
+    @handle("'", filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
