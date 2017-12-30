@@ -95,16 +95,16 @@ in `~/.bash_profile` such that `r` would open `rice` and `R` would still open th
 
 ### R_HOME location
 
-If _rice_ cannot locate the R installation files automatically. You can either expose the R binary to the system `PATH` variable or export the environment variable `R_HOME`. For example,
+If _rice_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
 
+On Linux/macOS, you could also export the environment variable `R_HOME`. For example,
 ```sh
 $ export R_HOME=/usr/local/lib/R
 $ rice
 ```
-Note that it should be the path to `R_HOME`, not the path to the R binary. The folder should contain a file called `COPYING`.
-
-If the above doesn't work, you may need to futher specify `LD_LIBRARY_PATH`,
-
+Note that it should be the path to `R_HOME`, not the path to the R binary. The
+folder should contain a file called `COPYING`. In some cases, you may need to
+futher specify `LD_LIBRARY_PATH`,
 ```sh
 $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
 $ rice
