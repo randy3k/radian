@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from . import api
 from ctypes import c_int
+import struct
 
 import os
 import time
@@ -137,10 +138,10 @@ def set_option(key, value):
     rcall(api.mk_symbol("options"), **kwargs)
 
 
-def r_version():
+def greeting():
     info = rcopy(rcall(api.mk_symbol("R.Version")), simplify=True)
-    return "{} -- {}\nPlatform: {}\n".format(
-        info["version.string"], info["nickname"], info["platform"])
+    return "{} -- \"{}\"\nPlatform: {} ({}-bit)\n".format(
+        info["version.string"], info["nickname"], info["platform"], 8 * struct.calcsize("P"))
 
 
 def make_installed_packages():

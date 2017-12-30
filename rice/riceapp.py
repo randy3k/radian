@@ -119,7 +119,7 @@ class RiceApplication(object):
         interface.installed_packages()
 
         # print welcome message
-        sys.stdout.write(interface.r_version())
+        sys.stdout.write(interface.greeting())
 
     def get_inputhook(self):
         terminal_width = [None]
