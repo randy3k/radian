@@ -52,16 +52,10 @@ class RSession(object):
         if 'R_HOME' not in os.environ:
             try:
                 Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
-            except Exception as e:
-                if sys.platform.startswith("win"):
-                    Rexe = os.path.join(
-                        read_registry("Software\\R-Core\\R", "InstallPath")[0],
-                        "bin",
-                        "R.exe")
-                    Rhome = subprocess.check_output([Rexe, "RHOME"]).decode("utf-8").strip()
-                else:
-                    raise e
-
+            except FileNotFoundError:
+                Rhome = ""
+            if not Rhome:
+                raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
             os.environ['R_HOME'] = Rhome
         else:
             Rhome = os.environ['R_HOME']
@@ -71,8 +65,6 @@ class RSession(object):
 
         if sys.platform.startswith("win"):
             libR_dir = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
-            os.environ['PATH'] = libR_dir + ";" + os.environ['PATH']
-
             libR_path = os.path.join(libR_dir, "R.dll")
         elif sys.platform == "darwin":
             libR_path = os.path.join(Rhome, "lib", "libR.dylib")
