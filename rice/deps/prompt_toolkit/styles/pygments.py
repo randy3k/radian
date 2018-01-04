@@ -16,7 +16,7 @@ __all__ = (
 )
 
 
-def style_from_pygments(pygments_style_cls=None):
+def style_from_pygments(pygments_style_cls):
     """
     Shortcut to create a :class:`.Style` instance from a Pygments style class
     and a style dictionary.
@@ -41,7 +41,7 @@ def style_from_pygments_dict(pygments_dict):
     Create a :class:`.Style` instance from a Pygments style dictionary.
     (One that maps Token objects to style strings.)
     """
-    assert isinstance(pygments_dict, dict)
+    assert hasattr(pygments_dict, 'items')  # collections.abc.Mapping only available on Python 3.
     pygments_style = []
 
     for token, style in pygments_dict.items():
@@ -57,4 +57,7 @@ def pygments_token_to_classname(token):
     (Our Pygments lexer will also turn the tokens that pygments produces in a
     prompt_toolkit list of fragments that match these styling rules.)
     """
-    return 'pygments.' + '.'.join(token).lower()
+    if token:
+        return 'pygments.' + '.'.join(token).lower()
+    else:
+        return 'pygments'
