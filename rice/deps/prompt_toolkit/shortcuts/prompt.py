@@ -31,7 +31,7 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import DynamicAutoSuggest
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.clipboard import DynamicClipboard, InMemoryClipboard
-from prompt_toolkit.completion import DynamicCompleter
+from prompt_toolkit.completion import DynamicCompleter, ThreadedCompleter
 from prompt_toolkit.document import Document
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
 from prompt_toolkit.eventloop import ensure_future, Return, From
@@ -56,7 +56,7 @@ from prompt_toolkit.layout.processors import Processor, DynamicProcessor, Passwo
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.layout.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
-from prompt_toolkit.styles import default_style, BaseStyle, DynamicStyle, merge_styles
+from prompt_toolkit.styles import BaseStyle, DynamicStyle
 from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.validation import DynamicValidator
 from six import text_type
@@ -140,10 +140,13 @@ class Prompt(object):
     All parameters that expect "formatted text" can take either just plain text
     (a unicode object), a list of ``(style_str, text)`` tuples or an HTML object.
 
+    Example usage::
+
+        p = Prompt('>')
+        text = p.prompt()
+
     :param message: Plain text or formatted text to be shown before the prompt.
-        This can also be a callable that takes an
-        :class:`~prompt_toolkit.application.Application` and returns formatted
-        text.
+        This can also be a callable that returns formatted text.
     :param multiline: `bool` or :class:`~prompt_toolkit.filters.Filter`.
         When True, prefer a layout that is more adapted for multiline input.
         Text after newlines is automatically indented, and search/arg input is
@@ -169,11 +172,22 @@ class Prompt(object):
         for input validation.
     :param completer: :class:`~prompt_toolkit.completion.Completer` instance
         for input completion.
+    :param complete_in_thread: `bool` or
+        :class:`~prompt_toolkit.filters.Filter`. Run the completer code in a
+        background thread in order to avoid blocking the user interface.
+        For ``CompleteStyle.READLINE_LIKE``, this setting has no effect. There
+        we always run the completions in the main thread.
     :param reserve_space_for_menu: Space to be reserved for displaying the menu.
         (0 means that no space needs to be reserved.)
     :param auto_suggest: :class:`~prompt_toolkit.auto_suggest.AutoSuggest`
         instance for input suggestions.
     :param style: :class:`.Style` instance for the color scheme.
+    :param include_default_pygments_style: `bool` or
+        :class:`~prompt_toolkit.filters.Filter`. Tell whether the default
+        styling for Pygments lexers has to be included. By default, this is
+        true, but it is recommended to be disabled if another Pygments style is
+        passed as the `style` argument, otherwise, two Pygments styles will be
+        merged.
     :param enable_system_prompt: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. Pressing Meta+'!' will show
         a system prompt.
@@ -202,16 +216,16 @@ class Prompt(object):
         `InputHookContext` object.
     """
     _fields = (
-        'message', 'lexer', 'completer', 'is_password', 'editing_mode',
-        'extra_key_bindings', 'is_password', 'bottom_toolbar', 'style',
-        'rprompt', 'multiline', 'prompt_continuation',
-        'wrap_lines', 'history', 'enable_history_search',
-        'complete_while_typing', 'validate_while_typing',
-        'complete_style', 'mouse_support', 'auto_suggest',
-        'clipboard', 'validator',
-        'refresh_interval', 'extra_input_processor', 'default',
-        'enable_system_prompt', 'enable_suspend', 'enable_open_in_editor',
-        'reserve_space_for_menu', 'tempfile_suffix', 'inputhook')
+        'message', 'lexer', 'completer', 'complete_in_thread', 'is_password',
+        'editing_mode', 'extra_key_bindings', 'is_password', 'bottom_toolbar',
+        'style', 'include_default_pygments_style', 'rprompt', 'multiline',
+        'prompt_continuation', 'wrap_lines', 'history',
+        'enable_history_search', 'complete_while_typing',
+        'validate_while_typing', 'complete_style', 'mouse_support',
+        'auto_suggest', 'clipboard', 'validator', 'refresh_interval',
+        'extra_input_processor', 'default', 'enable_system_prompt',
+        'enable_suspend', 'enable_open_in_editor', 'reserve_space_for_menu',
+        'tempfile_suffix', 'inputhook')
 
     def __init__(
             self,
@@ -231,10 +245,12 @@ class Prompt(object):
             enable_open_in_editor=False,
             validator=None,
             completer=None,
+            complete_in_thread=False,
             reserve_space_for_menu=8,
             complete_style=None,
             auto_suggest=None,
             style=None,
+            include_default_pygments_style=True,
             history=None,
             clipboard=None,
             prompt_continuation=None,
@@ -321,7 +337,10 @@ class Prompt(object):
             validate_while_typing=dyncond('validate_while_typing'),
             enable_history_search=dyncond('enable_history_search'),
             validator=DynamicValidator(lambda: self.validator),
-            completer=DynamicCompleter(lambda: self.completer),
+            completer=ThreadedCompleter(
+                completer=DynamicCompleter(lambda: self.completer),
+                in_thread=dyncond('complete_in_thread'),
+            ),
             history=DynamicHistory(lambda: self.history),
             auto_suggest=DynamicAutoSuggest(lambda: self.auto_suggest),
             accept_handler=accept,
@@ -471,10 +490,8 @@ class Prompt(object):
         # Create application
         application = Application(
             layout=Layout(layout, default_buffer_window),
-            style=merge_styles([
-                default_style(),
-                DynamicStyle(lambda: self.style),
-            ]),
+            style=DynamicStyle(lambda: self.style),
+            include_default_pygments_style=dyncond('include_default_pygments_style'),
             clipboard=DynamicClipboard(lambda: self.clipboard),
             key_bindings=merge_key_bindings([
                 merge_key_bindings([
@@ -609,8 +626,9 @@ class Prompt(object):
             # for the current prompt.
             default='', editing_mode=None,
             refresh_interval=None, vi_mode=None, lexer=None, completer=None,
-            is_password=None, extra_key_bindings=None, bottom_toolbar=None,
-            style=None, rprompt=None, multiline=None, prompt_continuation=None,
+            complete_in_thread=None, is_password=None, extra_key_bindings=None,
+            bottom_toolbar=None, style=None, include_default_pygments_style=None,
+            rprompt=None, multiline=None, prompt_continuation=None,
             wrap_lines=None, history=None, enable_history_search=None,
             complete_while_typing=None, validate_while_typing=None,
             complete_style=None, auto_suggest=None, validator=None,
@@ -620,7 +638,8 @@ class Prompt(object):
             tempfile_suffix=None, inputhook=None,
             async_=False):
         """
-        Display the prompt.
+        Display the prompt. All the arguments are the same as for the
+        :class:`~.Prompt` class.
 
         :param _async: When `True` return a `Future` instead of waiting for the
             prompt to finish.

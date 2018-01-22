@@ -5,6 +5,7 @@ Container for the layout.
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
+from functools import partial
 from six import with_metaclass, text_type
 from six.moves import range
 
@@ -63,7 +64,8 @@ class Container(with_metaclass(ABCMeta, object)):
         """
 
     @abstractmethod
-    def write_to_screen(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def write_to_screen(self, screen, mouse_handlers, write_position,
+                        parent_style, erase_bg, z_index):
         """
         Write the actual content to the screen.
 
@@ -72,6 +74,7 @@ class Container(with_metaclass(ABCMeta, object)):
         :param parent_style: Style string to pass to the `Window` object. This will be
             applied to all content of the windows. `VSplit` and `HSplit` can
             use it to pass their style down to the windows that they contain.
+        :param z_index: Used for propagating z_index from parent to child.
         """
 
     def is_modal(self):
@@ -123,22 +126,30 @@ class _Split(Container):
     """
     The common parts of `VSplit` and `HSplit`.
     """
-    def __init__(self, children, window_too_small=None, padding=Dimension.exact(0),
-                 width=None, height=None, modal=False, key_bindings=None, style=''):
+    def __init__(self, children, window_too_small=None,
+                 padding=Dimension.exact(0), padding_char=None,
+                 padding_style='', width=None, height=None, z_index=None,
+                 modal=False, key_bindings=None, style=''):
         assert window_too_small is None or isinstance(window_too_small, Container)
         assert isinstance(children, list)
         assert isinstance(modal, bool)
         assert isinstance(style, text_type)
         assert is_dimension(width)
         assert is_dimension(height)
+        assert z_index is None or isinstance(z_index, int)  # `None` means: inherit from parent.
         assert is_dimension(padding)
+        assert padding_char is None or isinstance(padding_char, text_type)
+        assert isinstance(padding_style, text_type)
 
         self.children = [to_container(c) for c in children]
         self.window_too_small = window_too_small or _window_too_small()
-        self.padding = to_dimension(padding)
+        self.padding = padding
+        self.padding_char = padding_char
+        self.padding_style = padding_style
 
         self.width = width
         self.height = height
+        self.z_index = z_index
 
         self.modal = modal
         self.key_bindings = key_bindings
@@ -170,17 +181,22 @@ class HSplit(_Split):
         "Window too small" message.
     :param width: When given, use this width instead of looking at the children.
     :param height: When given, use this width instead of looking at the children.
+    :param z_index: (int or None) When specified, this can be used to bring
+        element in front of floating elements.  `None` means: inherit from parent.
     :param style: A style string.
     :param modal: ``True`` or ``False``.
     :param key_bindings: ``None`` or a ``KeyBindings`` object.
     """
     def __init__(self, children, window_too_small=None,
-                 align=VerticalAlign.JUSTIFY, padding=0, width=None,
-                 height=None, modal=False, key_bindings=None, style=''):
+                 align=VerticalAlign.JUSTIFY, padding=0, padding_char=None,
+                 padding_style='', width=None, height=None, z_index=None,
+                 modal=False, key_bindings=None, style=''):
         super(HSplit, self).__init__(
             children=children, window_too_small=window_too_small,
-            padding=padding, width=width, height=height, modal=modal,
-            key_bindings=key_bindings, style=style)
+            padding=padding, padding_char=padding_char,
+            padding_style=padding_style, width=width, height=height,
+            z_index=z_index, modal=modal, key_bindings=key_bindings,
+            style=style)
 
         self.align = align
 
@@ -225,7 +241,10 @@ class HSplit(_Split):
             # The children with padding.
             for child in self.children:
                 result.append(child)
-                result.append(Window(height=self.padding))
+                result.append(Window(
+                    height=self.padding,
+                    char=self.padding_char,
+                    style=self.padding_style))
             result.pop()
 
             # Padding right.
@@ -236,7 +255,8 @@ class HSplit(_Split):
 
         return self._children_cache.get(tuple(self.children), get)
 
-    def write_to_screen(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def write_to_screen(self, screen, mouse_handlers, write_position,
+                        parent_style, erase_bg, z_index):
         """
         Render the prompt to a `Screen` instance.
 
@@ -245,10 +265,11 @@ class HSplit(_Split):
         """
         sizes = self._divide_heigths(write_position)
         style = parent_style + ' ' + self.style
+        z_index = z_index if self.z_index is None else self.z_index
 
         if sizes is None:
             self.window_too_small.write_to_screen(
-                screen, mouse_handlers, write_position, style, erase_bg)
+                screen, mouse_handlers, write_position, style, erase_bg, z_index)
         else:
             #
             ypos = write_position.ypos
@@ -258,7 +279,8 @@ class HSplit(_Split):
             # Draw child panes.
             for s, c in zip(sizes, self._all_children):
                 c.write_to_screen(screen, mouse_handlers,
-                                  WritePosition(xpos, ypos, width, s), style, erase_bg)
+                                  WritePosition(xpos, ypos, width, s), style,
+                                  erase_bg, z_index)
                 ypos += s
 
             # Fill in the remaining space. This happens when a child control
@@ -270,7 +292,8 @@ class HSplit(_Split):
             if remaining_height > 0:
                 self._remaining_space_window.write_to_screen(
                     screen, mouse_handlers,
-                    WritePosition(xpos, ypos, width, remaining_height), style, erase_bg)
+                    WritePosition(xpos, ypos, width, remaining_height), style,
+                                  erase_bg, z_index)
 
     def _divide_heigths(self, write_position):
         """
@@ -343,17 +366,22 @@ class VSplit(_Split):
         "Window too small" message.
     :param width: When given, use this width instead of looking at the children.
     :param height: When given, use this width instead of looking at the children.
+    :param z_index: (int or None) When specified, this can be used to bring
+        element in front of floating elements.  `None` means: inherit from parent.
     :param style: A style string.
     :param modal: ``True`` or ``False``.
     :param key_bindings: ``None`` or a ``KeyBindings`` object.
     """
     def __init__(self, children, window_too_small=None, align=HorizontalAlign.JUSTIFY,
-                 padding=Dimension.exact(0), width=None, height=None,
+                 padding=Dimension.exact(0), padding_char=None,
+                 padding_style='', width=None, height=None, z_index=None,
                  modal=False, key_bindings=None, style=''):
         super(VSplit, self).__init__(
             children=children, window_too_small=window_too_small,
-            padding=padding, width=width, height=height, modal=modal,
-            key_bindings=key_bindings, style=style)
+            padding=padding, padding_char=padding_char,
+            padding_style=padding_style, width=width, height=height,
+            z_index=z_index, modal=modal, key_bindings=key_bindings,
+            style=style)
 
         self.align = align
 
@@ -410,7 +438,10 @@ class VSplit(_Split):
             # The children with padding.
             for child in self.children:
                 result.append(child)
-                result.append(Window(width=self.padding))
+                result.append(Window(
+                    width=self.padding,
+                    char=self.padding_char,
+                    style=self.padding_style))
             result.pop()
 
             # Padding right.
@@ -472,7 +503,8 @@ class VSplit(_Split):
 
         return sizes
 
-    def write_to_screen(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def write_to_screen(self, screen, mouse_handlers, write_position,
+                        parent_style, erase_bg, z_index):
         """
         Render the prompt to a `Screen` instance.
 
@@ -485,11 +517,12 @@ class VSplit(_Split):
         children = self._all_children
         sizes = self._divide_widths(write_position.width)
         style = parent_style + ' ' + self.style
+        z_index = z_index if self.z_index is None else self.z_index
 
         # If there is not enough space.
         if sizes is None:
             self.window_too_small.write_to_screen(
-                screen, mouse_handlers, write_position, style, erase_bg)
+                screen, mouse_handlers, write_position, style, erase_bg, z_index)
             return
 
         # Calculate heights, take the largest possible, but not larger than
@@ -505,7 +538,8 @@ class VSplit(_Split):
         # Draw all child panes.
         for s, c in zip(sizes, children):
             c.write_to_screen(screen, mouse_handlers,
-                              WritePosition(xpos, ypos, s, height), style, erase_bg)
+                              WritePosition(xpos, ypos, s, height), style,
+                              erase_bg, z_index)
             xpos += s
 
         # Fill in the remaining space. This happens when a child control
@@ -517,7 +551,8 @@ class VSplit(_Split):
         if remaining_width > 0:
             self._remaining_space_window.write_to_screen(
                 screen, mouse_handlers,
-                WritePosition(xpos, ypos, remaining_width, height), style, erase_bg)
+                WritePosition(xpos, ypos, remaining_width, height), style,
+                erase_bg, z_index)
 
 
 class FloatContainer(Container):
@@ -533,11 +568,16 @@ class FloatContainer(Container):
                                 ycursor=True,
                                 layout=CompletionMenu(...))
                        ])
+
+    :param z_index: (int or None) When specified, this can be used to bring
+        element in front of floating elements.  `None` means: inherit from parent.
+        This is the z_index for the whole `Float` container as a whole.
     """
-    def __init__(self, content, floats, modal=False, key_bindings=None, style=''):
+    def __init__(self, content, floats, modal=False, key_bindings=None, style='', z_index=None):
         assert all(isinstance(f, Float) for f in floats)
         assert isinstance(modal, bool)
         assert isinstance(style, text_type)
+        assert z_index is None or isinstance(z_index, int)
 
         self.content = to_container(content)
         self.floats = floats
@@ -545,6 +585,7 @@ class FloatContainer(Container):
         self.modal = modal
         self.key_bindings = key_bindings
         self.style = style
+        self.z_index = z_index
 
     def reset(self):
         self.content.reset()
@@ -563,124 +604,151 @@ class FloatContainer(Container):
         """
         return self.content.preferred_height(width, max_available_height)
 
-    def write_to_screen(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def write_to_screen(self, screen, mouse_handlers, write_position,
+                        parent_style, erase_bg, z_index):
         style = parent_style + ' ' + self.style
+        z_index = z_index if self.z_index is None else self.z_index
 
-        self.content.write_to_screen(screen, mouse_handlers, write_position, style, erase_bg)
+        self.content.write_to_screen(
+            screen, mouse_handlers, write_position, style, erase_bg, z_index)
 
         for fl in self.floats:
-            # When a menu_position was given, use this instead of the cursor
-            # position. (These cursor positions are absolute, translate again
-            # relative to the write_position.)
-            # Note: This should be inside the for-loop, because one float could
-            #       set the cursor position to be used for the next one.
-            cpos = screen.get_menu_position(fl.attach_to_window or get_app().layout.current_window)
-            cursor_position = Point(x=cpos.x - write_position.xpos,
-                                    y=cpos.y - write_position.ypos)
+            # z_index of a Float is computed by summing the z_index of the
+            # container and the `Float`.
+            new_z_index = (z_index or 0) + fl.z_index
+            style = parent_style + ' ' + self.style
 
-            fl_width = fl.get_width()
-            fl_height = fl.get_height()
+            # If the float that we have here, is positioned relative to the
+            # cursor position, but the Window that specifiies the cursor
+            # position is not drawn yet, because it's a Float itself, we have
+            # to postpone this calculation. (This is a work-around, but good
+            # enough for now.)
+            postpone = (fl.xcursor is not None or fl.ycursor is not None)
 
-            # Left & width given.
-            if fl.left is not None and fl_width is not None:
-                xpos = fl.left
-                width = fl_width
-            # Left & right given -> calculate width.
-            elif fl.left is not None and fl.right is not None:
-                xpos = fl.left
-                width = write_position.width - fl.left - fl.right
-            # Width & right given -> calculate left.
-            elif fl_width is not None and fl.right is not None:
-                xpos = write_position.width - fl.right - fl_width
-                width = fl_width
-            elif fl.xcursor:
-                width = fl_width
-                if width is None:
-                    width = fl.content.preferred_width(write_position.width).preferred
-                    width = min(write_position.width, width)
-
-                xpos = cursor_position.x
-                if xpos + width > write_position.width:
-                    xpos = max(0, write_position.width - width)
-            # Only width given -> center horizontally.
-            elif fl_width:
-                xpos = int((write_position.width - fl_width) / 2)
-                width = fl_width
-            # Otherwise, take preferred width from float content.
+            if postpone:
+                new_z_index = 10 ** 10  # Draw as late as possible.
+                screen.draw_with_z_index(z_index=new_z_index, draw_func=partial(self._draw_float,
+                    fl, screen, mouse_handlers, write_position, style, erase_bg, new_z_index))
             else:
+                self._draw_float(fl, screen, mouse_handlers, write_position,
+                                 style, erase_bg, new_z_index)
+
+    def _draw_float(self, fl, screen, mouse_handlers, write_position,
+                    style, erase_bg, z_index):
+        " Draw a single Float. "
+        # When a menu_position was given, use this instead of the cursor
+        # position. (These cursor positions are absolute, translate again
+        # relative to the write_position.)
+        # Note: This should be inside the for-loop, because one float could
+        #       set the cursor position to be used for the next one.
+        cpos = screen.get_menu_position(fl.attach_to_window or get_app().layout.current_window)
+        cursor_position = Point(x=cpos.x - write_position.xpos,
+                                y=cpos.y - write_position.ypos)
+
+        fl_width = fl.get_width()
+        fl_height = fl.get_height()
+
+        # Left & width given.
+        if fl.left is not None and fl_width is not None:
+            xpos = fl.left
+            width = fl_width
+        # Left & right given -> calculate width.
+        elif fl.left is not None and fl.right is not None:
+            xpos = fl.left
+            width = write_position.width - fl.left - fl.right
+        # Width & right given -> calculate left.
+        elif fl_width is not None and fl.right is not None:
+            xpos = write_position.width - fl.right - fl_width
+            width = fl_width
+        elif fl.xcursor:
+            width = fl_width
+            if width is None:
                 width = fl.content.preferred_width(write_position.width).preferred
+                width = min(write_position.width, width)
 
-                if fl.left is not None:
-                    xpos = fl.left
-                elif fl.right is not None:
-                    xpos = max(0, write_position.width - width - fl.right)
-                else:  # Center horizontally.
-                    xpos = max(0, int((write_position.width - width) / 2))
+            xpos = cursor_position.x
+            if xpos + width > write_position.width:
+                xpos = max(0, write_position.width - width)
+        # Only width given -> center horizontally.
+        elif fl_width:
+            xpos = int((write_position.width - fl_width) / 2)
+            width = fl_width
+        # Otherwise, take preferred width from float content.
+        else:
+            width = fl.content.preferred_width(write_position.width).preferred
 
-                # Trim.
-                width = min(width, write_position.width - xpos)
+            if fl.left is not None:
+                xpos = fl.left
+            elif fl.right is not None:
+                xpos = max(0, write_position.width - width - fl.right)
+            else:  # Center horizontally.
+                xpos = max(0, int((write_position.width - width) / 2))
 
-            # Top & height given.
-            if fl.top is not None and fl_height is not None:
-                ypos = fl.top
-                height = fl_height
-            # Top & bottom given -> calculate height.
-            elif fl.top is not None and fl.bottom is not None:
-                ypos = fl.top
-                height = write_position.height - fl.top - fl.bottom
-            # Height & bottom given -> calculate top.
-            elif fl_height is not None and fl.bottom is not None:
-                ypos = write_position.height - fl_height - fl.bottom
-                height = fl_height
-            # Near cursor.
-            elif fl.ycursor:
-                ypos = cursor_position.y + (0 if fl.allow_cover_cursor else 1)
+            # Trim.
+            width = min(width, write_position.width - xpos)
 
-                height = fl_height
-                if height is None:
-                    height = fl.content.preferred_height(
-                        width, write_position.height).preferred
+        # Top & height given.
+        if fl.top is not None and fl_height is not None:
+            ypos = fl.top
+            height = fl_height
+        # Top & bottom given -> calculate height.
+        elif fl.top is not None and fl.bottom is not None:
+            ypos = fl.top
+            height = write_position.height - fl.top - fl.bottom
+        # Height & bottom given -> calculate top.
+        elif fl_height is not None and fl.bottom is not None:
+            ypos = write_position.height - fl_height - fl.bottom
+            height = fl_height
+        # Near cursor.
+        elif fl.ycursor:
+            ypos = cursor_position.y + (0 if fl.allow_cover_cursor else 1)
 
-                # Reduce height if not enough space. (We can use the height
-                # when the content requires it.)
-                if height > write_position.height - ypos:
-                    if write_position.height - ypos + 1 >= ypos:
-                        # When the space below the cursor is more than
-                        # the space above, just reduce the height.
-                        height = write_position.height - ypos
-                    else:
-                        # Otherwise, fit the float above the cursor.
-                        height = min(height, cursor_position.y)
-                        ypos = cursor_position.y - height
-
-            # Only height given -> center vertically.
-            elif fl_width:
-                ypos = int((write_position.height - fl_height) / 2)
-                height = fl_height
-            # Otherwise, take preferred height from content.
-            else:
+            height = fl_height
+            if height is None:
                 height = fl.content.preferred_height(
                     width, write_position.height).preferred
 
-                if fl.top is not None:
-                    ypos = fl.top
-                elif fl.bottom is not None:
-                    ypos = max(0, write_position.height - height - fl.bottom)
-                else:  # Center vertically.
-                    ypos = max(0, int((write_position.height - height) / 2))
+            # Reduce height if not enough space. (We can use the height
+            # when the content requires it.)
+            if height > write_position.height - ypos:
+                if write_position.height - ypos + 1 >= ypos:
+                    # When the space below the cursor is more than
+                    # the space above, just reduce the height.
+                    height = write_position.height - ypos
+                else:
+                    # Otherwise, fit the float above the cursor.
+                    height = min(height, cursor_position.y)
+                    ypos = cursor_position.y - height
 
-                # Trim.
-                height = min(height, write_position.height - ypos)
+        # Only height given -> center vertically.
+        elif fl_width:
+            ypos = int((write_position.height - fl_height) / 2)
+            height = fl_height
+        # Otherwise, take preferred height from content.
+        else:
+            height = fl.content.preferred_height(
+                width, write_position.height).preferred
 
-            # Write float.
-            # (xpos and ypos can be negative: a float can be partially visible.)
-            if height > 0 and width > 0:
-                wp = WritePosition(xpos=xpos + write_position.xpos,
-                                   ypos=ypos + write_position.ypos,
-                                   width=width, height=height)
+            if fl.top is not None:
+                ypos = fl.top
+            elif fl.bottom is not None:
+                ypos = max(0, write_position.height - height - fl.bottom)
+            else:  # Center vertically.
+                ypos = max(0, int((write_position.height - height) / 2))
 
-                if not fl.hide_when_covering_content or self._area_is_empty(screen, wp):
-                    fl.content.write_to_screen(screen, mouse_handlers, wp, style, erase_bg=True)
+            # Trim.
+            height = min(height, write_position.height - ypos)
+
+        # Write float.
+        # (xpos and ypos can be negative: a float can be partially visible.)
+        if height > 0 and width > 0:
+            wp = WritePosition(xpos=xpos + write_position.xpos,
+                               ypos=ypos + write_position.ypos,
+                               width=width, height=height)
+
+            if not fl.hide_when_covering_content or self._area_is_empty(screen, wp):
+                fl.content.write_to_screen(
+                    screen, mouse_handlers, wp, style, erase_bg=True, z_index=z_index)
 
     def _area_is_empty(self, screen, write_position):
         """
@@ -732,15 +800,18 @@ class Float(object):
     :param hide_when_covering_content: Hide the float when it covers content underneath.
     :param allow_cover_cursor: When `False`, make sure to display the float
         below the cursor. Not on top of the indicated position.
+    :param z_index: Z-index position. For a Float, this needs to be at least
+        one. It is relative to the z_index of the parent container.
     """
     def __init__(self, content=None, top=None, right=None, bottom=None, left=None,
-                 width=None, height=None,
-                 xcursor=None, ycursor=None, attach_to_window=None,
-                 hide_when_covering_content=False, allow_cover_cursor=False):
+                 width=None, height=None, xcursor=None, ycursor=None,
+                 attach_to_window=None, hide_when_covering_content=False,
+                 allow_cover_cursor=False, z_index=1):
         assert is_dimension(width)
         assert is_dimension(height)
         assert isinstance(hide_when_covering_content, bool)
         assert isinstance(allow_cover_cursor, bool)
+        assert isinstance(z_index, int) and z_index >= 1
 
         self.left = left
         self.right = right
@@ -761,6 +832,7 @@ class Float(object):
         self.content = to_container(content)
         self.hide_when_covering_content = hide_when_covering_content
         self.allow_cover_cursor = allow_cover_cursor
+        self.z_index = z_index
 
     def get_width(self):
         if callable(self.width):
@@ -1014,7 +1086,7 @@ class ScrollOffsets(object):
 
 
 class ColorColumn(object):
-    def __init__(self, position, style=''):
+    def __init__(self, position, style='class:color-column'):
         assert isinstance(position, int)
         assert isinstance(style, text_type)
 
@@ -1040,10 +1112,18 @@ class Window(Container):
     :param content: :class:`~prompt_toolkit.layout.controls.UIControl` instance.
     :param width: :class:`~prompt_toolkit.layout.dimension.Dimension` instance or callable.
     :param height: :class:`~prompt_toolkit.layout.dimension.Dimension` instance or callable.
+    :param z_index: When specified, this can be used to bring element in front
+        of floating elements.
     :param dont_extend_width: When `True`, don't take up more width then the
                               preferred width reported by the control.
     :param dont_extend_height: When `True`, don't take up more width then the
                                preferred height reported by the control.
+    :param ignore_content_width: A `bool` or
+        :class:`~prompt_toolkit.filters.Filter` instance. Ignore the
+        `UIContent` width when calculating the dimensions.
+    :param ignore_content_height: A `bool` or
+        :class:`~prompt_toolkit.filters.Filter` instance. Ignore the
+        `UIContent` height when calculating the dimensions.
     :param left_margins: A list of :class:`~prompt_toolkit.layout.margins.Margin`
         instance to be displayed on the left. For instance:
         :class:`~prompt_toolkit.layout.margins.NumberredMargin` can be one of
@@ -1084,11 +1164,12 @@ class Window(Container):
     :param char: Character to be used for filling the background.
     :param transparent: When `False`, first erase everything underneath. (This
         is mainly useful if this Window is displayed inside a `Float`.)
-        (when `char` or `get_char` is geven, it will never be transparant
+        (when `char` or `get_char` is given, it will never be transparant
         anyway, and this parameter doesn't change anything.)
     """
-    def __init__(self, content=None, width=None, height=None,
+    def __init__(self, content=None, width=None, height=None, z_index=None,
                  dont_extend_width=False, dont_extend_height=False,
+                 ignore_content_width=False, ignore_content_height=False,
                  left_margins=None, right_margins=None, scroll_offsets=None,
                  allow_scroll_beyond_bottom=False, wrap_lines=False,
                  get_vertical_scroll=None, get_horizontal_scroll=None, always_hide_cursor=False,
@@ -1110,6 +1191,7 @@ class Window(Container):
         assert get_char is None or callable(get_char)
         assert not (char and get_char)
         assert isinstance(transparent, bool)
+        assert z_index is None or isinstance(z_index, int)
 
         self.allow_scroll_beyond_bottom = to_filter(allow_scroll_beyond_bottom)
         self.always_hide_cursor = to_filter(always_hide_cursor)
@@ -1118,8 +1200,10 @@ class Window(Container):
         self.cursorcolumn = to_filter(cursorcolumn)
 
         self.content = content or DummyControl()
-        self.dont_extend_width = dont_extend_width
-        self.dont_extend_height = dont_extend_height
+        self.dont_extend_width = to_filter(dont_extend_width)
+        self.dont_extend_height = to_filter(dont_extend_height)
+        self.ignore_content_width = to_filter(ignore_content_width)
+        self.ignore_content_height = to_filter(ignore_content_height)
         self.left_margins = left_margins or []
         self.right_margins = right_margins or []
         self.scroll_offsets = scroll_offsets or ScrollOffsets()
@@ -1134,6 +1218,7 @@ class Window(Container):
 
         self.width = width
         self.height = height
+        self.z_index = z_index
 
         # Cache for the screens generated by the margin.
         self._ui_content_cache = SimpleCache(maxsize=8)
@@ -1182,6 +1267,9 @@ class Window(Container):
         def preferred_content_width():
             """ Content width: is only calculated if no exact width for the
             window was given. """
+            if self.ignore_content_width():
+                return None
+
             # Calculate the width of the margin.
             total_margin_width = sum(self._get_margin_width(m) for m in
                                      self.left_margins + self.right_margins)
@@ -1199,7 +1287,7 @@ class Window(Container):
         return self._merge_dimensions(
             dimension=to_dimension(self.width),
             get_preferred=preferred_content_width,
-            dont_extend=self.dont_extend_width)
+            dont_extend=self.dont_extend_width())
 
     def preferred_height(self, width, max_available_height):
         """
@@ -1208,6 +1296,9 @@ class Window(Container):
         def preferred_content_height():
             """ Content height: is only calculated if no exact height for the
             window was given. """
+            if self.ignore_content_height():
+                return None
+
             total_margin_width = sum(self._get_margin_width(m) for m in
                                      self.left_margins + self.right_margins)
             wrap_lines = self.wrap_lines()
@@ -1218,7 +1309,7 @@ class Window(Container):
         return self._merge_dimensions(
             dimension=to_dimension(self.height),
             get_preferred=preferred_content_height,
-            dont_extend=self.dont_extend_height)
+            dont_extend=self.dont_extend_height())
 
     @staticmethod
     def _merge_dimensions(dimension, get_preferred, dont_extend=False):
@@ -1281,11 +1372,25 @@ class Window(Container):
             return '?'
         return False
 
-    def write_to_screen(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def write_to_screen(self, screen, mouse_handlers, write_position,
+                        parent_style, erase_bg, z_index):
         """
         Write window to screen. This renders the user control, the margins and
         copies everything over to the absolute position at the given screen.
         """
+        z_index = z_index if self.z_index is None else self.z_index
+
+        draw_func = partial(self._write_to_screen_at_index, screen,
+                            mouse_handlers, write_position, parent_style, erase_bg)
+
+        if z_index is None or z_index <= 0:
+            # When no z_index is given, draw right away.
+            draw_func()
+        else:
+            # Otherwise, postpone.
+            screen.draw_with_z_index(z_index=z_index, draw_func=draw_func)
+
+    def _write_to_screen_at_index(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
         # Don't bother writing invisible windows.
         # (We save some time, but also avoid applying last-line styling.)
         if write_position.height <= 0 or write_position.width <= 0:
@@ -1589,14 +1694,14 @@ class Window(Container):
         else:
             char = self.char
 
-        if (erase_bg or char) and not self.transparent:
+        if erase_bg or char or not self.transparent:
             wp = write_position
-            char = _CHAR_CACHE[char or ' ', '']
+            char_obj = _CHAR_CACHE[char or ' ', '']
 
             for y in range(wp.ypos, wp.ypos + wp.height):
                 row = screen.data_buffer[y]
                 for x in range(wp.xpos, wp.xpos + wp.width):
-                    row[x] = char
+                    row[x] = char_obj
 
     def _apply_style(self, new_screen, write_position, parent_style):
         # Apply `self.style`.
@@ -1676,14 +1781,16 @@ class Window(Container):
         # Highlight color columns
         for cc in self.get_colorcolumns():
             assert isinstance(cc, ColorColumn)
-            color_column_style = ' ' + cc.style
             column = cc.position
 
-            for y2 in range(y, y + height):
-                row = data_buffer[y2]
-                original_char = row[column]
-                row[column] = _CHAR_CACHE[
-                   original_char.char, original_char.style + color_column_style]
+            if column < x + width:  # Only draw when visible.
+                color_column_style = ' ' + cc.style
+
+                for y2 in range(y, y + height):
+                    row = data_buffer[y2]
+                    original_char = row[column + x]
+                    row[column + x] = _CHAR_CACHE[
+                       original_char.char, original_char.style + color_column_style]
 
     def _copy_margin(self, lazy_screen, new_screen, write_position, move_x, width):
         """
@@ -1948,10 +2055,11 @@ class ConditionalContainer(Container):
         else:
             return Dimension.zero()
 
-    def write_to_screen(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def write_to_screen(self, screen, mouse_handlers, write_position,
+                        parent_style, erase_bg, z_index):
         if self.filter():
             return self.content.write_to_screen(
-                screen, mouse_handlers, write_position, parent_style, erase_bg)
+                screen, mouse_handlers, write_position, parent_style, erase_bg, z_index)
 
     def get_children(self):
         return [self.content]

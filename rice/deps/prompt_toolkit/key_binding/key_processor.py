@@ -306,7 +306,7 @@ class KeyProcessor(object):
         # Invalidate user interface.
         app.invalidate()
 
-        # self._start_timeout()
+        self._start_timeout()
 
     def empty_queue(self):
         """

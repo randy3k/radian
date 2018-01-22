@@ -26,7 +26,7 @@ from prompt_toolkit.layout.processors import \
 from prompt_toolkit.layout.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
-from prompt_toolkit.styles import default_style, DynamicStyle, merge_styles
+from prompt_toolkit.styles import DynamicStyle
 from prompt_toolkit.utils import is_windows
 
 import sys
@@ -236,10 +236,8 @@ class ModalPrompt(object):
 
         self.app = Application(
             layout=self.create_layout(),
-            style=merge_styles([
-                default_style(),
-                DynamicStyle(lambda: self.style),
-            ]),
+            style=DynamicStyle(lambda: self.style),
+            include_default_pygments_style=True,
             key_bindings=merge_key_bindings([
                 merge_key_bindings([
                     ConditionalKeyBindings(
