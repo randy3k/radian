@@ -30,6 +30,8 @@ class RCompleter(Completer):
         self.assignEnd = self.get_utils_func(".assignEnd")
         self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
         self.completeToken = self.get_utils_func(".completeToken")
+        self.completeTokenCall = api.lang1(self.completeToken)
+        api.preserve_object(self.completeTokenCall)
         self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
         self.initialized = True
 
@@ -39,17 +41,21 @@ class RCompleter(Completer):
         token = ""
         text = document.current_line_before_cursor
         completions = []
-        s = api.protect(api.mk_string(text))
+        s = api.mk_string(text)
+        api.protect(s)
         interface.rcall(self.assignLinebuffer, s)
         api.unprotect(1)
         interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
         token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
         if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
             try:
-                interface.rcall(self.completeToken)
+                interface.rcall(
+                    api.mk_symbol("try"),
+                    self.completeTokenCall,
+                    silent=api.scalar_integer(1))
+                completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
             except Exception:
                 return
-            completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
 
         for c in completions:
             yield Completion(c, -len(token))
