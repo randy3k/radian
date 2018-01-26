@@ -181,11 +181,11 @@ def create_keybindings():
     def _(event):
         event.current_buffer.cursor_right()
 
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\($") & following_text(r"^\)"))
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\[$") & following_text(r"^\]"))
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*\{$") & following_text(r"^\}"))
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text('.*"$') & following_text('^"'))
-    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & preceding_text(r".*'$") & following_text(r"^'"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & preceding_text(r".*\($") & following_text(r"^\)"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & preceding_text(r".*\[$") & following_text(r"^\]"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & preceding_text('.*"$') & following_text('^"'))
+    @handle('backspace', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & preceding_text(r".*'$") & following_text(r"^'"))
     def _(event):
         event.current_buffer.delete()
         event.current_buffer.delete_before_cursor()
