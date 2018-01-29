@@ -21,7 +21,7 @@ from prompt_toolkit.mouse_events import MouseEvent, MouseEventType
 from prompt_toolkit.reactive import Integer
 from prompt_toolkit.utils import take_using_weights, get_cwidth
 
-__all__ = (
+__all__ = [
     'Container',
     'HSplit',
     'VSplit',
@@ -35,7 +35,7 @@ __all__ = (
     'to_container',
     'to_window',
     'is_container',
-)
+]
 
 
 class Container(with_metaclass(ABCMeta, object)):
@@ -80,7 +80,7 @@ class Container(with_metaclass(ABCMeta, object)):
     def is_modal(self):
         """
         When this container is modal, key bindings from parent containers are
-        not taken into account if a user control in this container is focussed.
+        not taken into account if a user control in this container is focused.
         """
         return False
 
@@ -88,7 +88,7 @@ class Container(with_metaclass(ABCMeta, object)):
         """
         Returns a `KeyBindings` object. These bindings become active when any
         user control in this container has the focus, except if any containers
-        between this container and the focussed user control is modal.
+        between this container and the focused user control is modal.
         """
         return None
 
@@ -122,6 +122,14 @@ class HorizontalAlign:
     JUSTIFY = 'JUSTIFY'
 
 
+def to_str(value):
+    " Turn callable or string into string. "
+    if callable(value):
+        return to_str(value())
+    else:
+        return str(value)
+
+
 class _Split(Container):
     """
     The common parts of `VSplit` and `HSplit`.
@@ -133,7 +141,7 @@ class _Split(Container):
         assert window_too_small is None or isinstance(window_too_small, Container)
         assert isinstance(children, list)
         assert isinstance(modal, bool)
-        assert isinstance(style, text_type)
+        assert callable(style) or isinstance(style, text_type)
         assert is_dimension(width)
         assert is_dimension(height)
         assert z_index is None or isinstance(z_index, int)  # `None` means: inherit from parent.
@@ -263,8 +271,8 @@ class HSplit(_Split):
         :param screen: The :class:`~prompt_toolkit.layout.screen.Screen` class
             to which the output has to be written.
         """
-        sizes = self._divide_heigths(write_position)
-        style = parent_style + ' ' + self.style
+        sizes = self._divide_heights(write_position)
+        style = parent_style + ' ' + to_str(self.style)
         z_index = z_index if self.z_index is None else self.z_index
 
         if sizes is None:
@@ -295,7 +303,7 @@ class HSplit(_Split):
                     WritePosition(xpos, ypos, width, remaining_height), style,
                                   erase_bg, z_index)
 
-    def _divide_heigths(self, write_position):
+    def _divide_heights(self, write_position):
         """
         Return the heights for all rows.
         Or None when there is not enough space.
@@ -516,7 +524,7 @@ class VSplit(_Split):
 
         children = self._all_children
         sizes = self._divide_widths(write_position.width)
-        style = parent_style + ' ' + self.style
+        style = parent_style + ' ' + to_str(self.style)
         z_index = z_index if self.z_index is None else self.z_index
 
         # If there is not enough space.
@@ -576,7 +584,7 @@ class FloatContainer(Container):
     def __init__(self, content, floats, modal=False, key_bindings=None, style='', z_index=None):
         assert all(isinstance(f, Float) for f in floats)
         assert isinstance(modal, bool)
-        assert isinstance(style, text_type)
+        assert callable(style) or isinstance(style, text_type)
         assert z_index is None or isinstance(z_index, int)
 
         self.content = to_container(content)
@@ -606,7 +614,7 @@ class FloatContainer(Container):
 
     def write_to_screen(self, screen, mouse_handlers, write_position,
                         parent_style, erase_bg, z_index):
-        style = parent_style + ' ' + self.style
+        style = parent_style + ' ' + to_str(self.style)
         z_index = z_index if self.z_index is None else self.z_index
 
         self.content.write_to_screen(
@@ -616,10 +624,10 @@ class FloatContainer(Container):
             # z_index of a Float is computed by summing the z_index of the
             # container and the `Float`.
             new_z_index = (z_index or 0) + fl.z_index
-            style = parent_style + ' ' + self.style
+            style = parent_style + ' ' + to_str(self.style)
 
             # If the float that we have here, is positioned relative to the
-            # cursor position, but the Window that specifiies the cursor
+            # cursor position, but the Window that specifies the cursor
             # position is not drawn yet, because it's a Float itself, we have
             # to postpone this calculation. (This is a work-around, but good
             # enough for now.)
@@ -1126,7 +1134,7 @@ class Window(Container):
         `UIContent` height when calculating the dimensions.
     :param left_margins: A list of :class:`~prompt_toolkit.layout.margins.Margin`
         instance to be displayed on the left. For instance:
-        :class:`~prompt_toolkit.layout.margins.NumberredMargin` can be one of
+        :class:`~prompt_toolkit.layout.margins.NumberedMargin` can be one of
         them in order to show line numbers.
     :param right_margins: Like `left_margins`, but on the other side.
     :param scroll_offsets: :class:`.ScrollOffsets` instance, representing the
@@ -1158,13 +1166,14 @@ class Window(Container):
     :param get_colorcolumns: A callable that should return a a list of
         :class:`.ColorColumn` instances that describe the columns to be
         highlighted.
-    :param align: alignment of content.
+    :param align: `Align` value or callable that returns an `Align value.
+        alignment of content.
     :param style: A string string. Style to be applied to all the cells in this
         window.
     :param char: Character to be used for filling the background.
     :param transparent: When `False`, first erase everything underneath. (This
         is mainly useful if this Window is displayed inside a `Float`.)
-        (when `char` or `get_char` is given, it will never be transparant
+        (when `char` or `get_char` is given, it will never be transparent
         anyway, and this parameter doesn't change anything.)
     """
     def __init__(self, content=None, width=None, height=None, z_index=None,
@@ -1185,8 +1194,8 @@ class Window(Container):
         assert get_vertical_scroll is None or callable(get_vertical_scroll)
         assert get_horizontal_scroll is None or callable(get_horizontal_scroll)
         assert get_colorcolumns is None or callable(get_colorcolumns)
-        assert align in Align._ALL
-        assert isinstance(style, text_type)
+        assert callable(align) or align in Align._ALL
+        assert callable(style) or isinstance(style, text_type)
         assert char is None or isinstance(char, text_type)
         assert get_char is None or callable(get_char)
         assert not (char and get_char)
@@ -1390,7 +1399,8 @@ class Window(Container):
             # Otherwise, postpone.
             screen.draw_with_z_index(z_index=z_index, draw_func=draw_func)
 
-    def _write_to_screen_at_index(self, screen, mouse_handlers, write_position, parent_style, erase_bg):
+    def _write_to_screen_at_index(self, screen, mouse_handlers, write_position,
+                                  parent_style, erase_bg):
         # Don't bother writing invisible windows.
         # (We save some time, but also avoid applying last-line styling.)
         if write_position.height <= 0 or write_position.width <= 0:
@@ -1413,6 +1423,9 @@ class Window(Container):
         # Erase background and fill with `char`.
         self._fill_bg(screen, write_position, erase_bg)
 
+        # Resolve `align` attribute.
+        align = self.align() if callable(self.align) else self.align
+
         # Write body
         visible_line_to_row_col, rowcol_to_yx = self._copy_body(
             ui_content, screen, write_position,
@@ -1422,7 +1435,7 @@ class Window(Container):
             vertical_scroll_2=self.vertical_scroll_2,
             always_hide_cursor=self.always_hide_cursor(),
             has_focus=get_app().layout.current_control == self.content,
-            align=self.align)
+            align=align)
 
         # Remember render info. (Set before generating the margins. They need this.)
         x_offset = write_position.xpos + sum(left_margin_widths)
@@ -1606,7 +1619,7 @@ class Window(Container):
                             new_buffer_row[x + xpos] = char
 
                             # When we print a multi width character, make sure
-                            # to erase the neighbous positions in the screen.
+                            # to erase the neighbours positions in the screen.
                             # (The empty string if different from everything,
                             # so next redraw this cell will repaint anyway.)
                             if char_width > 1:
@@ -1679,7 +1692,7 @@ class Window(Container):
             new_screen.set_menu_position(self, cursor_pos_to_screen_pos(
                     ui_content.menu_position.y, ui_content.menu_position.x))
 
-        # Update output screne height.
+        # Update output screen height.
         new_screen.height = max(new_screen.height, ypos + write_position.height)
 
         return visible_line_to_row_col, rowcol_to_yx
@@ -1705,12 +1718,7 @@ class Window(Container):
 
     def _apply_style(self, new_screen, write_position, parent_style):
         # Apply `self.style`.
-        style = parent_style + ' ' + self.style
-
-        if get_app().layout.current_window == self:
-            style += ' class:focussed'
-        else:
-            style += ' class:not-focussed'
+        style = parent_style + ' ' + to_str(self.style)
 
         new_screen.fill_area(write_position, style=style, after=False)
 
@@ -1833,7 +1841,7 @@ class Window(Container):
         # scroll to this line.
         if ui_content.get_height_for_line(ui_content.cursor_position.y, width) > height - scroll_offsets_top:
             # Calculate the height of the text before the cursor, with the line
-            # containing the cursor included, and the character belowe the
+            # containing the cursor included, and the character below the
             # cursor included as well.
             line = explode_text_fragments(ui_content.get_line(ui_content.cursor_position.y))
             text_before_cursor = fragment_list_to_text(line[:ui_content.cursor_position.x + 1])

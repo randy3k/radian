@@ -11,7 +11,7 @@ from . import callbacks
 
 from prompt_toolkit.application.current import get_app
 
-from prompt_toolkit.styles import style_from_pygments
+from prompt_toolkit.styles import style_from_pygments_cls
 from pygments.styles import get_style_by_name
 
 from prompt_toolkit.formatted_text import ANSI
@@ -75,7 +75,7 @@ class RiceApplication(object):
             mp.app.editing_mode = EditingMode.EMACS
 
         color_scheme = interface.get_option("rice.color_scheme", "native")
-        mp.style = style_from_pygments(get_style_by_name(color_scheme))
+        mp.style = style_from_pygments_cls(get_style_by_name(color_scheme))
 
         mp.app.auto_match = interface.get_option("rice.auto_match", False)
         mp.app.auto_indentation = interface.get_option("rice.auto_indentation", True)

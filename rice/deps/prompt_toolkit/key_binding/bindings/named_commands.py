@@ -15,9 +15,9 @@ from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.keys import Keys
 
-__all__ = (
+__all__ = [
     'get_by_name',
-)
+]
 
 
 # Registry that maps the Readline command names to their handlers.
@@ -490,13 +490,13 @@ def call_last_kbd_macro(event):
 
 @register('print-last-kbd-macro')
 def print_last_kbd_macro(event):
-    " Print the last keboard macro. "
+    " Print the last keyboard macro. "
     # TODO: Make the format suitable for the inputrc file.
     def print_macro():
         for k in event.app.key_processor.macro:
             print(k)
 
-    from prompt_toolkit.aplication.run_in_terminal import run_in_terminal
+    from prompt_toolkit.application.run_in_terminal import run_in_terminal
     run_in_terminal(print_macro)
 
 #

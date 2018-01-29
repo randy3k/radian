@@ -5,12 +5,12 @@ from six import with_metaclass
 import datetime
 import os
 
-__all__ = (
+__all__ = [
     'FileHistory',
     'History',
     'DummyHistory',
     'InMemoryHistory',
-)
+]
 
 
 class History(with_metaclass(ABCMeta, object)):
@@ -27,7 +27,7 @@ class History(with_metaclass(ABCMeta, object)):
 
     @abstractmethod
     def __iter__(self):
-        " Iterate through all the items of the history. Cronologically. "
+        " Iterate through all the items of the history. Chronologically. "
 
     @abstractmethod
     def __len__(self):

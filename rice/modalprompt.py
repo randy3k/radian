@@ -23,7 +23,7 @@ from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
     ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, \
     HighlightMatchingBracketProcessor, DisplayMultipleCursors, merge_processors
-from prompt_toolkit.layout.widgets.toolbars import SearchToolbar
+from prompt_toolkit.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.styles import DynamicStyle
@@ -75,7 +75,7 @@ class ModalPrompt(object):
             tempfile_suffix=None,
             input=None,
             output=None,
-            on_render=None,
+            after_render=None,
             accept=None,
             inputhook=None):
 
@@ -92,7 +92,7 @@ class ModalPrompt(object):
             self.input = input or get_default_input()
         self.output = output or get_default_output()
 
-        self.on_render = on_render
+        self.after_render = after_render
 
         self.accept = accept
 
@@ -249,7 +249,7 @@ class ModalPrompt(object):
             ]),
             editing_mode=self.editing_mode,
             reverse_vi_search_direction=True,
-            on_render=self.on_render,
+            after_render=self.after_render,
             input=self.input,
             output=self.output)
 
@@ -294,7 +294,7 @@ def create_modal_prompt(options, history_file, inputhook):
         else:
             return ModalFileHistory(os.path.join(os.path.expanduser("~"), history_file))
 
-    def on_render(app):
+    def after_render(app):
         if app.is_aborting and mp.insert_new_line and mp.prompt_mode not in ["readline"]:
             app.output.write("\n")
 
@@ -325,7 +325,7 @@ def create_modal_prompt(options, history_file, inputhook):
         history=get_history(),
         extra_key_bindings=create_keybindings(),
         tempfile_suffix=".R",
-        on_render=on_render,
+        after_render=after_render,
         accept=accept,
         inputhook=inputhook
     )

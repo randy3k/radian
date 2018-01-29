@@ -13,7 +13,7 @@ from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.layout.utils import fragment_list_width
 from prompt_toolkit.utils import get_cwidth
 
-__all__ = (
+__all__ = [
     'Formatter',
     'Text',
     'Label',
@@ -25,7 +25,7 @@ __all__ = (
     'IterationsPerSecond',
     'SpinningWheel',
     'Rainbow',
-)
+]
 
 
 class Formatter(with_metaclass(ABCMeta, object)):
@@ -127,7 +127,7 @@ class Bar(Formatter):
         self.unknown = unknown
 
     def format(self, progress_bar, progress, width):
-        width -= 3  # Substract left '|', bar_b and right '|'
+        width -= 3  # Subtract left '|', bar_b and right '|'
 
         if progress.total:
             pb_a = int(progress.percentage * width / 100)

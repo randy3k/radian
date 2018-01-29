@@ -9,10 +9,9 @@ from prompt_toolkit.keys import Keys
 from .named_commands import get_by_name
 from ..key_bindings import KeyBindings
 
-
-__all__ = (
+__all__ = [
     'load_basic_bindings',
-)
+]
 
 
 def if_no_repeat(event):
@@ -154,7 +153,7 @@ def load_basic_bindings():
         r"""
         By default, handle \n as if it were a \r (enter).
         (It appears that some terminals send \n instead of \r when pressing
-        enter. - at least the Linux subsytem for Windows.)
+        enter. - at least the Linux subsystem for Windows.)
         """
         event.key_processor.feed(
             KeyPress(Keys.ControlM, '\r'), first=True)

@@ -16,20 +16,18 @@ from prompt_toolkit.enums import SearchDirection
 from prompt_toolkit.filters import to_filter, is_searching
 from prompt_toolkit.formatted_text import to_formatted_text, Template, is_formatted_text
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
+from prompt_toolkit.layout.containers import Window, VSplit, HSplit, FloatContainer, Float, Align, is_container
+from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.layout.dimension import Dimension as D
+from prompt_toolkit.layout.dimension import is_dimension, to_dimension
+from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
+from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, merge_processors
+from prompt_toolkit.layout.utils import fragment_list_to_text
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
 
-from ..containers import Window, VSplit, HSplit, FloatContainer, Float, Align, is_container
-from ..controls import BufferControl, FormattedTextControl
-from ..dimension import Dimension as D
-from ..dimension import is_dimension
-from ..dimension import to_dimension
-from ..margins import ScrollbarMargin, NumberredMargin
-from ..processors import PasswordProcessor, ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, merge_processors
-from ..utils import fragment_list_to_text
 
-
-__all__ = (
+__all__ = [
     'TextArea',
     'SearchField',
     'Label',
@@ -43,7 +41,7 @@ __all__ = (
 
     'Checkbox',  # XXX: refactor into CheckboxList.
     'ProgressBar',
-)
+]
 
 
 class Border:
@@ -74,11 +72,11 @@ class TextArea(object):
     :param multiline: If True, allow multiline input.
     :param lexer: ``Lexer`` instance for syntax highlighting.
     :param completer: ``Completer`` instance for auto completion.
-    :param focussable: When `True`, allow this widget to receive the focus.
+    :param focusable: When `True`, allow this widget to receive the focus.
     :param wrap_lines: When `True`, don't scroll horizontally, but wrap lines.
     :param width: Window width. (``Dimension`` object.)
     :param height: Window height. (``Dimension`` object.)
-    :param password: When `True`, display using asteriks.
+    :param password: When `True`, display using asterisks.
     :param accept_handler: Called when `Enter` is pressed.
     :param scrollbar: When `True`, display a scroll bar.
     :param style: A style string.
@@ -87,7 +85,7 @@ class TextArea(object):
     """
     def __init__(self, text='', multiline=True, password=False,
                  lexer=None, completer=None, accept_handler=None,
-                 focussable=True, wrap_lines=True, read_only=False,
+                 focusable=True, wrap_lines=True, read_only=False,
                  width=None, height=None,
                  dont_extend_height=False, dont_extend_width=False,
                  line_numbers=False, scrollbar=False, style='',
@@ -124,7 +122,7 @@ class TextArea(object):
             ]),
             search_buffer_control=search_buffer,
             preview_search=preview_search,
-            focussable=focussable)
+            focusable=focusable)
 
         if multiline:
             if scrollbar:
@@ -132,7 +130,7 @@ class TextArea(object):
             else:
                 right_margins = []
             if line_numbers:
-                left_margins = [NumberredMargin()]
+                left_margins = [NumberedMargin()]
             else:
                 left_margins = []
         else:
@@ -197,7 +195,7 @@ class SearchField(object):
 
 class Label(object):
     """
-    Widget that displays the given text. It is not editable or focussable.
+    Widget that displays the given text. It is not editable or focusable.
 
     :param text: The text to be displayed. (This can be multiline. This can be
         formatted text as well.)
@@ -255,7 +253,7 @@ class Button(object):
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=self._get_key_bindings(),
-            focussable=True)
+            focusable=True)
 
         self.window = Window(
             self.control,
@@ -452,7 +450,7 @@ class Checkbox(object):
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=kb,
-            focussable=True)
+            focusable=True)
 
         self.window = Window(
             width=3, content=self.control, height=1)
@@ -507,7 +505,7 @@ class RadioList(object):
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=kb,
-            focussable=True)
+            focusable=True)
 
         self.window = Window(
             content=self.control,

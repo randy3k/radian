@@ -54,24 +54,24 @@ from prompt_toolkit.layout.margins import PromptMargin, ConditionalMargin
 from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import Processor, DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, ReverseSearchProcessor, ShowArg, merge_processors
 from prompt_toolkit.layout.utils import explode_text_fragments
-from prompt_toolkit.layout.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.styles import BaseStyle, DynamicStyle
 from prompt_toolkit.utils import suspend_to_background_supported
 from prompt_toolkit.validation import DynamicValidator
+from prompt_toolkit.widgets.toolbars import ValidationToolbar, SystemToolbar, SearchToolbar
 from six import text_type
 
 import contextlib
 import threading
 import time
 
-__all__ = (
+__all__ = [
     'Prompt',
     'prompt',
     'confirm',
     'create_confirm_prompt',  # Used by '_display_completions_like_readline'.
     'CompleteStyle',
-)
+]
 
 
 def _split_multiline_prompt(get_prompt_text):
@@ -212,7 +212,7 @@ class Prompt(object):
         the user).
     :param refresh_interval: (number; in seconds) When given, refresh the UI
         every so many seconds.
-    :param inputhook: None or an Inputook callable that takes an
+    :param inputhook: None or an Inputhook callable that takes an
         `InputHookContext` object.
     """
     _fields = (
@@ -397,7 +397,7 @@ class Prompt(object):
         system_toolbar = SystemToolbar()
 
         def get_search_buffer_control():
-            " Return the UIControl to be focussed when searching start. "
+            " Return the UIControl to be focused when searching start. "
             if _true(self.multiline):
                 return search_toolbar.control
             else:
@@ -543,14 +543,14 @@ class Prompt(object):
         """
         kb = KeyBindings()
         handle = kb.add
-        default_focussed = has_focus(DEFAULT_BUFFER)
+        default_focused = has_focus(DEFAULT_BUFFER)
 
         @Condition
         def do_accept():
             return (not _true(self.multiline) and
                     self.app.layout.current_control == self._default_buffer_control)
 
-        @handle('enter', filter=do_accept & default_focussed)
+        @handle('enter', filter=do_accept & default_focused)
         def _(event):
             " Accept input when enter has been pressed. "
             self.default_buffer.validate_and_handle()
@@ -559,12 +559,12 @@ class Prompt(object):
         def readline_complete_style():
             return self.complete_style == CompleteStyle.READLINE_LIKE
 
-        @handle('tab', filter=readline_complete_style & default_focussed)
+        @handle('tab', filter=readline_complete_style & default_focused)
         def _(event):
             " Display completions (like readline). "
             display_completions_like_readline(event)
 
-        @handle('c-c', filter=default_focussed)
+        @handle('c-c', filter=default_focused)
         def _(event):
             " Abort when Control-C has been pressed. "
             event.app.abort()
@@ -577,7 +577,7 @@ class Prompt(object):
             return (app.current_buffer.name == DEFAULT_BUFFER and
                     not app.current_buffer.text)
 
-        @handle('c-d', filter=ctrl_d_condition & default_focussed)
+        @handle('c-d', filter=ctrl_d_condition & default_focused)
         def _(event):
             " Exit when Control-D has been pressed. "
             event.app.exit()
@@ -723,8 +723,8 @@ class Prompt(object):
         return to_formatted_text(
             prompt_continuation, style='class:prompt-continuation')
 
-    def _get_arg_text(self, app):
-        arg = app.key_processor.arg
+    def _get_arg_text(self):
+        arg = self.app.key_processor.arg
         if arg == '-':
             arg = '-1'
 

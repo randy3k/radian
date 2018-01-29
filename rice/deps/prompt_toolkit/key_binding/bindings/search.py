@@ -9,6 +9,16 @@ from prompt_toolkit.filters import is_searching, control_is_searchable, Conditio
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.layout.controls import BufferControl
 
+__all__ = [
+    'abort_search',
+    'accept_search',
+    'start_reverse_incremental_search',
+    'start_forward_incremental_search',
+    'reverse_incremental_search',
+    'forward_incremental_search',
+    'accept_search_and_accept_input',
+]
+
 
 @key_binding(filter=is_searching)
 def abort_search(event):
@@ -90,7 +100,7 @@ def start_forward_incremental_search(event):
 
 
 def _incremental_search(app, direction, count=1):
-    " Apply search, but keep search buffer focussed. "
+    " Apply search, but keep search buffer focused. "
     assert is_searching()
 
     search_control = app.layout.current_control
@@ -112,7 +122,7 @@ def _incremental_search(app, direction, count=1):
 @key_binding(filter=is_searching)
 def reverse_incremental_search(event):
     """
-    Apply reverse incremental search, but keep search buffer focussed.
+    Apply reverse incremental search, but keep search buffer focused.
     """
     _incremental_search(
         event.app, SearchDirection.BACKWARD, count=event.arg)
@@ -121,7 +131,7 @@ def reverse_incremental_search(event):
 @key_binding(filter=is_searching)
 def forward_incremental_search(event):
     """
-    Apply forward incremental search, but keep search buffer focussed.
+    Apply forward incremental search, but keep search buffer focused.
     """
     _incremental_search(
         event.app, SearchDirection.FORWARD, count=event.arg)
@@ -130,7 +140,7 @@ def forward_incremental_search(event):
 @Condition
 def _previous_buffer_is_returnable():
     """
-    True if the previously focussed buffer has a return handler.
+    True if the previously focused buffer has a return handler.
     """
     prev_control = get_app().layout.previous_control
     if isinstance(prev_control, BufferControl):

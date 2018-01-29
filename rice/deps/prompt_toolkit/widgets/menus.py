@@ -7,14 +7,14 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window, FloatContainer, Float, ConditionalContainer
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout.widgets import Shadow
+from prompt_toolkit.widgets import Shadow
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
 
-__all__ = (
+__all__ = [
     'MenuContainer',
     'MenuItem',
-)
+]
 
 
 class MenuContainer(object):
@@ -126,7 +126,7 @@ class MenuContainer(object):
         self.control = FormattedTextControl(
             self._get_menu_fragments,
             key_bindings=kb,
-            focussable=True,
+            focusable=True,
             show_cursor=False)
 
         self.window = Window(
@@ -186,11 +186,11 @@ class MenuContainer(object):
         return menu
 
     def _get_menu_fragments(self):
-        focussed = get_app().layout.has_focus(self.window)
+        focused = get_app().layout.has_focus(self.window)
 
         # This is called during the rendering. When we discover that this
         # widget doesn't have the focus anymore. Reset menu state.
-        if not focussed:
+        if not focused:
             self.selected_menu = [0]
 
         # Generate text fragments for the main menu.
@@ -207,7 +207,7 @@ class MenuContainer(object):
                     self.selected_menu = [i]
 
             yield ('class:menu-bar', ' ', mouse_handler)
-            if i == self.selected_menu[0] and focussed:
+            if i == self.selected_menu[0] and focused:
                 yield ('[SetMenuPosition]', '', mouse_handler)
                 style = 'class:menu-bar.selected-item'
             else:

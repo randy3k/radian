@@ -45,9 +45,9 @@ from six.moves import range
 from .regex_parser import Any, Sequence, Regex, Variable, Repeat, Lookahead
 from .regex_parser import parse_regex, tokenize_regex
 
-__all__ = (
+__all__ = [
     'compile',
-)
+]
 
 
 # Name of the named group in the regex, matching trailing input.
@@ -70,7 +70,7 @@ class _CompiledGrammar(object):
         self.escape_funcs = escape_funcs or {}
         self.unescape_funcs = unescape_funcs or {}
 
-        #: Dictionary that will map the redex names to Node instances.
+        #: Dictionary that will map the regex names to Node instances.
         self._group_names_to_nodes = {}  # Maps regex group names to varnames.
         counter = [0]
 
@@ -164,7 +164,7 @@ class _CompiledGrammar(object):
         which clause would appear first. E.g. "(A|B)C" is not the same as
         "(B|A)C" because the regex engine is lazy and takes the first match.
         However, because we the current input is actually a prefix of the
-        grammar which meight not yet contain the data for "C", we need to know
+        grammar which might not yet contain the data for "C", we need to know
         both intermediate states, in order to call the appropriate
         autocompletion for both cases.
 

@@ -12,9 +12,9 @@ from .controls import FormattedTextControl
 from .dimension import D
 from .layout import Layout
 
-__all__ = (
+__all__ = [
     'create_dummy_layout',
-)
+]
 
 
 def create_dummy_layout():
@@ -32,4 +32,4 @@ def create_dummy_layout():
         HTML('No layout specified. Press <reverse>ENTER</reverse> to quit.'),
         key_bindings=kb)
     window = Window(content=control, height=D(min=1))
-    return Layout(container=window, focussed_window=window)
+    return Layout(container=window, focused_element=window)

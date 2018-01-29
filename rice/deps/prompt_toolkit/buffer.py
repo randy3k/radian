@@ -30,13 +30,13 @@ import six
 import subprocess
 import tempfile
 
-__all__ = (
+__all__ = [
     'EditReadOnlyBuffer',
     'Buffer',
     'indent',
     'unindent',
     'reshape_text',
-)
+]
 
 
 class EditReadOnlyBuffer(Exception):
@@ -128,7 +128,7 @@ class YankNthArgState(object):
 class Buffer(object):
     """
     The core data structure that holds the text and cursor position of the
-    current input line and implements all text manupulations on top of it. It
+    current input line and implements all text manipulations on top of it. It
     also implements the history, undo stack and the completion state.
 
     :param eventloop: :class:`~prompt_toolkit.eventloop.base.EventLoop` instance.
@@ -161,7 +161,7 @@ class Buffer(object):
         typing.
     :param enable_history_search: :class:`~prompt_toolkit.filters.Filter`
         to indicate when up-arrow partial string matching is enabled. It is
-        adviced to not enable this at the same time as `complete_while_typing`,
+        advised to not enable this at the same time as `complete_while_typing`,
         because when there is an autocompletion found, the up arrows usually
         browse through the completions, rather than through the history.
     :param read_only: :class:`~prompt_toolkit.filters.Filter`. When True,
@@ -389,7 +389,7 @@ class Buffer(object):
         if self.__working_index != value:
             self.__working_index = value
             # Make sure to reset the cursor position, otherwise we end up in
-            # sitations where the cursor position is out of the bounds of the
+            # situations where the cursor position is out of the bounds of the
             # text.
             self.cursor_position = 0
             self._text_changed()

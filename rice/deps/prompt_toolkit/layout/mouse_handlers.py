@@ -3,14 +3,14 @@ from __future__ import unicode_literals
 from itertools import product
 from collections import defaultdict
 
-__all__ = (
+__all__ = [
     'MouseHandlers',
-)
+]
 
 
 class MouseHandlers(object):
     """
-    Two dimentional raster of callbacks for mouse events.
+    Two dimensional raster of callbacks for mouse events.
     """
     def __init__(self):
         def dummy_callback(mouse_event):

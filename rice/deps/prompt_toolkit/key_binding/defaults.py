@@ -14,9 +14,9 @@ from prompt_toolkit.key_binding.bindings.cpr import load_cpr_bindings
 
 from prompt_toolkit.filters import buffer_has_focus
 
-__all__ = (
+__all__ = [
     'load_key_bindings',
-)
+]
 
 
 def load_key_bindings():
@@ -38,12 +38,12 @@ def load_key_bindings():
 
     return merge_key_bindings([
         # Make sure that the above key bindings are only active if the
-        # currently focussed control is a `BufferControl`. For other controls, we
+        # currently focused control is a `BufferControl`. For other controls, we
         # don't want these key bindings to intervene. (This would break "ptterm"
         # for instance, which handles 'Keys.Any' in the user control itself.)
         ConditionalKeyBindings(all_bindings, buffer_has_focus),
 
-        # Active, even when no buffer has been focussed.
+        # Active, even when no buffer has been focused.
         load_mouse_bindings(),
         load_cpr_bindings(),
     ])

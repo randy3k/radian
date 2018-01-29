@@ -9,21 +9,21 @@ from .eventloop import Future, run_in_executor
 from abc import ABCMeta, abstractmethod
 from six import with_metaclass
 
-__all__ = (
+__all__ = [
     'ConditionalValidator',
     'ValidationError',
     'Validator',
     'ThreadedValidator',
     'DummyValidator',
     'DynamicValidator',
-)
+]
 
 
 class ValidationError(Exception):
     """
     Error raised by :meth:`.Validator.validate`.
 
-    :param cursor_position: The cursor position where the error occured.
+    :param cursor_position: The cursor position where the error occurred.
     :param message: Text.
     """
     def __init__(self, cursor_position=0, message=''):

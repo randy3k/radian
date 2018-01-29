@@ -18,10 +18,10 @@ from six.moves import range
 import time
 import threading
 
-__all__ = (
+__all__ = [
     'Renderer',
     'print_formatted_text',
-)
+]
 
 
 def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, last_style=None,
@@ -44,7 +44,7 @@ def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, 
         character.  (Color/attributes.)
     :param attrs_for_style_string: :class:`._StyleStringToAttrsCache` instance.
     :param width: The width of the terminal.
-    :param prevous_width: The width of the terminal during the last rendering.
+    :param previous_width: The width of the terminal during the last rendering.
     """
     width, height = size.columns, size.rows
 
@@ -76,7 +76,7 @@ def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, 
         current_x, current_y = current_pos.x, current_pos.y
 
         if new.y > current_y:
-            # Use newlines instead of CURSOR_DOWN, because this meight add new lines.
+            # Use newlines instead of CURSOR_DOWN, because this might add new lines.
             # CURSOR_DOWN will never create new lines at the bottom.
             # Also reset attributes, otherwise the newline could draw a
             # background color.
@@ -125,7 +125,7 @@ def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, 
         output.disable_autowrap()
 
     # When the previous screen has a different size, redraw everything anyway.
-    # Also when we are done. (We meight take up less rows, so clearing is important.)
+    # Also when we are done. (We might take up less rows, so clearing is important.)
     if is_done or not previous_screen or previous_width != width:  # XXX: also consider height??
         current_pos = move_cursor(Point(x=0, y=0))
         reset_attributes()
@@ -205,7 +205,7 @@ def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, 
     # Always reset the color attributes. This is important because a background
     # thread could print data to stdout and we want that to be displayed in the
     # default colors. (Also, if a background color has been set, many terminals
-    # give weird artifacs on resize events.)
+    # give weird artifacts on resize events.)
     reset_attributes()
 
     if screen.show_cursor or is_done:
@@ -299,7 +299,7 @@ class Renderer(object):
         #: We don't know this until a `report_absolute_cursor_row` call.
         self._min_available_height = 0
 
-        # In case of Windown, also make sure to scroll to the current cursor
+        # In case of Windows, also make sure to scroll to the current cursor
         # position. (Only when rendering the first time.)
         if is_windows() and _scroll:
             self.output.scroll_buffer_to_prompt()
@@ -438,7 +438,7 @@ class Renderer(object):
 
         f = Future()
 
-        # When a CPR has been reveived, set the result.
+        # When a CPR has been received, set the result.
         def wait_for_responses():
             for response_f in cpr_futures:
                 yield From(response_f)
@@ -621,7 +621,7 @@ def print_formatted_text(output, formatted_text, style):
             output.reset_attributes()
 
         # Assume that the output is raw, and insert a carriage return before
-        # every newline. (Also importent when the front-end is a telnet client.)
+        # every newline. (Also important when the front-end is a telnet client.)
         assert '\r' not in text
         output.write(text.replace('\n', '\r\n'))
 

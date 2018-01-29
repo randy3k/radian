@@ -10,9 +10,9 @@ from prompt_toolkit.win32_types import CONSOLE_SCREEN_BUFFER_INFO, STD_OUTPUT_HA
 import os
 import six
 
-__all__ = (
+__all__ = [
     'Win32Output',
-)
+]
 
 
 def _coord_byval(coord):
@@ -20,7 +20,7 @@ def _coord_byval(coord):
     Turns a COORD object into a c_long.
     This will cause it to be passed by value instead of by reference. (That is what I think at least.)
 
-    When runing ``ptipython`` is run (only with IPython), we often got the following error::
+    When running ``ptipython`` is run (only with IPython), we often got the following error::
 
          Error in 'SetConsoleCursorPosition'.
          ArgumentError("argument 2: <class 'TypeError'>: wrong type",)
@@ -294,7 +294,7 @@ class Win32Output(Output):
             self.LOG.write(('%r' % data).encode('utf-8') + b'\n')
             self.LOG.flush()
 
-        # Print characters one by one. This appears to be the best soluton
+        # Print characters one by one. This appears to be the best solution
         # in oder to avoid traces of vertical lines when the completion
         # menu disappears.
         for b in data:
@@ -414,7 +414,7 @@ class FOREGROUND_COLOR:
     INTENSITY = 0x0008  # Foreground color is intensified.
 
 
-class BACKROUND_COLOR:
+class BACKGROUND_COLOR:
     BLACK     = 0x0000
     BLUE      = 0x0010
     GREEN     = 0x0020
@@ -454,7 +454,7 @@ def _create_ansi_color_dict(color_cls):
 
 
 FG_ANSI_COLORS = _create_ansi_color_dict(FOREGROUND_COLOR)
-BG_ANSI_COLORS = _create_ansi_color_dict(BACKROUND_COLOR)
+BG_ANSI_COLORS = _create_ansi_color_dict(BACKGROUND_COLOR)
 
 assert set(FG_ANSI_COLORS) == set(ANSI_COLOR_NAMES)
 assert set(BG_ANSI_COLORS) == set(ANSI_COLOR_NAMES)
@@ -474,7 +474,7 @@ class ColorLookupTable(object):
         Build an RGB-to-256 color conversion table
         """
         FG = FOREGROUND_COLOR
-        BG = BACKROUND_COLOR
+        BG = BACKGROUND_COLOR
 
         return [
             (0x00, 0x00, 0x00, FG.BLACK, BG.BLACK),

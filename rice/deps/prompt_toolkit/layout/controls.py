@@ -28,13 +28,13 @@ import six
 import time
 
 
-__all__ = (
+__all__ = [
     'BufferControl',
     'DummyControl',
     'FormattedTextControl',
     'UIControl',
     'UIContent',
-)
+]
 
 
 class UIControl(with_metaclass(ABCMeta, object)):
@@ -51,9 +51,9 @@ class UIControl(with_metaclass(ABCMeta, object)):
     def preferred_height(self, width, max_available_height, wrap_lines):
         return None
 
-    def is_focussable(self):
+    def is_focusable(self):
         """
-        Tell whether this user control is focussable.
+        Tell whether this user control is focusable.
         """
         return False
 
@@ -204,7 +204,7 @@ class FormattedTextControl(UIControl):
         either handle the event or return `NotImplemented` in case we want the
         containing Window to handle this event.
 
-    :param focussable: `bool` or `Filter`: Tell whether this control is focussable.
+    :param focusable: `bool` or `Filter`: Tell whether this control is focusable.
 
     :param text: Text or formatted text to be displayed.
     :param style: Style string applied to the content. (If you want to style
@@ -215,7 +215,7 @@ class FormattedTextControl(UIControl):
     :param get_cursor_position: A callable that returns the cursor position as
         a `Point` instance.
     """
-    def __init__(self, text='', style='', focussable=False, key_bindings=None,
+    def __init__(self, text='', style='', focusable=False, key_bindings=None,
                  show_cursor=True, modal=False, get_cursor_position=None):
         from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
         assert isinstance(style, six.text_type)
@@ -226,7 +226,7 @@ class FormattedTextControl(UIControl):
 
         self.text = text  # No type check on 'text'. This is done dynamically.
         self.style = style
-        self.focussable = to_filter(focussable)
+        self.focusable = to_filter(focusable)
 
         # Key bindings.
         self.key_bindings = key_bindings
@@ -245,8 +245,8 @@ class FormattedTextControl(UIControl):
     def reset(self):
         self._fragments = None
 
-    def is_focussable(self):
-        return self.focussable()
+    def is_focusable(self):
+        return self.focusable()
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.text)
@@ -378,7 +378,7 @@ class DummyControl(UIControl):
             get_line=get_line,
             line_count=100 ** 100)  # Something very big.
 
-    def is_focussable(self):
+    def is_focusable(self):
         return False
 
 
@@ -399,9 +399,9 @@ class BufferControl(UIControl):
         ``HighlightSearchProcessor`` with ``preview_search=True`` as well.
         Otherwise only the cursor position will move, but the text won't be
         highlighted.
-    :param focussable: `bool` or `Filter`: Tell whether this control is focussable.
+    :param focusable: `bool` or `Filter`: Tell whether this control is focusable.
     :param get_search_state: Callable that returns the SearchState to be used.
-    :param focus_on_click: Focus this buffer when it's click, but not yet focussed.
+    :param focus_on_click: Focus this buffer when it's click, but not yet focused.
     :param key_bindings: a `KeyBindings` object.
     """
     def __init__(self,
@@ -409,7 +409,7 @@ class BufferControl(UIControl):
                  input_processor=None,
                  lexer=None,
                  preview_search=False,
-                 focussable=True,
+                 focusable=True,
                  search_buffer_control=None,
                  get_search_buffer_control=None,
                  get_search_state=None,
@@ -443,7 +443,7 @@ class BufferControl(UIControl):
             ])
 
         self.preview_search = to_filter(preview_search)
-        self.focussable = to_filter(focussable)
+        self.focusable = to_filter(focusable)
         self.get_search_state = get_search_state
         self.focus_on_click = to_filter(focus_on_click)
 
@@ -458,7 +458,7 @@ class BufferControl(UIControl):
         #: Cache for the lexer.
         #: Often, due to cursor movement, undo/redo and window resizing
         #: operations, it happens that a short time, the same document has to be
-        #: lexed. This is a faily easy way to cache such an expensive operation.
+        #: lexed. This is a fairly easy way to cache such an expensive operation.
         self._fragment_cache = SimpleCache(maxsize=8)
 
         self._xy_to_cursor_position = None
@@ -488,8 +488,8 @@ class BufferControl(UIControl):
     def search_state(self):
         return self.get_search_state()
 
-    def is_focussable(self):
-        return self.focussable()
+    def is_focusable(self):
+        return self.focusable()
 
     def preferred_width(self, max_available_width):
         """
@@ -641,7 +641,7 @@ class BufferControl(UIControl):
 
         # If there is an auto completion going on, use that start point for a
         # pop-up menu position. (But only when this buffer has the focus --
-        # there is only one place for a menu, determined by the focussed buffer.)
+        # there is only one place for a menu, determined by the focused buffer.)
         if get_app().layout.current_control == self:
             menu_position = self.menu_position() if self.menu_position else None
             if menu_position is not None:
@@ -709,12 +709,12 @@ class BufferControl(UIControl):
                     # Don't handle scroll events here.
                     return NotImplemented
 
-        # Not focussed, but focussing on click events.
+        # Not focused, but focusing on click events.
         else:
             if self.focus_on_click() and mouse_event.event_type == MouseEventType.MOUSE_UP:
                 # Focus happens on mouseup. (If we did this on mousedown, the
                 # up event will be received at the point where this widget is
-                # focussed and be handled anyway.)
+                # focused and be handled anyway.)
                 get_app().layout.current_control = self
             else:
                 return NotImplemented

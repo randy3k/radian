@@ -11,13 +11,13 @@ from prompt_toolkit.filters import to_filter
 from prompt_toolkit.utils import get_cwidth
 from .utils import fragment_list_to_text
 
-__all__ = (
+__all__ = [
     'Margin',
-    'NumberredMargin',
+    'NumberedMargin',
     'ScrollbarMargin',
     'ConditionalMargin',
     'PromptMargin',
-)
+]
 
 
 class Margin(with_metaclass(ABCMeta, object)):
@@ -54,7 +54,7 @@ class Margin(with_metaclass(ABCMeta, object)):
         return []
 
 
-class NumberredMargin(Margin):
+class NumberedMargin(Margin):
     """
     Margin that displays the line numbers.
 

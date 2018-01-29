@@ -1,11 +1,5 @@
 from __future__ import unicode_literals
 
-from ..containers import Window, ConditionalContainer
-from ..controls import BufferControl, FormattedTextControl, UIControl, UIContent
-from ..dimension import Dimension
-from ..lexers import SimpleLexer
-from ..processors import BeforeInput
-from ..utils import fragment_list_len
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.enums import SYSTEM_BUFFER, SearchDirection
@@ -13,15 +7,21 @@ from prompt_toolkit.filters import has_focus, has_completions, has_validation_er
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings, ConditionalKeyBindings
 from prompt_toolkit.key_binding.vi_state import InputMode
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.layout.containers import Window, ConditionalContainer
+from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl, UIControl, UIContent
+from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.lexers import SimpleLexer
+from prompt_toolkit.layout.processors import BeforeInput
+from prompt_toolkit.layout.utils import fragment_list_len
 
-__all__ = (
+__all__ = [
     'ArgToolbar',
     'CompletionsToolbar',
     'FormattedTextToolbar',
     'SearchToolbar',
     'SystemToolbar',
     'ValidationToolbar',
-)
+]
 
 
 class FormattedTextToolbar(Window):
@@ -65,16 +65,16 @@ class SystemToolbar(object):
             filter=has_focus(self.system_buffer))
 
     def _build_global_key_bindings(self):
-        focussed = has_focus(self.system_buffer)
+        focused = has_focus(self.system_buffer)
 
         bindings = KeyBindings()
 
-        @bindings.add(Keys.Escape, '!', filter= ~focussed & emacs_mode)
+        @bindings.add(Keys.Escape, '!', filter= ~focused & emacs_mode)
         def _(event):
             " M-'!' will focus this user control. "
             event.app.layout.focus(self.window)
 
-        @bindings.add('!', filter=~focussed & vi_mode & vi_navigation_mode)
+        @bindings.add('!', filter=~focused & vi_mode & vi_navigation_mode)
         def _(event):
             " Focus. "
             event.app.vi_state.input_mode = InputMode.INSERT
@@ -89,21 +89,21 @@ class SystemToolbar(object):
         ]
 
     def _build_key_bindings(self):
-        focussed = has_focus(self.system_buffer)
+        focused = has_focus(self.system_buffer)
 
         # Emacs
         emacs_bindings = KeyBindings()
         handle = emacs_bindings.add
 
-        @handle('escape', filter=focussed)
-        @handle('c-g', filter=focussed)
-        @handle('c-c', filter=focussed)
+        @handle('escape', filter=focused)
+        @handle('c-g', filter=focused)
+        @handle('c-c', filter=focused)
         def _(event):
             " Hide system prompt. "
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
-        @handle('enter', filter=focussed)
+        @handle('enter', filter=focused)
         def _(event):
             " Run system command. "
             event.app.run_system_command(
@@ -116,15 +116,15 @@ class SystemToolbar(object):
         vi_bindings = KeyBindings()
         handle = vi_bindings.add
 
-        @handle('escape', filter=focussed)
-        @handle('c-c', filter=focussed)
+        @handle('escape', filter=focused)
+        @handle('c-c', filter=focused)
         def _(event):
             " Hide system prompt. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
             self.system_buffer.reset()
             event.app.layout.focus_last()
 
-        @handle('enter', filter=focussed)
+        @handle('enter', filter=focused)
         def _(event):
             " Run system command. "
             event.app.vi_state.input_mode = InputMode.NAVIGATION
@@ -142,7 +142,7 @@ class SystemToolbar(object):
     def get_global_key_bindings(self):
         """
         Return the key bindings which need to be registered to allow this
-        toolbar to be focussed.
+        toolbar to be focused.
         """
         return self._global_bindings
 
@@ -242,8 +242,8 @@ class _CompletionsToolbarControl(UIControl):
                         cut_right = True
                         break
 
-                fragments.append(('class:completion,current-completion' if i == index
-                               else 'class:completion', c.display))
+                fragments.append(('class:completion-toolbar.completion.current' if i == index
+                               else 'class:completion-toolbar.completion', c.display))
                 fragments.append(('', ' '))
 
             # Extend/strip until the content width.
@@ -253,11 +253,11 @@ class _CompletionsToolbarControl(UIControl):
             # Return fragments
             all_fragments = [
                 ('', ' '),
-                ('class:completions-toolbar.arrow', '<' if cut_left else ' '),
+                ('class:completion-toolbar.arrow', '<' if cut_left else ' '),
                 ('', ' '),
             ] + fragments + [
                 ('', ' '),
-                ('class:completions-toolbar.arrow', '>' if cut_right else ' '),
+                ('class:completion-toolbar.arrow', '>' if cut_right else ' '),
                 ('', ' '),
             ]
         else:
@@ -275,7 +275,7 @@ class CompletionsToolbar(object):
             content=Window(
                 _CompletionsToolbarControl(),
                 height=Dimension.exact(1),
-                style='class:completions-toolbar'),
+                style='class:completion-toolbar'),
             filter=has_completions & ~is_done)
 
     def __pt_container__(self):

@@ -10,13 +10,27 @@ Description: prompt_toolkit is a Library for building powerful interactive
 
 See the examples directory to learn about the usage.
 
-Probably, to get started, you meight also want to have a look at
+Probably, to get started, you might also want to have a look at
 `prompt_toolkit.shortcuts.prompt`.
 """
 from .application import Application
-from .shortcuts import *
+from .shortcuts import Prompt, prompt, print_formatted_text
 from .formatted_text import HTML, ANSI
 
 
 # Don't forget to update in `docs/conf.py`!
 __version__ = '2.0.0'
+
+
+__all__ = [
+    # Application.
+    'Application',
+
+    # Shortcuts.
+    'prompt',
+    'Prompt',
+    'print_formatted_text',
+
+    # Formatted text.
+    'HTML', 'ANSI',
+]

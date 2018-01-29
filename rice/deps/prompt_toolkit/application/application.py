@@ -36,9 +36,9 @@ import six
 import sys
 import time
 
-__all__ = (
+__all__ = [
     'Application',
-)
+]
 
 
 class Application(object):
@@ -91,8 +91,9 @@ class Application(object):
     :class:`~prompt_toolkit.application.Application` object as input.)
 
     :param on_reset: Called during reset.
-    :param on_render: Called right after rendering.
     :param on_invalidate: Called when the UI has been invalidated.
+    :param before_render: Called right before rendering.
+    :param after_render: Called right after rendering.
 
     I/O:
 
@@ -119,13 +120,14 @@ class Application(object):
                  min_redraw_interval=None,
                  max_render_postpone_time=0,
 
-                 on_reset=None, on_render=None, on_invalidate=None,
+                 on_reset=None, on_invalidate=None,
+                 before_render=None, after_render=None,
 
                  # I/O.
                  input=None, output=None):
 
         # If `enable_page_navigation_bindings` is not specified, enable it in
-        # case of full screen applications only. This can be overriden by the user.
+        # case of full screen applications only. This can be overridden by the user.
         if enable_page_navigation_bindings is None:
             enable_page_navigation_bindings = Condition(lambda: self.full_screen)
 
@@ -146,8 +148,9 @@ class Application(object):
         assert max_render_postpone_time is None or isinstance(max_render_postpone_time, (float, int))
 
         assert on_reset is None or callable(on_reset)
-        assert on_render is None or callable(on_render)
         assert on_invalidate is None or callable(on_invalidate)
+        assert before_render is None or callable(before_render)
+        assert after_render is None or callable(after_render)
 
         assert output is None or isinstance(output, Output)
         assert input is None or isinstance(input, Input)
@@ -177,8 +180,9 @@ class Application(object):
 
         # Events.
         self.on_invalidate = Event(self, on_invalidate)
-        self.on_render = Event(self, on_render)
         self.on_reset = Event(self, on_reset)
+        self.before_render = Event(self, before_render)
+        self.after_render = Event(self, after_render)
 
         # I/O.
         self.output = output or get_default_output()
@@ -230,7 +234,7 @@ class Application(object):
         self.key_processor = KeyProcessor(_CombinedRegistry(self))
 
         # If `run_in_terminal` was called. This will point to a `Future` what will be
-        # set at the point whene the previous run finishes.
+        # set at the point when the previous run finishes.
         self._running_in_terminal = False
         self._running_in_terminal_f = None
 
@@ -261,7 +265,7 @@ class Application(object):
     @property
     def current_buffer(self):
         """
-        The currently focussed :class:`~.Buffer`.
+        The currently focused :class:`~.Buffer`.
 
         (This returns a dummy :class:`.Buffer` when none of the actual buffers
         has the focus. In this case, it's really not practical to check for
@@ -272,7 +276,7 @@ class Application(object):
     @property
     def current_search_state(self):
         """
-        Return the current `SearchState`. (The one for the focussed
+        Return the current `SearchState`. (The one for the focused
         `BufferControl`.)
         """
         ui_control = self.layout.current_control
@@ -301,13 +305,13 @@ class Application(object):
         # Trigger reset event.
         self.on_reset.fire()
 
-        # Make sure that we have a 'focussable' widget focussed.
+        # Make sure that we have a 'focusable' widget focused.
         # (The `Layout` class can't determine this.)
         layout = self.layout
 
-        if not layout.current_control.is_focussable():
+        if not layout.current_control.is_focusable():
             for w in layout.find_all_windows():
-                if w.content.is_focussable():
+                if w.content.is_focusable():
                     layout.current_window = w
                     break
 
@@ -380,20 +384,28 @@ class Application(object):
 
             # Render
             self.render_counter += 1
+            self.before_render.fire()
 
-            if render_as_done:
-                if self.erase_when_done:
-                    self.renderer.erase()
+            # NOTE: We want to make sure this Application is the active one, if
+            #       we have a situation with multiple concurrent running apps.
+            #       We had the case with pymux where `invalidate()` was called
+            #       at the point where another Application was active. This
+            #       would cause prompt_toolkit to render the wrong application
+            #       to this output device.
+            with set_app(self):
+                if render_as_done:
+                    if self.erase_when_done:
+                        self.renderer.erase()
+                    else:
+                        # Draw in 'done' state and reset renderer.
+                        self.renderer.render(self, self.layout, is_done=render_as_done)
                 else:
-                    # Draw in 'done' state and reset renderer.
-                    self.renderer.render(self, self.layout, is_done=render_as_done)
-            else:
-                self.renderer.render(self, self.layout)
+                    self.renderer.render(self, self.layout)
 
             self.layout.update_parents_relations()
 
             # Fire render event.
-            self.on_render.fire()
+            self.after_render.fire()
 
             self._update_invalidate_events()
 
@@ -408,7 +420,7 @@ class Application(object):
             ev -= self.invalidate
 
         # Gather all new events.
-        # (All controls are able to invalidate themself.)
+        # (All controls are able to invalidate themselves.)
         def gather_events():
             for c in self.layout.find_all_controls():
                 for ev in c.get_invalidate_events():
@@ -719,7 +731,7 @@ class Application(object):
         :param suspend_group: When true, suspend the whole process group.
             (This is the default, and probably what you want.)
         """
-        # Only suspend when the opperating system supports it.
+        # Only suspend when the operating system supports it.
         # (Not on Windows.)
         if hasattr(signal, 'SIGTSTP'):
             def run():
@@ -789,7 +801,7 @@ class _CombinedRegistry(KeyBindingsBase):
         """
         key_bindings = []
 
-        # Collect key bindings from currently focussed control and all parent
+        # Collect key bindings from currently focused control and all parent
         # controls. Don't include key bindings of container parent controls.
         container = current_window
         while container is not None:

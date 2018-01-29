@@ -13,7 +13,7 @@ from .utils import split_lines
 import re
 import six
 
-__all__ = (
+__all__ = [
     'Lexer',
     'SimpleLexer',
     'PygmentsLexer',
@@ -21,7 +21,7 @@ __all__ = (
     'SyncFromStart',
     'RegexSync',
     'DynamicLexer',
-)
+]
 
 
 class Lexer(with_metaclass(ABCMeta, object)):
@@ -185,9 +185,9 @@ class PygmentsLexer(Lexer):
 
     Note: Don't forget to also load a Pygments compatible style. E.g.::
 
-        from prompt_toolkit.styles.from_pygments import style_from_pygments
+        from prompt_toolkit.styles.from_pygments import style_from_pygments_cls
         from pygments.styles import get_style_by_name
-        style = style_from_pygments(get_style_by_name('monokai'))
+        style = style_from_pygments_cls(get_style_by_name('monokai'))
 
     :param pygments_lexer_cls: A `Lexer` from Pygments.
     :param sync_from_start: Start lexing at the start of the document. This
@@ -253,14 +253,14 @@ class PygmentsLexer(Lexer):
         line_generators = {}  # Map lexer generator to the line number.
 
         def get_syntax_sync():
-            " The Syntax synchronisation objcet that we currently use. "
+            " The Syntax synchronisation object that we currently use. "
             if self.sync_from_start():
                 return SyncFromStart()
             else:
                 return self.syntax_sync
 
         def find_closest_generator(i):
-            " Return a generator close to line 'i', or None if none was fonud. "
+            " Return a generator close to line 'i', or None if none was found. "
             for generator, lineno in line_generators.items():
                 if lineno < i and i - lineno < self.REUSE_GENERATOR_MAX_DISTANCE:
                     return generator

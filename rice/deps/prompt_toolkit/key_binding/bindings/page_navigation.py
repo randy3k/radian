@@ -8,20 +8,19 @@ from .scroll import scroll_forward, scroll_backward, scroll_half_page_up, scroll
 from prompt_toolkit.filters import vi_mode
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings, merge_key_bindings
 
-
-__all__ = (
+__all__ = [
     'load_page_navigation_bindings',
     'load_emacs_page_navigation_bindings',
     'load_vi_page_navigation_bindings',
-)
+]
 
 
 def load_page_navigation_bindings():
     """
     Load both the Vi and Emacs bindings for page navigation.
     """
-    # Only enable when a `Buffer` is focussed, otherwise, we would catch keys
-    # when another widget is focussed (like for instance `c-d` in a
+    # Only enable when a `Buffer` is focused, otherwise, we would catch keys
+    # when another widget is focused (like for instance `c-d` in a
     # ptterm.Terminal).
     return ConditionalKeyBindings(
         merge_key_bindings([

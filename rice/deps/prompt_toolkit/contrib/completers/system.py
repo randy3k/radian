@@ -5,9 +5,9 @@ from prompt_toolkit.contrib.regular_languages.compiler import compile
 
 from .filesystem import PathCompleter, ExecutableCompleter
 
-__all__ = (
+__all__ = [
     'SystemCompleter',
-)
+]
 
 
 class SystemCompleter(GrammarCompleter):
@@ -41,7 +41,7 @@ class SystemCompleter(GrammarCompleter):
                 'single_quoted_filename': (lambda string: string.replace("'", "\\'")),
             },
             unescape_funcs={
-                'double_quoted_filename': (lambda string: string.replace('\\"', '"')),  # XXX: not enterily correct.
+                'double_quoted_filename': (lambda string: string.replace('\\"', '"')),  # XXX: not entirely correct.
                 'single_quoted_filename': (lambda string: string.replace("\\'", "'")),
             })
 

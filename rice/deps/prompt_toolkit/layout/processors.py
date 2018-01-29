@@ -23,7 +23,7 @@ from .utils import fragment_list_len, explode_text_fragments
 
 import re
 
-__all__ = (
+__all__ = [
     'Processor',
     'TransformationInput',
     'Transformation',
@@ -44,7 +44,7 @@ __all__ = (
     'TabsProcessor',
     'DynamicProcessor',
     'merge_processors',
-)
+]
 
 
 class Processor(with_metaclass(ABCMeta, object)):
@@ -203,7 +203,7 @@ class HighlightSelectionProcessor(Processor):
 
             if from_ == 0 and to == 0 and len(fragments) == 0:
                 # When this is an empty line, insert a space in order to
-                # visualiase the selection.
+                # visualise the selection.
                 return Transformation([(selected_fragment, ' ')])
             else:
                 for i in range(from_, to + 1):
@@ -323,7 +323,7 @@ class DisplayMultipleCursors(Processor):
             start_pos = document.translate_row_col_to_index(lineno, 0)
             end_pos = start_pos + len(document.lines[lineno])
 
-            fragment_suffix = ' class:multiple-cursors.cursor '
+            fragment_suffix = ' class:multiple-cursors'
 
             for p in positions:
                 if start_pos <= p < end_pos:
@@ -713,7 +713,7 @@ class ConditionalProcessor(Processor):
         def highlight_enabled():
             return true_or_false
 
-        # Wrapt it in a `ConditionalProcessor` for usage in a `BufferControl`.
+        # Wrapped it in a `ConditionalProcessor` for usage in a `BufferControl`.
         BufferControl(input_processors=[
             ConditionalProcessor(HighlightSearchProcessor(),
                                  Condition(highlight_enabled))])

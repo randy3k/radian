@@ -17,7 +17,7 @@ Limitations:
 from __future__ import unicode_literals
 import re
 
-__all__ = (
+__all__ = [
     'Repeat',
     'Variable',
     'Regex',
@@ -25,7 +25,7 @@ __all__ = (
 
     'tokenize_regex',
     'parse_regex',
-)
+]
 
 
 class Node(object):
@@ -242,7 +242,7 @@ def parse_regex(regex_tokens):
 
             elif t.startswith('{'):
                 # TODO: implement!
-                raise Exception('{}-style repitition not yet supported' % t)
+                raise Exception('{}-style repetition not yet supported' % t)
 
             elif t.startswith('(?'):
                 raise Exception('%r not supported' % t)
@@ -257,6 +257,6 @@ def parse_regex(regex_tokens):
     result = _parse()
 
     if len(tokens) != 0:
-        raise Exception("Unmatched parantheses.")
+        raise Exception("Unmatched parentheses.")
     else:
         return result

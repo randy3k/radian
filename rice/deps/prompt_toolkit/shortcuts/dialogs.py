@@ -6,17 +6,17 @@ from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings
 from prompt_toolkit.layout import Layout
-from prompt_toolkit.layout.dimension import Dimension as D
-from prompt_toolkit.layout.widgets import ProgressBar, Dialog, Button, Label, Box, TextArea, RadioList
 from prompt_toolkit.layout.containers import HSplit
+from prompt_toolkit.layout.dimension import Dimension as D
+from prompt_toolkit.widgets import ProgressBar, Dialog, Button, Label, Box, TextArea, RadioList
 
-__all__ = (
+__all__ = [
     'yes_no_dialog',
     'input_dialog',
     'message_dialog',
     'radiolist_dialog',
     'progress_dialog',
-)
+]
 
 
 def yes_no_dialog(title='', text='', yes_text='Yes', no_text='No', style=None,
@@ -124,7 +124,7 @@ def progress_dialog(title='', text='', run_callback=None, style=None, async_=Fal
 
     progressbar = ProgressBar()
     text_area = TextArea(
-        focussable=False,
+        focusable=False,
 
         # Prefer this text area as big as possible, to avoid having a window
         # that keeps resizing when we add text to it.

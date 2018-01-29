@@ -43,13 +43,13 @@ from prompt_toolkit.keys import Keys, ALL_KEYS, KEY_ALIASES
 
 from six import text_type, with_metaclass
 
-__all__ = (
+__all__ = [
     'KeyBindingsBase',
     'KeyBindings',
     'ConditionalKeyBindings',
     'merge_key_bindings',
     'DynamicKeyBindings',
-)
+]
 
 
 class _Binding(object):
@@ -274,7 +274,7 @@ class KeyBindings(KeyBindingsBase):
                     if match:
                         result.append((any_count, b))
 
-            # Place bindings that have more 'Any' occurences in them at the end.
+            # Place bindings that have more 'Any' occurrences in them at the end.
             result = sorted(result, key=lambda item: -item[0])
 
             return [item[1] for item in result]
@@ -388,7 +388,7 @@ class ConditionalKeyBindings(_Proxy):
         def setting_is_true():
             return True  # or False
 
-        registy = ConditionalKeyBindings(key_bindings, setting_is_true)
+        registry = ConditionalKeyBindings(key_bindings, setting_is_true)
 
     When new key bindings are added to this object. They are also
     enable/disabled according to the given `filter`.

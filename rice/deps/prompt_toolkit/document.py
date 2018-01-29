@@ -13,7 +13,9 @@ from six.moves import range, map
 from .selection import SelectionType, SelectionState, PasteMode
 from .clipboard import ClipboardData
 
-__all__ = ('Document',)
+__all__ = [
+    'Document',
+]
 
 
 # Regex for finding "words" in documents. (We consider a group of alnum
@@ -43,7 +45,7 @@ class _ImmutableLineList(list):
     (Useful for detecting obvious bugs.)
     """
     def _error(self, *a, **kw):
-        raise NotImplementedError('Attempt to modifiy an immutable list.')
+        raise NotImplementedError('Attempt to modify an immutable list.')
 
     __setitem__ = _error
     append = _error
@@ -346,7 +348,7 @@ class Document(object):
         Find `text` after the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
 
-        :param count: Find the n-th occurance.
+        :param count: Find the n-th occurrence.
         """
         assert isinstance(ignore_case, bool)
 
@@ -376,7 +378,7 @@ class Document(object):
 
     def find_all(self, sub, ignore_case=False):
         """
-        Find all occurances of the substring. Return a list of absolute
+        Find all occurrences of the substring. Return a list of absolute
         positions in the document.
         """
         flags = re.IGNORECASE if ignore_case else 0
@@ -387,7 +389,7 @@ class Document(object):
         Find `text` before the cursor, return position relative to the cursor
         position. Return `None` if nothing was found.
 
-        :param count: Find the n-th occurance.
+        :param count: Find the n-th occurrence.
         """
         if in_current_line:
             before_cursor = self.current_line_before_cursor[::-1]

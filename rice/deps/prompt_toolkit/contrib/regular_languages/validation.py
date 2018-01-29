@@ -1,5 +1,5 @@
 """
-Validator for a regular langage.
+Validator for a regular language.
 """
 from __future__ import unicode_literals
 
@@ -8,9 +8,9 @@ from prompt_toolkit.document import Document
 
 from .compiler import _CompiledGrammar
 
-__all__ = (
+__all__ = [
     'GrammarValidator',
-)
+]
 
 
 class GrammarValidator(Validator):

@@ -8,10 +8,11 @@ from .base import BaseStyle, DEFAULT_ATTRS, ANSI_COLOR_NAMES, Attrs
 from .named_colors import NAMED_COLORS
 from prompt_toolkit.cache import SimpleCache
 
-__all__ = (
+__all__ = [
     'Style',
+    'Priority',
     'merge_styles',
-)
+]
 
 _named_colors_lowercase = dict(
     (k.lower(), v.lstrip('#')) for k, v in NAMED_COLORS.items())
@@ -120,7 +121,7 @@ def _parse_style_str(style_str):
             pass
 
         # Ignore pieces in between square brackets. This is internal stuff.
-        # Like '[transparant]' or '[set-cursor-position]'.
+        # Like '[transparent]' or '[set-cursor-position]'.
         elif part.startswith('[') and part.endswith(']'):
             pass
 
@@ -138,6 +139,28 @@ def _parse_style_str(style_str):
 CLASS_NAMES_RE = re.compile(r'^[a-z0-9.\s_-]*$')  # This one can't contain a comma!
 
 
+class Priority:
+    """
+    The priority of the rules, when a style is created from a dictionary.
+
+    In a `Style`, rules that are defined later will always override previous
+    defined rules, however in a dictionary, the key order was arbitrary before
+    Python 3.6. This means that the style could change at random between rules.
+
+    We have two options:
+    - `DICT_KEY_ORDER`: This means, iterate through the dictionary, and take
+        the key/value pairs in order as they come. This is a good option if you
+        have Python >3.6. Rules at the end will override rules at the
+        beginning.
+    - `MOST_PRECISE`: keys that are defined with most precision will get higher
+      priority. (More precise means: more elements.)
+    """
+    DICT_KEY_ORDER = 'KEY_ORDER'
+    MOST_PRECISE = 'MOST_PRECISE'
+
+    _ALL = [DICT_KEY_ORDER, MOST_PRECISE]
+
+
 class Style(BaseStyle):
     """
     Create a ``Style`` instance from a list of style rules.
@@ -146,6 +169,8 @@ class Style(BaseStyle):
     The classnames are a whitespace separated string of class names and the
     style string is just like a Pygments style definition, but with a few
     additions: it supports 'reverse' and 'blink'.
+
+    Later rules always override previous rules.
 
     Usage::
 
@@ -182,12 +207,21 @@ class Style(BaseStyle):
         return self._style_rules
 
     @classmethod
-    def from_dict(cls, style_dict):
+    def from_dict(cls, style_dict, priority=Priority.MOST_PRECISE):
         """
-        :param include_defaults: Include the defaults (built-in) styling for
-            selected text, etc...)
+        :param style_dict: Style dictionary.
+        :param priority: `Priority` value.
         """
-        return cls(list(style_dict.items()))
+        assert priority in Priority._ALL
+
+        if priority == Priority.MOST_PRECISE:
+            def key(item):
+                # Split on '.' and whitespace. Count elements.
+                return sum(len(i.split('.')) for i in item[0].split())
+
+            return cls(sorted(style_dict.items(), key=key))
+        else:
+            return cls(list(style_dict.items()))
 
     def get_attrs_for_style_str(self, style_str, default=DEFAULT_ATTRS):
         """
@@ -279,7 +313,7 @@ class _MergedStyle(BaseStyle):
     # NOTE: previously, we used an algorithm where we did not generate the
     #       combined style. Instead this was a proxy that called one style
     #       after the other, passing the outcome of the previous style as the
-    #       defalut for the next one. This did not work, because that way, the
+    #       default for the next one. This did not work, because that way, the
     #       priorities like described in the `Style` class don't work.
     #       'class:aborted' was for instance never displayed in gray, because
     #       the next style specified a default color for any text. (The

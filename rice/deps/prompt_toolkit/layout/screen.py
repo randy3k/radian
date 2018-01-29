@@ -5,12 +5,12 @@ from prompt_toolkit.utils import get_cwidth
 
 from collections import defaultdict, namedtuple
 
-__all__ = (
+__all__ = [
     'Point',
     'Size',
     'Screen',
     'Char',
-)
+]
 
 
 Point = namedtuple('Point', 'x y')
@@ -95,7 +95,7 @@ Transparent = '[transparent]'
 
 class Screen(object):
     """
-    Two dimentional buffer of :class:`.Char` instances.
+    Two dimensional buffer of :class:`.Char` instances.
     """
     def __init__(self, default_char=None, initial_width=0, initial_height=0):
         if default_char is None:
