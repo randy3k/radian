@@ -469,7 +469,9 @@ class Prompt(object):
                           content=_RPrompt(lambda: self.rprompt)),
                 ]
             ),
-            ValidationToolbar(),
+            ConditionalContainer(
+                ValidationToolbar(),
+                filter=~is_done),
             ConditionalContainer(
                 system_toolbar,
                 dyncond('enable_system_prompt') & ~is_done),
@@ -478,7 +480,7 @@ class Prompt(object):
             ConditionalContainer(
                 Window(FormattedTextControl(self._get_arg_text), height=1),
                 dyncond('multiline') & has_arg),
-            ConditionalContainer(search_toolbar, dyncond('multiline')),
+            ConditionalContainer(search_toolbar, dyncond('multiline') & ~is_done),
             bottom_toolbar,
         ])
 
