@@ -1,6 +1,6 @@
 # rice: 🍚 A 21 century R console
 
-_rice_ is a modern command line interface to the R program. It replaces the use of the the default R console, in the sense which is similar to `ipython` in the `python` ecosystem. In fact, `rice` is built on top of the same technology which `ipython` uses. 
+_rice_ is a modern command line interface to the R program. It replaces the use of the default R console, in the sense like what `ipython` does in the `python` ecosystem. Actually, `rice` and `ipython` are based on the same library `prompt-toolkit`.
 
 _rice_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
 
