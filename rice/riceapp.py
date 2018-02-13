@@ -39,6 +39,11 @@ difficulties in loading `reticulate`.
 
 class RiceApplication(object):
     initialized = False
+    r_home = None
+
+    def __init__(self, r_home):
+        self.r_home = r_home
+        super(RiceApplication).__init__()
 
     def set_cli_options(self, options):
         if options.vanilla:
@@ -198,7 +203,7 @@ class RiceApplication(object):
 
             return text
 
-        rsession = RSession()
+        rsession = RSession(self.r_home)
         rsession.read_console = callbacks.create_read_console(result_from_prompt)
         rsession.write_console_ex = callbacks.write_console_ex
         rsession.clean_up = callbacks.clean_up

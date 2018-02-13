@@ -2,9 +2,9 @@ from __future__ import unicode_literals
 import optparse
 import os
 import sys
+import subprocess
 
 from .deps import dependencies_loaded
-from .riceapp import RiceApplication
 
 __version__ = '0.0.43.dev1'
 
@@ -40,4 +40,21 @@ def main():
         ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v])
     os.environ["RETICULATE_PYTHON"] = sys.executable
 
-    RiceApplication().run(options)
+    from .riceapp import RiceApplication
+
+    if 'R_HOME' not in os.environ:
+        try:
+            r_home = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
+        except FileNotFoundError:
+            r_home = ""
+        if not r_home:
+            raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
+        os.environ['R_HOME'] = r_home
+    else:
+        r_home = os.environ['R_HOME']
+
+    os.environ["R_DOC_DIR"] = os.path.join(r_home, "doc")
+    os.environ["R_INCLUDE_DIR"] = os.path.join(r_home, "include")
+    os.environ["R_SHARE_DIR"] = os.path.join(r_home, "share")
+
+    RiceApplication(r_home).run(options)

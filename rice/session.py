@@ -1,11 +1,10 @@
 from __future__ import unicode_literals
 import os
-import subprocess
 import sys
 import ctypes
 from ctypes import c_char, c_char_p, c_int, c_size_t, c_void_p, \
     cast, pointer, PyDLL, CFUNCTYPE, POINTER
-from .util import ccall, read_registry
+from .util import ccall
 
 
 if sys.platform.startswith("win"):
@@ -48,28 +47,14 @@ class RSession(object):
     show_message = None
     clean_up = None
 
-    def __init__(self):
-        if 'R_HOME' not in os.environ:
-            try:
-                Rhome = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
-            except FileNotFoundError:
-                Rhome = ""
-            if not Rhome:
-                raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
-            os.environ['R_HOME'] = Rhome
-        else:
-            Rhome = os.environ['R_HOME']
-        os.environ["R_DOC_DIR"] = os.path.join(Rhome, "doc")
-        os.environ["R_INCLUDE_DIR"] = os.path.join(Rhome, "include")
-        os.environ["R_SHARE_DIR"] = os.path.join(Rhome, "share")
-
+    def __init__(self, r_home):
         if sys.platform.startswith("win"):
-            libR_dir = os.path.join(Rhome, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
+            libR_dir = os.path.join(r_home, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
             libR_path = os.path.join(libR_dir, "R.dll")
         elif sys.platform == "darwin":
-            libR_path = os.path.join(Rhome, "lib", "libR.dylib")
+            libR_path = os.path.join(r_home, "lib", "libR.dylib")
         elif sys.platform.startswith("linux"):
-            libR_path = os.path.join(Rhome, "lib", "libR.so")
+            libR_path = os.path.join(r_home, "lib", "libR.so")
 
         if not os.path.exists(libR_path):
             raise RuntimeError("Cannot locate R share library.")
