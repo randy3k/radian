@@ -35,7 +35,7 @@ def main():
             r_binary = os.path.join(r_home, "bin", "R")
             try:
                 version_cmd = [
-                    r_binary, "--slave", "-e", "cat(paste0(version$major, \".\", version$minor))"
+                    r_binary, "--slave", "-e", "cat(paste0(version$major, '.', version$minor))"
                 ]
                 r_version = subprocess.check_output(version_cmd).decode("utf-8").strip()
             except FileNotFoundError:
