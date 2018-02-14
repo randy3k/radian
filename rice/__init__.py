@@ -4,16 +4,11 @@ import os
 import sys
 import subprocess
 
-from .deps import dependencies_loaded
 
 __version__ = '0.0.43.dev1'
 
 
 def main():
-    if not dependencies_loaded:
-        print("Dependencies not loaded.")
-        return
-
     parser = optparse.OptionParser("usage: rice")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
     parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
@@ -26,13 +21,35 @@ def main():
 
     options, args = parser.parse_args()
 
+    if 'R_HOME' not in os.environ:
+        try:
+            r_home = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
+        except FileNotFoundError:
+            r_home = ""
+        os.environ['R_HOME'] = r_home
+    else:
+        r_home = os.environ['R_HOME']
+
     if options.version:
+        if r_home:
+            r_binary = os.path.join(r_home, "bin", "R")
+            try:
+                version_cmd = [
+                    r_binary, "--slave", "-e", "cat(paste0(version$major, \".\", version$minor))"
+                ]
+                r_version = subprocess.check_output(version_cmd).decode("utf-8").strip()
+            except FileNotFoundError:
+                r_version = "NA"
+        else:
+            r_binary = "NA"
         print("rice version: {}".format(__version__))
+        print("r executable: {}".format(r_binary))
+        print("r version: {}".format(r_version))
+        print("python executable: {}".format(sys.executable))
         print("python version: {:d}.{:d}.{:d}".format(
             sys.version_info.major,
             sys.version_info.minor,
             sys.version_info.micro))
-        print("python executable: {}".format(sys.executable))
         return
 
     os.environ["RICE_VERSION"] = __version__
@@ -40,21 +57,18 @@ def main():
         ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v])
     os.environ["RETICULATE_PYTHON"] = sys.executable
 
-    from .riceapp import RiceApplication
-
-    if 'R_HOME' not in os.environ:
-        try:
-            r_home = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
-        except FileNotFoundError:
-            r_home = ""
-        if not r_home:
-            raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
-        os.environ['R_HOME'] = r_home
-    else:
-        r_home = os.environ['R_HOME']
-
     os.environ["R_DOC_DIR"] = os.path.join(r_home, "doc")
     os.environ["R_INCLUDE_DIR"] = os.path.join(r_home, "include")
     os.environ["R_SHARE_DIR"] = os.path.join(r_home, "share")
 
+    if not r_home:
+        raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
+
+    from .deps import dependencies_loaded
+
+    if not dependencies_loaded:
+        print("Dependencies not loaded.")
+        return
+
+    from .riceapp import RiceApplication
     RiceApplication(r_home).run(options)
