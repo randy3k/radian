@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import optparse
 import os
 import sys
+import re
 import subprocess
 
 
@@ -34,10 +35,8 @@ def main():
         if r_home:
             r_binary = os.path.normpath(os.path.join(r_home, "bin", "R"))
             try:
-                version_cmd = [
-                    r_binary, "--slave", "-e", "cat(paste0(version$major, '.', version$minor))"
-                ]
-                r_version = subprocess.check_output(version_cmd).decode("utf-8").strip()
+                version_output = subprocess.check_output([r_binary, "--version"]).decode("utf-8").strip()
+                r_version = re.match(r"R version ([\.0-9]+)", version_output).group(1)
             except FileNotFoundError:
                 r_version = "NA"
         else:
