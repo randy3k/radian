@@ -25,7 +25,7 @@ def main():
     if 'R_HOME' not in os.environ:
         try:
             r_home = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
-        except FileNotFoundError:
+        except Exception:
             r_home = ""
         os.environ['R_HOME'] = r_home
     else:
@@ -35,9 +35,14 @@ def main():
         if r_home:
             r_binary = os.path.normpath(os.path.join(r_home, "bin", "R"))
             try:
-                version_output = subprocess.check_output([r_binary, "--version"]).decode("utf-8").strip()
-                r_version = re.match(r"R version ([\.0-9]+)", version_output).group(1)
-            except FileNotFoundError:
+                version_output = subprocess.check_output(
+                    [r_binary, "--version"], stderr=subprocess.STDOUT).decode("utf-8").strip()
+                m = re.match(r"R version ([\.0-9]+)", version_output)
+                if m:
+                    r_version = m.group(1)
+                else:
+                    r_version = "NA"
+            except Exception:
                 r_version = "NA"
         else:
             r_binary = "NA"
