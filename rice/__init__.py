@@ -32,7 +32,7 @@ def main():
 
     if options.version:
         if r_home:
-            r_binary = os.path.join(r_home, "bin", "R")
+            r_binary = os.path.normpath(os.path.join(r_home, "bin", "R"))
             try:
                 version_cmd = [
                     r_binary, "--slave", "-e", "cat(paste0(version$major, '.', version$minor))"
