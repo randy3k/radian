@@ -43,7 +43,7 @@ class RiceApplication(object):
 
     def __init__(self, r_home):
         self.r_home = r_home
-        super(RiceApplication).__init__()
+        super(RiceApplication, self).__init__()
 
     def set_cli_options(self, options):
         if options.vanilla:
