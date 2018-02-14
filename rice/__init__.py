@@ -46,6 +46,7 @@ def main():
                 r_version = "NA"
         else:
             r_binary = "NA"
+            r_version = "NA"
         print("rice version: {}".format(__version__))
         print("r executable: {}".format(r_binary))
         print("r version: {}".format(r_version))
