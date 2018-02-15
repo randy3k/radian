@@ -17,12 +17,12 @@ from prompt_toolkit.layout.containers import ConditionalContainer
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
-from prompt_toolkit.layout.lexers import PygmentsLexer, DynamicLexer
 from prompt_toolkit.layout.margins import PromptMargin
 from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
     ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, \
     HighlightMatchingBracketProcessor, DisplayMultipleCursors, merge_processors
+from prompt_toolkit.lexers import PygmentsLexer, DynamicLexer
 from prompt_toolkit.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt

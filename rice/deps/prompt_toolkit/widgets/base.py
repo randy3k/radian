@@ -9,10 +9,12 @@ from __future__ import unicode_literals
 from functools import partial
 import six
 
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import to_filter
 from prompt_toolkit.formatted_text import to_formatted_text, Template, is_formatted_text
+from prompt_toolkit.formatted_text.utils import fragment_list_to_text
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.layout.containers import Window, VSplit, HSplit, FloatContainer, Float, Align, is_container
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
@@ -20,7 +22,6 @@ from prompt_toolkit.layout.dimension import Dimension as D
 from prompt_toolkit.layout.dimension import is_dimension, to_dimension
 from prompt_toolkit.layout.margins import ScrollbarMargin, NumberedMargin
 from prompt_toolkit.layout.processors import PasswordProcessor, ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, merge_processors
-from prompt_toolkit.layout.utils import fragment_list_to_text
 from prompt_toolkit.mouse_events import MouseEventType
 from prompt_toolkit.utils import get_cwidth
 
@@ -234,12 +235,18 @@ class Button(object):
             key_bindings=self._get_key_bindings(),
             focusable=True)
 
+        def get_style():
+            if get_app().layout.has_focus(self):
+                return 'class:button.focused'
+            else:
+                return 'class:button'
+
         self.window = Window(
             self.control,
             align=Align.CENTER,
             height=1,
             width=width,
-            style='class:button',
+            style=get_style,
             dont_extend_width=True,
             dont_extend_height=True)
 
