@@ -4,6 +4,7 @@ import os
 import sys
 import re
 import subprocess
+from .util import read_registry
 
 
 __version__ = '0.0.43'
@@ -27,7 +28,18 @@ def main():
             r_home = subprocess.check_output(["R", "RHOME"]).decode("utf-8").strip()
         except Exception:
             r_home = ""
-        os.environ['R_HOME'] = r_home
+        try:
+            if sys.platform.startswith("win") and not r_home:
+                r_binary = os.path.join(
+                    read_registry("Software\\R-Core\\R", "InstallPath")[0],
+                    "bin",
+                    "R.exe")
+                r_home = subprocess.check_output([r_binary, "RHOME"]).decode("utf-8").strip()
+        except Exception:
+            r_home = ""
+
+        if r_home:
+            os.environ['R_HOME'] = r_home
     else:
         r_home = os.environ['R_HOME']
 
@@ -69,9 +81,9 @@ def main():
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
-    # make sure Rblas.dll can be reached
     if sys.platform.startswith("win"):
         libR_dir = os.path.join(r_home, "bin", "x64" if sys.maxsize > 2**32 else "i386")
+        # make sure Rblas.dll can be reached
         os.environ['PATH'] = libR_dir + ";" + os.environ['PATH']
 
     from .deps import dependencies_loaded
