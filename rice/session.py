@@ -49,7 +49,7 @@ class RSession(object):
 
     def __init__(self, r_home):
         if sys.platform.startswith("win"):
-            libR_dir = os.path.join(r_home, "bin", ['i386', 'x64'][sys.maxsize > 2**32])
+            libR_dir = os.path.join(r_home, "bin", "x64" if sys.maxsize > 2**32 else "i386")
             libR_path = os.path.join(libR_dir, "R.dll")
         elif sys.platform == "darwin":
             libR_path = os.path.join(r_home, "lib", "libR.dylib")

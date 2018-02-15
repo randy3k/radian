@@ -69,6 +69,11 @@ def main():
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
+    # make sure Rblas.dll can be reached
+    if sys.platform.startswith("win"):
+        libR_dir = os.path.join(r_home, "bin", "x64" if sys.maxsize > 2**32 else "i386")
+        os.environ['PATH'] = libR_dir + ";" + os.environ['PATH']
+
     from .deps import dependencies_loaded
 
     if not dependencies_loaded:
