@@ -83,8 +83,17 @@ def main():
 
     if sys.platform.startswith("win"):
         libR_dir = os.path.join(r_home, "bin", "x64" if sys.maxsize > 2**32 else "i386")
+
         # make sure Rblas.dll can be reached
-        os.environ['PATH'] = libR_dir + ";" + os.environ['PATH']
+        try:
+            from ctypes import cdll, c_char_p
+            msvcrt = cdll.msvcrt
+            msvcrt.getenv.restype = c_char_p
+            path = msvcrt.getenv("PATH".encode("utf-8"))
+            path = libR_dir + ";" + path.decode("utf-8")
+            msvcrt._putenv("PATH={}".format(path).encode("utf-8"))
+        except Exception:
+            pass
 
     from .deps import dependencies_loaded
 
