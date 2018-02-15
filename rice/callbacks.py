@@ -3,7 +3,10 @@ import ctypes
 import sys
 
 # to be set by RiceApplication
-ENCODING = "utf-8"
+if sys.platform.startswith("win"):
+    ENCODING = "latin-1"
+else:
+    ENCODING = "utf-8"
 
 
 def create_read_console(get_text):
