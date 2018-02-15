@@ -6,7 +6,7 @@ import re
 import subprocess
 
 
-__version__ = '0.0.43.dev1'
+__version__ = '0.0.43'
 
 
 def main():
