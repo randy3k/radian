@@ -58,12 +58,12 @@ class ModalBuffer(Buffer):
         direction = search_state.direction
         ignore_case = search_state.ignore_case()
 
-        # modified by rice
+        # modified by rtifact
         if direction != self.last_search_direction:
             self.last_search_history = None
             self.search_history = []
 
-        # modified by rice
+        # modified by rtifact
         no_duplicates = get_app().mp.history_search_no_duplicates and count == 1
 
         def search_once(working_index, document):
@@ -87,7 +87,7 @@ class ModalBuffer(Buffer):
                     for i in range(working_index + 1, len(self._working_lines) + 1):
                         i %= len(self._working_lines)
 
-                        # modified by rice
+                        # modified by rtifact
                         if not no_duplicates or self._working_lines[i] not in self.search_history:
                             document = Document(self._working_lines[i], 0)
                             new_index = document.find(text, include_current_position=True,
@@ -107,7 +107,7 @@ class ModalBuffer(Buffer):
                     for i in range(working_index - 1, -2, -1):
                         i %= len(self._working_lines)
 
-                        # modified by rice
+                        # modified by rtifact
                         if not no_duplicates or self._working_lines[i] not in self.search_history:
                             document = Document(self._working_lines[i], len(self._working_lines[i]))
                             new_index = document.find_backwards(
@@ -123,7 +123,7 @@ class ModalBuffer(Buffer):
             if result:
                 working_index, document = result
 
-        # modified by rice
+        # modified by rtifact
         if result:
             working_index, document = result
             self.last_search_direction = direction

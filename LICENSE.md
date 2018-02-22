@@ -1,4 +1,4 @@
-__rice__ is licensed under the MIT "Expat" License:
+__rtifact__ is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2017 Randy Lai
 >

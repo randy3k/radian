@@ -5,7 +5,7 @@ import sys
 
 from .util import ccall, cglobal
 
-# to be set by RiceApplication
+# to be set by RtifactApplication
 rsession = None
 
 """

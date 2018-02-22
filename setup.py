@@ -19,10 +19,10 @@ def get_version(package):
     return re.search("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
 setup(
-    name='rice',
+    name='rtifact',
     author='Randy Lai',
-    version=get_version("rice"),
-    url='https://github.com/randy3k/rice',
+    version=get_version("rtifact"),
+    url='https://github.com/randy3k/rtifact',
     description='R CLI built on top of prompt_toolkit',
     long_description=long_description,
     packages=find_packages('.'),
@@ -33,7 +33,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'rice = rice:main'
+            'rtifact = rtifact:main',
+            'rice = rtifact:deprecated_main'
         ]
     }
 )

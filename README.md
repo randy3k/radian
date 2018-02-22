@@ -1,8 +1,8 @@
-# rice: 🍚 A 21 century R console
+# rtifact: 🍚 A 21 century R console
 
-_rice_ is a modern command line interface to the R program. It replaces the use of the default R console, in the sense like what `ipython` does in the `python` ecosystem. Actually, `rice` and `ipython` are based on the same library `prompt-toolkit`.
+_rtifact_ is a modern command line interface to the R program. It replaces the use of the default R console, in the sense like what `ipython` does in the `python` ecosystem. Actually, `rtifact` and `ipython` are based on the same library `prompt-toolkit`.
 
-_rice_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
+_rtifact_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
@@ -27,103 +27,103 @@ _rice_ is still under active development, any feedbacks will be welcome. Users s
 
 Requirements:
 
-- An installation of R (version 3.4.0 or above) is required to use _rice_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
-- `python` is also required to install _rice_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended.
+- An installation of R (version 3.4.0 or above) is required to use _rtifact_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
+- `python` is also required to install _rtifact_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended.
 - `pip` is optional but it makes the installation a bit easier.
 
 ```sh
 # install released version
-pip install -U rice
+pip install -U rtifact
 # or the development version
-pip install -U git+https://github.com/randy3k/rice
-# to run rice
-rice
+pip install -U git+https://github.com/randy3k/rtifact
+# to run rtifact
+rtifact
 ```
 
 ## Settings
 
-_rice_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
+_rtifact_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
 
 ```r
 options(
     # color scheme see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
-    rice.color_scheme = "native",
+    rtifact.color_scheme = "native",
 
     # either  `"emacs"` (default) or `"vi"`.
-    rice.editing_mode = "emacs",
+    rtifact.editing_mode = "emacs",
 
     # auto match brackets and quotes
-    rice.auto_match = FALSE,
+    rtifact.auto_match = FALSE,
 
     # auto indentation for new line and curly braces
-    rice.auto_indentation = TRUE,
-    rice.tab_size = 4,
+    rtifact.auto_indentation = TRUE,
+    rtifact.tab_size = 4,
 
     # pop up completion while typing
-    rice.complete_while_typing = TRUE,
+    rtifact.complete_while_typing = TRUE,
 
     # automatically adjust R buffer size based on terminal width
-    rice.auto_width = TRUE,
+    rtifact.auto_width = TRUE,
 
     # insert new line between prompts
-    rice.insert_new_line = TRUE,
+    rtifact.insert_new_line = TRUE,
 
     # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
-    rice.history_search_no_duplicates = FALSE,
+    rtifact.history_search_no_duplicates = FALSE,
 
     # custom prompt for different modes
-    rice.prompt = "\033[0;34mr$>\033[0m ",
-    rice.shell_prompt = "\033[0;31m#!>\033[0m ",
-    rice.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
+    rtifact.prompt = "\033[0;34mr$>\033[0m ",
+    rtifact.shell_prompt = "\033[0;31m#!>\033[0m ",
+    rtifact.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
 
     # supress the loading message for reticulate
-    rice.suppress_reticulate_message = FALSE
+    rtifact.suppress_reticulate_message = FALSE
 )
 ```
 
 ## Alias on unix system
 
-You could alias `r` to `rice` by putting
+You could alias `r` to `rtifact` by putting
 
 ```bash
-alias r="rice"
+alias r="rtifact"
 ```
-in `~/.bash_profile` such that `r` would open `rice` and `R` would still open the tranditional R console.
+in `~/.bash_profile` such that `r` would open `rtifact` and `R` would still open the tranditional R console.
 (`R` is still useful, e.g, running `R CMD BUILD`.)
 
 ## FAQ
 
 ### R_HOME location
 
-If _rice_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
+If _rtifact_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
 
 On Linux/macOS, you could also export the environment variable `R_HOME`. For example,
 ```sh
 $ export R_HOME=/usr/local/lib/R
-$ rice
+$ rtifact
 ```
 Note that it should be the path to `R_HOME`, not the path to the R binary. The
 folder should contain a file called `COPYING`. In some cases, you may need to
 futher specify `LD_LIBRARY_PATH`,
 ```sh
 $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-$ rice
+$ rtifact
 ```
 
 ### History file
 
-_rice_ maintains its own history file `.rice_history` and doesn't use the `.Rhistory` file. A local `.rice_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rice_history` would be used. To override the default behavior, you could launch `rice` with the options: `rice --local-history`, `rice --global-history` or `rice --no-history`.
+_rtifact_ maintains its own history file `.rtifact_history` and doesn't use the `.Rhistory` file. A local `.rtifact_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rtifact_history` would be used. To override the default behavior, you could launch `rtifact` with the options: `rtifact --local-history`, `rtifact --global-history` or `rtifact --no-history`.
 
 
 ### Does it slow down my R program?
 
-_rice_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
+_rtifact_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
 
 ### Nvim-R support
 
 Put
 ```vim
-let R_app = "rice"
+let R_app = "rtifact"
 let R_cmd = "R"
 let R_hl_term = 0
 let R_args = []  " if you had set any
