@@ -7,11 +7,11 @@ import subprocess
 from .util import read_registry
 
 
-__version__ = '0.0.44.dev1'
+__version__ = '0.1.0'
 
 
 def main():
-    parser = optparse.OptionParser("usage: rice")
+    parser = optparse.OptionParser("usage: rtichoke")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
     parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
     parser.add_option("--no-site-file", action="store_true", dest="no_site_file", help="Don't read the site-wide Rprofile")
@@ -59,7 +59,7 @@ def main():
         else:
             r_binary = "NA"
             r_version = "NA"
-        print("rice version: {}".format(__version__))
+        print("rtichoke version: {}".format(__version__))
         print("r executable: {}".format(r_binary))
         print("r version: {}".format(r_version))
         print("python executable: {}".format(sys.executable))
@@ -101,5 +101,10 @@ def main():
         print("Dependencies not loaded.")
         return
 
-    from .riceapp import RiceApplication
-    RiceApplication(r_home).run(options)
+    from .rtichokeapp import RtichokeApplication
+    RtichokeApplication(r_home).run(options)
+
+
+def deprecated_main():
+    print("The program `rice` has been deprecated, use `rtichoke` instead.")
+    main()

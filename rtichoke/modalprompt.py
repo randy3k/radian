@@ -330,7 +330,7 @@ def create_modal_prompt(options, history_file, inputhook):
         inputhook=inputhook
     )
 
-    # r mode message is set by RiceApplication.app_initialize()
+    # r mode message is set by RtichokeApplication.app_initialize()
     mp.prompt_mode = "r"
     mp.top_level_modes = ["r", "shell"]
 

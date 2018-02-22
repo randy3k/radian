@@ -8,7 +8,7 @@ addons:
 install:
   - pip install .
 script:
-  - rice --version
+  - rtichoke --version
 
 before_deploy:
   - pip install pypandoc

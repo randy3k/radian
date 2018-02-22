@@ -185,7 +185,7 @@ def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, 
     # lower lines of the canvas just contain whitespace.
 
     # The most obvious reason that we actually want this behaviour is the avoid
-    # the artifact of the input scrolling when the completion menu is shown.
+    # the artichoke of the input scrolling when the completion menu is shown.
     # (If the scrolling is actually wanted, the layout can still be build in a
     # way to behave that way by setting a dynamic height.)
     if current_height > previous_screen.height:
@@ -205,7 +205,7 @@ def _output_screen_diff(app, output, screen, current_pos, previous_screen=None, 
     # Always reset the color attributes. This is important because a background
     # thread could print data to stdout and we want that to be displayed in the
     # default colors. (Also, if a background color has been set, many terminals
-    # give weird artifacts on resize events.)
+    # give weird artichokes on resize events.)
     reset_attributes()
 
     if screen.show_cursor or is_done:

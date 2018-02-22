@@ -29,22 +29,22 @@ BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 RETICULATE_MESSAGE = """
 The host python environment is {}
-and `rice` is forcing `reticulate` to use this version of python.
+and `rtichoke` is forcing `reticulate` to use this version of python.
 Any python packages needed, e.g., `tensorflow` and `keras`,
 have to be available to the current python environment.
 
-File an issue at https://github.com/randy3k/rice if you encounter any
+File an issue at https://github.com/randy3k/rtichoke if you encounter any
 difficulties in loading `reticulate`.
 """.format(sys.executable).strip()
 
 
-class RiceApplication(object):
+class RtichokeApplication(object):
     initialized = False
     r_home = None
 
     def __init__(self, r_home):
         self.r_home = r_home
-        super(RiceApplication, self).__init__()
+        super(RtichokeApplication, self).__init__()
 
     def set_cli_options(self, options):
         if options.vanilla:
@@ -64,33 +64,33 @@ class RiceApplication(object):
             os.environ["R_PROFILE_USER"] = ""
 
         if options.local_history:
-            if not os.path.exists(".rice_history"):
-                open(".rice_history", 'w+').close()
+            if not os.path.exists(".rtichoke_history"):
+                open(".rtichoke_history", 'w+').close()
 
     def app_initialize(self, mp):
         if sys.platform.startswith('win'):
             encoding = api.encoding()
             callbacks.ENCODING = encoding
 
-        if not interface.get_option("rice.suppress_reticulate_message", False):
+        if not interface.get_option("rtichoke.suppress_reticulate_message", False):
             interface.reticulate_set_message(RETICULATE_MESSAGE)
 
-        if interface.get_option("rice.editing_mode", "emacs") in ["vim", "vi"]:
+        if interface.get_option("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
             mp.app.editing_mode = EditingMode.VI
         else:
             mp.app.editing_mode = EditingMode.EMACS
 
-        color_scheme = interface.get_option("rice.color_scheme", "native")
+        color_scheme = interface.get_option("rtichoke.color_scheme", "native")
         mp.style = style_from_pygments_cls(get_style_by_name(color_scheme))
 
-        mp.app.auto_match = interface.get_option("rice.auto_match", False)
-        mp.app.auto_indentation = interface.get_option("rice.auto_indentation", True)
-        mp.app.tab_size = int(interface.get_option("rice.tab_size", 4))
-        mp.complete_while_typing = interface.get_option("rice.complete_while_typing", True)
-        mp.history_search_no_duplicates = interface.get_option("rice.history_search_no_duplicates", False)
-        mp.insert_new_line = interface.get_option("rice.insert_new_line", True)
+        mp.app.auto_match = interface.get_option("rtichoke.auto_match", False)
+        mp.app.auto_indentation = interface.get_option("rtichoke.auto_indentation", True)
+        mp.app.tab_size = int(interface.get_option("rtichoke.tab_size", 4))
+        mp.complete_while_typing = interface.get_option("rtichoke.complete_while_typing", True)
+        mp.history_search_no_duplicates = interface.get_option("rtichoke.history_search_no_duplicates", False)
+        mp.insert_new_line = interface.get_option("rtichoke.insert_new_line", True)
 
-        prompt = interface.get_option("rice.prompt", None)
+        prompt = interface.get_option("rtichoke.prompt", None)
         if prompt:
             mp.set_prompt_mode_message("r", ANSI(prompt))
         else:
@@ -104,13 +104,13 @@ class RiceApplication(object):
         mp.set_prompt_mode_message("r", ANSI(prompt))
         interface.set_option("prompt", prompt)
 
-        shell_prompt = interface.get_option("rice.shell_prompt", SHELL_PROMPT)
+        shell_prompt = interface.get_option("rtichoke.shell_prompt", SHELL_PROMPT)
         mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
 
-        mp.browse_prompt = interface.get_option("rice.browse_prompt", BROWSE_PROMPT)
+        mp.browse_prompt = interface.get_option("rtichoke.browse_prompt", BROWSE_PROMPT)
 
         set_width_on_resize = interface.get_option("setWidthOnResize", True)
-        mp.auto_width = interface.get_option("rice.auto_width", set_width_on_resize)
+        mp.auto_width = interface.get_option("rtichoke.auto_width", set_width_on_resize)
 
         if mp.auto_width:
             interface.set_option("width", mp.app.output.get_size().columns)
@@ -154,7 +154,7 @@ class RiceApplication(object):
     def run(self, options):
         self.set_cli_options(options)
 
-        mp = create_modal_prompt(options, history_file=".rice_history", inputhook=self.get_inputhook())
+        mp = create_modal_prompt(options, history_file=".rtichoke_history", inputhook=self.get_inputhook())
         mp.interrupted = False
 
         def result_from_prompt(message, add_history=1):
@@ -173,9 +173,9 @@ class RiceApplication(object):
 
             text = None
 
-            # a hack to stop rice when exiting if an error occurs in process_events
+            # a hack to stop rtichoke when exiting if an error occurs in process_events
             # however, please note that it doesn't in general guarantee to work
-            # the best practice is to restart rice
+            # the best practice is to restart rtichoke
             mp.app._is_running = False
             set_event_loop(None)
 
@@ -202,7 +202,7 @@ class RiceApplication(object):
                         return None
                     else:
                         print("unexpected error was caught.")
-                        print("please report to https://github.com/randy3k/rice for such error.")
+                        print("please report to https://github.com/randy3k/rtichoke for such error.")
                         print(e)
                         import traceback
                         traceback.print_exc()

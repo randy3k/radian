@@ -61,11 +61,11 @@ class RSession(object):
 
         self.libR = PyDLL(str(libR_path))
         if not hasattr(self.libR, "R_tryCatchError"):
-            raise RuntimeError("rice requires R 3.4.0 or above.")
+            raise RuntimeError("rtichoke requires R 3.4.0 or above.")
 
     def run(self):
 
-        _argv = ["rice", "--no-save", "--no-restore-data", "--quiet"]
+        _argv = ["rtichoke", "--no-save", "--no-restore-data", "--quiet"]
         argn = len(_argv)
         argv = (c_char_p * argn)()
         for i, a in enumerate(_argv):

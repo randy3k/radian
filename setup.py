@@ -19,11 +19,11 @@ def get_version(package):
     return re.search("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
 setup(
-    name='rice',
+    name='rtichoke',
     author='Randy Lai',
-    version=get_version("rice"),
-    url='https://github.com/randy3k/rice',
-    description='R CLI built on top of prompt_toolkit',
+    version=get_version("rtichoke"),
+    url='https://github.com/randy3k/rtichoke',
+    description='An R console built on top of prompt_toolkit',
     long_description=long_description,
     packages=find_packages('.'),
     install_requires=[
@@ -33,7 +33,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'rice = rice:main'
+            'rtichoke = rtichoke:main',
+            'rice = rtichoke:deprecated_main'
         ]
     }
 )

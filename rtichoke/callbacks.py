@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import ctypes
 import sys
 
-# to be set by RiceApplication
+# to be set by RtichokeApplication
 if sys.platform.startswith("win"):
     ENCODING = "latin-1"
 else:
