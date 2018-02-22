@@ -201,7 +201,11 @@ class RiceApplication(object):
                         # todo: confirmation in "r" mode
                         return None
                     else:
+                        print("unexpected error was caught.")
+                        print("please report to https://github.com/randy3k/rice for such error.")
                         print(e)
+                        import traceback
+                        traceback.print_exc()
                         return None
                 except KeyboardInterrupt:
                     if mp.prompt_mode in ["readline"]:
