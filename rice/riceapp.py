@@ -10,6 +10,7 @@ from . import api
 from . import callbacks
 
 from prompt_toolkit.application.current import get_app
+from prompt_toolkit.eventloop import set_event_loop
 
 from prompt_toolkit.styles import style_from_pygments_cls
 from pygments.styles import get_style_by_name
@@ -171,6 +172,13 @@ class RiceApplication(object):
             mp.add_history = add_history == 1
 
             text = None
+
+            # a hack to stop rice when exiting if an error occurs in process_events
+            # however, please note that it doesn't in general guarantee to work
+            # the best practice is to restart rice
+            mp.app._is_running = False
+            set_event_loop(None)
+
             while text is None:
                 try:
                     if message == mp.default_prompt:
