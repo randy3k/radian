@@ -1,6 +1,6 @@
 # rtichoke: A 21 century R console
 
-_rtichoke_ is a improved console to the R program. `rtichoke` is built on top of a python library `prompt-toolkit`. In certain sense, one would consider `rtichoke` as a [ipython](https://github.com/ipython/ipython) clone for R. _rtichoke_ was pervasively named as _rice_.
+_rtichoke_ is an enhanced console to the R program. `rtichoke` is built on top of a python library `prompt-toolkit`. In certain sense, one would consider `rtichoke` as a [ipython](https://github.com/ipython/ipython) clone for R. _rtichoke_ was previously named as _rice_.
 
 
 _rtichoke_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
