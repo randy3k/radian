@@ -7,7 +7,7 @@ import subprocess
 from .util import read_registry
 
 
-__version__ = '0.0.44'
+__version__ = '0.1.0'
 
 
 def main():
