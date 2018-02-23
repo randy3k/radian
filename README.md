@@ -1,6 +1,6 @@
-# rtifact: 🍚 A 21 century R console
+# rtifact: A 21 century R console
 
-_rtifact_ is a modern command line interface to the R program. It replaces the use of the default R console, in the sense like what `ipython` does in the `python` ecosystem. Actually, `rtifact` and `ipython` are based on the same library `prompt-toolkit`.
+_rtifact_ is a improved console to the R program. `rtifact` is built on top of a python library `prompt-toolkit`. In certain sense, one would consider `rtifact` as a `ipython` clone for R because both `rtifact` and `ipython` are based on `prompt_toolkit`.
 
 _rtifact_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
 
