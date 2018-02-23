@@ -1,5 +1,7 @@
 # rtichoke: A 21 century R console
 
+<img src="rtichoke.png"></img>
+
 _rtichoke_ is an enhanced console to the R program. `rtichoke` is built on top of a python library `prompt-toolkit`. In certain sense, one would consider `rtichoke` as a [ipython](https://github.com/ipython/ipython) clone for R. _rtichoke_ was previously named as _rice_.
 
 
@@ -145,6 +147,8 @@ conda install -c conda-forge readline=6.2
 ```
 
 
-## Credit
+## Credits
 
 The name `rtichoke` was suggested by [thefringthing](https://www.reddit.com/r/rstats/comments/7zibhj/any_suggestions_of_a_new_name_of_rice/).
+
+<div>Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
