@@ -23,7 +23,7 @@ setup(
     author='Randy Lai',
     version=get_version("rtifact"),
     url='https://github.com/randy3k/rtifact',
-    description='R CLI built on top of prompt_toolkit',
+    description='An R console built on top of prompt_toolkit',
     long_description=long_description,
     packages=find_packages('.'),
     install_requires=[
