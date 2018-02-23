@@ -69,8 +69,8 @@ def main():
             sys.version_info.micro))
         return
 
-    os.environ["RICE_VERSION"] = __version__
-    os.environ["RICE_COMMAND_ARGS"] = " ".join(
+    os.environ["RTICHOKE_VERSION"] = __version__
+    os.environ["RTICHOKE_COMMAND_ARGS"] = " ".join(
         ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v])
     os.environ["RETICULATE_PYTHON"] = sys.executable
 
