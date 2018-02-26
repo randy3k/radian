@@ -176,8 +176,9 @@ class RtichokeApplication(object):
             # a hack to stop rtichoke when exiting if an error occurs in process_events
             # however, please note that it doesn't in general guarantee to work
             # the best practice is to restart rtichoke
-            mp.app._is_running = False
-            set_event_loop(None)
+            if mp.app._is_running:
+                mp.app._is_running = False
+                set_event_loop(None)
 
             while text is None:
                 try:
