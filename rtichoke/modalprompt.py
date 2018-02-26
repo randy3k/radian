@@ -24,7 +24,7 @@ from prompt_toolkit.layout.processors import \
     HighlightMatchingBracketProcessor, DisplayMultipleCursors
 from prompt_toolkit.lexers import PygmentsLexer, DynamicLexer
 from prompt_toolkit.widgets.toolbars import SearchToolbar
-from prompt_toolkit.output.defaults import get_default_output
+from prompt_toolkit.output import get_default_output, ColorDepth
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.styles import DynamicStyle
 from prompt_toolkit.utils import is_windows
@@ -235,6 +235,7 @@ class ModalPrompt(object):
             layout=self.create_layout(),
             style=DynamicStyle(lambda: self.style),
             include_default_pygments_style=True,
+            color_depth=ColorDepth.default(term=os.environ.get("TERM")),
             key_bindings=merge_key_bindings([
                 merge_key_bindings([
                     ConditionalKeyBindings(
