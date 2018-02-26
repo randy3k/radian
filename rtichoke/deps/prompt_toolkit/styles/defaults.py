@@ -15,8 +15,12 @@ __all__ = [
 #: Default styling. Mapping from classnames to their style definition.
 PROMPT_TOOLKIT_STYLE = [
     # Highlighting of search matches in document.
-    ('search-match',                             'noinherit reverse'),
-    ('search-match.current',                     'noinherit #ffffff bg:#448844 underline'),
+    ('search',                             'bg:ansibrightyellow'),
+    ('search.current',                     ''),
+
+    # Incremental search.
+    ('incsearch',                          ''),
+    ('incsearch.current',                  'reverse'),
 
     # Highlighting of select text in document.
     ('selected',                                'reverse'),

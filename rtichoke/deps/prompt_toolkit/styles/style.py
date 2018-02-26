@@ -4,7 +4,8 @@ Tool for creating styles from a dictionary.
 from __future__ import unicode_literals, absolute_import
 import itertools
 import re
-from .base import BaseStyle, DEFAULT_ATTRS, ANSI_COLOR_NAMES, Attrs
+import sys
+from .base import BaseStyle, DEFAULT_ATTRS, ANSI_COLOR_NAMES, ANSI_COLOR_NAMES_ALIASES, Attrs
 from .named_colors import NAMED_COLORS
 from prompt_toolkit.cache import SimpleCache
 
@@ -28,6 +29,8 @@ def _colorformat(text):
     # ANSI color names.
     if text in ANSI_COLOR_NAMES:
         return text
+    if text in ANSI_COLOR_NAMES_ALIASES:
+        return ANSI_COLOR_NAMES_ALIASES[text]
 
     # 140 named colors.
     try:
@@ -39,12 +42,19 @@ def _colorformat(text):
     # Hex codes.
     if text[0:1] == '#':
         col = text[1:]
+
+        # Keep this for backwards-compatibility (Pygments does it).
+        # I don't like the '#' prefix for named colors.
         if col in ANSI_COLOR_NAMES:
-            # Keep this for backwards-compatibility (Pygments does it).
-            # I don't like the '#' prefix for named colors.
             return col
+        elif col in ANSI_COLOR_NAMES_ALIASES:
+            return ANSI_COLOR_NAMES_ALIASES[col]
+
+        # 6 digit hex color.
         elif len(col) == 6:
             return col
+
+        # 3 digit hex color.
         elif len(col) == 3:
             return col[0] * 2 + col[1] * 2 + col[2] * 2
 
@@ -161,6 +171,16 @@ class Priority:
     _ALL = [DICT_KEY_ORDER, MOST_PRECISE]
 
 
+# In the latest python verions, we take the dictionary ordering like it is,
+# In older versions, we sort by by precision. If you need to write code that
+# runs on all Python versions, it's best to sort them manually, with the most
+# precise rules at the bottom.
+if sys.version_info >= (3, 6):
+    default_priority = Priority.DICT_KEY_ORDER
+else:
+    default_priority = Priority.MOST_PRECISE
+
+
 class Style(BaseStyle):
     """
     Create a ``Style`` instance from a list of style rules.
@@ -207,7 +227,7 @@ class Style(BaseStyle):
         return self._style_rules
 
     @classmethod
-    def from_dict(cls, style_dict, priority=Priority.MOST_PRECISE):
+    def from_dict(cls, style_dict, priority=default_priority):
         """
         :param style_dict: Style dictionary.
         :param priority: `Priority` value.

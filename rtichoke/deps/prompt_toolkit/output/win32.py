@@ -6,6 +6,7 @@ from ctypes.wintypes import DWORD
 from prompt_toolkit.renderer import Output
 from prompt_toolkit.styles import ANSI_COLOR_NAMES
 from prompt_toolkit.win32_types import CONSOLE_SCREEN_BUFFER_INFO, STD_OUTPUT_HANDLE, STD_INPUT_HANDLE, COORD, SMALL_RECT
+from .color_depth import ColorDepth
 
 import os
 import six
@@ -225,21 +226,22 @@ class Win32Output(Output):
         self._winapi(windll.kernel32.SetConsoleTextAttribute, self.hconsole,
                      self.default_attrs)
 
-    def set_attributes(self, attrs):
+    def set_attributes(self, attrs, color_depth):
         fgcolor, bgcolor, bold, underline, italic, blink, reverse = attrs
 
         # Start from the default attributes.
         attrs = self.default_attrs
 
-        # Override the last four bits: foreground color.
-        if fgcolor:
-            attrs = attrs & ~0xf
-            attrs |= self.color_lookup_table.lookup_fg_color(fgcolor)
+        if color_depth != ColorDepth.DEPTH_1_BIT:
+            # Override the last four bits: foreground color.
+            if fgcolor:
+                attrs = attrs & ~0xf
+                attrs |= self.color_lookup_table.lookup_fg_color(fgcolor)
 
-        # Override the next four bits: background color.
-        if bgcolor:
-            attrs = attrs & ~0xf0
-            attrs |= self.color_lookup_table.lookup_bg_color(bgcolor)
+            # Override the next four bits: background color.
+            if bgcolor:
+                attrs = attrs & ~0xf0
+                attrs |= self.color_lookup_table.lookup_bg_color(bgcolor)
 
         # Reverse: swap these four bits groups.
         if reverse:
@@ -429,27 +431,27 @@ class BACKGROUND_COLOR:
 def _create_ansi_color_dict(color_cls):
     " Create a table that maps the 16 named ansi colors to their Windows code. "
     return {
-        'ansidefault':   color_cls.BLACK,
-        'ansiblack':     color_cls.BLACK,
-        'ansidarkgray':  color_cls.BLACK | color_cls.INTENSITY,
-        'ansilightgray': color_cls.GRAY,
-        'ansiwhite':     color_cls.GRAY | color_cls.INTENSITY,
+        'ansidefault':     color_cls.BLACK,
+        'ansiblack':       color_cls.BLACK,
+        'ansigray':        color_cls.GRAY,
+        'ansibrightblack': color_cls.BLACK | color_cls.INTENSITY,
+        'ansiwhite':       color_cls.GRAY | color_cls.INTENSITY,
 
         # Low intensity.
-        'ansidarkred':     color_cls.RED,
-        'ansidarkgreen':   color_cls.GREEN,
-        'ansibrown':       color_cls.YELLOW,
-        'ansidarkblue':    color_cls.BLUE,
-        'ansipurple':      color_cls.MAGENTA,
-        'ansiteal':        color_cls.CYAN,
+        'ansired':     color_cls.RED,
+        'ansigreen':   color_cls.GREEN,
+        'ansiyellow':  color_cls.YELLOW,
+        'ansiblue':    color_cls.BLUE,
+        'ansimagenta': color_cls.MAGENTA,
+        'ansicyan':    color_cls.CYAN,
 
         # High intensity.
-        'ansired':        color_cls.RED | color_cls.INTENSITY,
-        'ansigreen':      color_cls.GREEN | color_cls.INTENSITY,
-        'ansiyellow':     color_cls.YELLOW | color_cls.INTENSITY,
-        'ansiblue':       color_cls.BLUE | color_cls.INTENSITY,
-        'ansifuchsia':    color_cls.MAGENTA | color_cls.INTENSITY,
-        'ansiturquoise':  color_cls.CYAN | color_cls.INTENSITY,
+        'ansibrightred':     color_cls.RED | color_cls.INTENSITY,
+        'ansibrightgreen':   color_cls.GREEN | color_cls.INTENSITY,
+        'ansibrightyellow':  color_cls.YELLOW | color_cls.INTENSITY,
+        'ansibrightblue':    color_cls.BLUE | color_cls.INTENSITY,
+        'ansibrightmagenta': color_cls.MAGENTA | color_cls.INTENSITY,
+        'ansibrightcyan':    color_cls.CYAN | color_cls.INTENSITY,
     }
 
 

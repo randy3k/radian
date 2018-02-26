@@ -20,8 +20,8 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.margins import PromptMargin
 from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
-    ConditionalProcessor, HighlightSearchProcessor, HighlightSelectionProcessor, \
-    HighlightMatchingBracketProcessor, DisplayMultipleCursors, merge_processors
+    HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, \
+    HighlightMatchingBracketProcessor, DisplayMultipleCursors
 from prompt_toolkit.lexers import PygmentsLexer, DynamicLexer
 from prompt_toolkit.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output.defaults import get_default_output
@@ -140,23 +140,20 @@ class ModalPrompt(object):
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
 
-        search_toolbar = SearchToolbar(
-            search_buffer,
-            get_search_state=lambda: default_buffer_control.get_search_state())
+        search_toolbar = SearchToolbar(search_buffer)
 
-        input_processor = merge_processors([
-            ConditionalProcessor(
-                HighlightSearchProcessor(preview_search=True),
-                has_focus(search_buffer)),
+        # Create processors list.
+        all_input_processors = [
+            HighlightIncrementalSearchProcessor(),
             HighlightSelectionProcessor(),
-            HighlightMatchingBracketProcessor(),
-            DisplayMultipleCursors()
-        ])
+            DisplayMultipleCursors(),
+            HighlightMatchingBracketProcessor()
+        ]
 
         default_buffer_control = BufferControl(
             buffer=default_buffer,
             search_buffer_control=search_toolbar.control,
-            input_processor=input_processor,
+            input_processors=all_input_processors,
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
 

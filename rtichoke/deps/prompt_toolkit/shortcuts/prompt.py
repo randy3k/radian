@@ -46,12 +46,12 @@ from prompt_toolkit.key_binding.key_bindings import KeyBindings, DynamicKeyBindi
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import Window, HSplit, FloatContainer, Float
 from prompt_toolkit.layout.containers import ConditionalContainer, Align
-from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.layout.controls import BufferControl, SearchBufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.margins import PromptMargin, ConditionalMargin
 from prompt_toolkit.layout.menus import CompletionsMenu, MultiColumnCompletionsMenu
-from prompt_toolkit.layout.processors import Processor, DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, ReverseSearchProcessor, ShowArg, merge_processors
+from prompt_toolkit.layout.processors import DynamicProcessor, PasswordProcessor, ConditionalProcessor, AppendAutoSuggestion, HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, BeforeInput, ReverseSearchProcessor, ShowArg, merge_processors
 from prompt_toolkit.layout.utils import explode_text_fragments
 from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.output.defaults import get_default_output
@@ -166,6 +166,8 @@ class Prompt(object):
     :param enable_history_search: `bool` or
         :class:`~prompt_toolkit.filters.Filter`. Enable up-arrow parting
         string matching.
+    :param search_ignore_case:
+        :class:`~prompt_toolkit.filters.Filter`. Search case insensitive.
     :param lexer: :class:`~prompt_toolkit.layout.lexers.Lexer` to be used for
         the syntax highlighting.
     :param validator: :class:`~prompt_toolkit.validation.Validator` instance
@@ -217,13 +219,13 @@ class Prompt(object):
     """
     _fields = (
         'message', 'lexer', 'completer', 'complete_in_thread', 'is_password',
-        'editing_mode', 'extra_key_bindings', 'is_password', 'bottom_toolbar',
+        'editing_mode', 'key_bindings', 'is_password', 'bottom_toolbar',
         'style', 'include_default_pygments_style', 'rprompt', 'multiline',
         'prompt_continuation', 'wrap_lines', 'history',
-        'enable_history_search', 'complete_while_typing',
+        'enable_history_search', 'search_ignore_case', 'complete_while_typing',
         'validate_while_typing', 'complete_style', 'mouse_support',
         'auto_suggest', 'clipboard', 'validator', 'refresh_interval',
-        'extra_input_processor', 'default', 'enable_system_prompt',
+        'input_processors', 'default', 'enable_system_prompt',
         'enable_suspend', 'enable_open_in_editor', 'reserve_space_for_menu',
         'tempfile_suffix', 'inputhook')
 
@@ -239,6 +241,7 @@ class Prompt(object):
             complete_while_typing=True,
             validate_while_typing=True,
             enable_history_search=False,
+            search_ignore_case=False,
             lexer=None,
             enable_system_prompt=False,
             enable_suspend=False,
@@ -257,8 +260,8 @@ class Prompt(object):
             rprompt=None,
             bottom_toolbar=None,
             mouse_support=False,
-            extra_input_processor=None,
-            extra_key_bindings=None,
+            input_processors=None,
+            key_bindings=None,
             erase_when_done=False,
             tempfile_suffix='.txt',
             inputhook=None,
@@ -267,13 +270,12 @@ class Prompt(object):
             input=None,
             output=None):
         assert style is None or isinstance(style, BaseStyle)
-        assert extra_input_processor is None or isinstance(extra_input_processor, Processor)
-        assert extra_key_bindings is None or isinstance(extra_key_bindings, KeyBindingsBase)
+        assert input_processors is None or isinstance(input_processors, list)
+        assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
 
         # Defaults.
         output = output or get_default_output()
         input = input or get_default_input()
-        extra_input_processor = extra_input_processor
 
         history = history or InMemoryHistory()
         clipboard = clipboard or InMemoryClipboard()
@@ -349,22 +351,15 @@ class Prompt(object):
         search_buffer = Buffer(name=SEARCH_BUFFER)
 
         # Create processors list.
-        input_processor = merge_processors([
-            ConditionalProcessor(
-                # By default, only highlight search when the search
-                # input has the focus. (Note that this doesn't mean
-                # there is no search: the Vi 'n' binding for instance
-                # still allows to jump to the next match in
-                # navigation mode.)
-                HighlightSearchProcessor(preview_search=True),
-                has_focus(search_buffer)),
+        all_input_processors = [
+            HighlightIncrementalSearchProcessor(),
             HighlightSelectionProcessor(),
             ConditionalProcessor(AppendAutoSuggestion(), has_focus(default_buffer) & ~is_done),
             ConditionalProcessor(PasswordProcessor(), dyncond('is_password')),
             DisplayMultipleCursors(),
 
             # Users can insert processors here.
-            DynamicProcessor(lambda: self.extra_input_processor),
+            DynamicProcessor(lambda: merge_processors(self.input_processors or [])),
 
             # For single line mode, show the prompt before the input.
             ConditionalProcessor(
@@ -373,7 +368,7 @@ class Prompt(object):
                     ShowArg(),
                 ]),
                 ~dyncond('multiline'))
-        ])
+        ]
 
         # Create bottom toolbars.
         bottom_toolbar = ConditionalContainer(
@@ -387,13 +382,16 @@ class Prompt(object):
                     Condition(lambda: self.bottom_toolbar is not None))
 
         search_toolbar = SearchToolbar(
-            search_buffer, get_search_state=lambda: default_buffer_control.get_search_state())
-        search_buffer_control = BufferControl(
+            search_buffer,
+            ignore_case=dyncond('search_ignore_case'))
+
+        search_buffer_control = SearchBufferControl(
             buffer=search_buffer,
-            input_processor=merge_processors([
+            input_processors=[
                 ReverseSearchProcessor(),
                 ShowArg(),
-            ]))
+            ],
+            ignore_case=dyncond('search_ignore_case'))
 
         system_toolbar = SystemToolbar()
 
@@ -406,8 +404,9 @@ class Prompt(object):
 
         default_buffer_control = BufferControl(
             buffer=default_buffer,
-            get_search_buffer_control=get_search_buffer_control,
-            input_processor=input_processor,
+            search_buffer_control=get_search_buffer_control,
+            input_processors=all_input_processors,
+            include_default_input_processors=False,
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
 
@@ -507,7 +506,7 @@ class Prompt(object):
                 ConditionalKeyBindings(
                     system_toolbar.get_global_key_bindings(),
                     dyncond('enable_system_prompt')),
-                DynamicKeyBindings(lambda: self.extra_key_bindings),
+                DynamicKeyBindings(lambda: self.key_bindings),
             ]),
             mouse_support=dyncond('mouse_support'),
             editing_mode=editing_mode,
@@ -629,16 +628,16 @@ class Prompt(object):
             # for the current prompt.
             default='', editing_mode=None,
             refresh_interval=None, vi_mode=None, lexer=None, completer=None,
-            complete_in_thread=None, is_password=None, extra_key_bindings=None,
+            complete_in_thread=None, is_password=None, key_bindings=None,
             bottom_toolbar=None, style=None, include_default_pygments_style=None,
             rprompt=None, multiline=None, prompt_continuation=None,
             wrap_lines=None, history=None, enable_history_search=None,
-            complete_while_typing=None, validate_while_typing=None,
-            complete_style=None, auto_suggest=None, validator=None,
-            clipboard=None, mouse_support=None, extra_input_processor=None,
-            reserve_space_for_menu=None, enable_system_prompt=None,
-            enable_suspend=None, enable_open_in_editor=None,
-            tempfile_suffix=None, inputhook=None,
+            search_ignore_case=None, complete_while_typing=None,
+            validate_while_typing=None, complete_style=None, auto_suggest=None,
+            validator=None, clipboard=None, mouse_support=None,
+            input_processors=None, reserve_space_for_menu=None,
+            enable_system_prompt=None, enable_suspend=None,
+            enable_open_in_editor=None, tempfile_suffix=None, inputhook=None,
             async_=False):
         """
         Display the prompt. All the arguments are the same as for the
@@ -740,7 +739,12 @@ class Prompt(object):
 def prompt(*a, **kw):
     """ The global `prompt` function. This will create a new `Prompt` instance
     for every call.  """
-    prompt = Prompt()
+    # Input and output arguments have to be passed to the 'Prompt' class, not
+    # its method.
+    input = kw.get('input')
+    output = kw.get('output')
+
+    prompt = Prompt(input=input, output=output)
     return prompt.prompt(*a, **kw)
 
 
@@ -772,7 +776,7 @@ def create_confirm_prompt(message):
         " Disallow inserting other text. "
         pass
 
-    prompt = Prompt(message, extra_key_bindings=bindings)
+    prompt = Prompt(message, key_bindings=bindings)
     return prompt
 
 

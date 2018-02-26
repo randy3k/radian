@@ -20,7 +20,7 @@ from prompt_toolkit.search_state import SearchState
 from prompt_toolkit.selection import SelectionType
 from prompt_toolkit.utils import get_cwidth
 
-from .processors import Processor, TransformationInput, HighlightSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, merge_processors
+from .processors import TransformationInput, HighlightSearchProcessor, HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, DisplayMultipleCursors, merge_processors
 from .screen import Point
 
 import six
@@ -29,6 +29,7 @@ import time
 
 __all__ = [
     'BufferControl',
+    'SearchBufferControl',
     'DummyControl',
     'FormattedTextControl',
     'UIControl',
@@ -389,9 +390,11 @@ class BufferControl(UIControl):
     Control for visualising the content of a `Buffer`.
 
     :param buffer: The `Buffer` object to be displayed.
-    :param input_processor: A :class:`~prompt_toolkit.layout.processors.Processor`. (Use
-        :func:`~prompt_toolkit.layout.processors.merge_processors` if you want
-        to apply multiple processors.)
+    :param input_processors: A list of
+        :class:`~prompt_toolkit.layout.processors.Processor` objects.
+    :param include_default_input_processors: When True, include the default
+        processors for highlighting of selection, search and displaying of
+        multiple cursors.
     :param lexer: :class:`~prompt_toolkit.lexers.Lexer` instance for syntax highlighting.
     :param preview_search: `bool` or `Filter`: Show search while typing.
         When this is `True`, probably you want to add a
@@ -399,58 +402,48 @@ class BufferControl(UIControl):
         Otherwise only the cursor position will move, but the text won't be
         highlighted.
     :param focusable: `bool` or `Filter`: Tell whether this control is focusable.
-    :param get_search_state: Callable that returns the SearchState to be used.
     :param focus_on_click: Focus this buffer when it's click, but not yet focused.
     :param key_bindings: a `KeyBindings` object.
     """
     def __init__(self,
                  buffer=None,
-                 input_processor=None,
+                 input_processors=None,
+                 include_default_input_processors=True,
                  lexer=None,
                  preview_search=False,
                  focusable=True,
                  search_buffer_control=None,
-                 get_search_buffer_control=None,
-                 get_search_state=None,
                  menu_position=None,
                  focus_on_click=False,
                  key_bindings=None):
         from prompt_toolkit.key_binding.key_bindings import KeyBindingsBase
         assert buffer is None or isinstance(buffer, Buffer)
-        assert input_processor is None or isinstance(input_processor, Processor)
+        assert input_processors is None or isinstance(input_processors, list)
+        assert isinstance(include_default_input_processors, bool)
         assert menu_position is None or callable(menu_position)
         assert lexer is None or isinstance(lexer, Lexer)
-        assert search_buffer_control is None or isinstance(search_buffer_control, BufferControl)
-        assert get_search_buffer_control is None or callable(get_search_buffer_control)
-        assert not (search_buffer_control and get_search_buffer_control)
-        assert get_search_state is None or callable(get_search_state)
+        assert (search_buffer_control is None or
+                callable(search_buffer_control) or
+                isinstance(search_buffer_control, SearchBufferControl))
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
 
-        # Default search state.
-        if get_search_state is None:
-            search_state = SearchState()
+        self.input_processors = input_processors
+        self.include_default_input_processors = include_default_input_processors
 
-            def get_search_state():
-                return search_state
-
-        # Default input processor (display search and selection by default.)
-        if input_processor is None:
-            input_processor = merge_processors([
-                HighlightSearchProcessor(),
-                HighlightSelectionProcessor(),
-                DisplayMultipleCursors(),
-            ])
+        self.default_input_processors = [
+            HighlightSearchProcessor(),
+            HighlightIncrementalSearchProcessor(),
+            HighlightSelectionProcessor(),
+            DisplayMultipleCursors(),
+        ]
 
         self.preview_search = to_filter(preview_search)
         self.focusable = to_filter(focusable)
-        self.get_search_state = get_search_state
         self.focus_on_click = to_filter(focus_on_click)
 
-        self.input_processor = input_processor
         self.buffer = buffer or Buffer()
         self.menu_position = menu_position
         self.lexer = lexer or SimpleLexer()
-        self.get_search_buffer_control = get_search_buffer_control
         self.key_bindings = key_bindings
         self._search_buffer_control = search_buffer_control
 
@@ -465,16 +458,16 @@ class BufferControl(UIControl):
         self._last_get_processed_line = None
 
     def __repr__(self):
-        return '<BufferControl(buffer=%r at %r>' % (self.buffer, id(self))
+        return '<%s(buffer=%r at %r>' % (self.__class__.__name__, self.buffer, id(self))
 
     @property
     def search_buffer_control(self):
-        if self.get_search_buffer_control is not None:
-            result = self.get_search_buffer_control()
+        if callable(self._search_buffer_control):
+            result = self._search_buffer_control()
         else:
             result = self._search_buffer_control
 
-        assert result is None or isinstance(result, UIControl)
+        assert result is None or isinstance(result, SearchBufferControl)
         return result
 
     @property
@@ -485,7 +478,17 @@ class BufferControl(UIControl):
 
     @property
     def search_state(self):
-        return self.get_search_state()
+        """
+        Return the `SearchState` for searching this `BufferControl`.
+        This is always associated with the search control. If one search bar is
+        used for searching multiple `BufferControls`, then they share the same
+        `SearchState`.
+        """
+        search_buffer_control = self.search_buffer_control
+        if search_buffer_control:
+            return search_buffer_control.searcher_search_state
+        else:
+            return SearchState()
 
     def is_focusable(self):
         return self.focusable()
@@ -544,7 +547,12 @@ class BufferControl(UIControl):
         returns a _ProcessedLine(processed_fragments, source_to_display, display_to_source)
         tuple.
         """
-        merged_processor = self.input_processor
+        # Merge all input processors together.
+        input_processors = self.input_processors or []
+        if self.include_default_input_processors:
+            input_processors = self.default_input_processors + input_processors
+
+        merged_processor = merge_processors(input_processors)
 
         def transform(lineno, fragments):
             " Transform the fragments for a given line number. "
@@ -588,7 +596,7 @@ class BufferControl(UIControl):
 
         return create_func()
 
-    def create_content(self, width, height):
+    def create_content(self, width, height, preview_search=False):
         """
         Create a UIContent.
         """
@@ -599,8 +607,16 @@ class BufferControl(UIControl):
         # then use the search document, which has possibly a different
         # text/cursor position.)
         search_control = self.search_buffer_control
-        preview_now = bool(
-            search_control and search_control.buffer.text and self.preview_search())
+        preview_now = preview_search or bool(
+            # Only if this feature is enabled.
+            self.preview_search() and
+
+            # And something was typed in the associated search field.
+            search_control and search_control.buffer.text and
+
+            # And we are searching in this control. (Many controls can point to
+            # the same search field, like in Pyvim.)
+            get_app().layout.search_target_buffer_control == self)
 
         if preview_now:
             ss = self.search_state
@@ -742,6 +758,25 @@ class BufferControl(UIControl):
 
         yield self.buffer.on_completions_changed
         yield self.buffer.on_suggestion_set
+
+
+class SearchBufferControl(BufferControl):
+    """
+    `BufferControl` which is used for searching another `BufferControl`.
+
+    :param ignore_case: Search case insensitive. (Only when this
+        `BufferControl` is used for searching through another `BufferControl`.)
+    """
+    def __init__(self, buffer=None, input_processors=None, lexer=None,
+                 focus_on_click=False, key_bindings=None,
+                 ignore_case=False):
+        super(SearchBufferControl, self).__init__(
+                buffer=buffer, input_processors=input_processors, lexer=lexer,
+                focus_on_click=focus_on_click, key_bindings=key_bindings)
+
+        # If this BufferControl is used as a search field for one or more other
+        # BufferControls, then represents the search state.
+        self.searcher_search_state = SearchState(ignore_case=ignore_case)
 
 
 # Deprecated aliases.
