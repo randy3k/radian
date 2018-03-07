@@ -111,9 +111,9 @@ class RtichokeApplication(object):
 
         set_width_on_resize = interface.get_option("setWidthOnResize", True)
         mp.auto_width = interface.get_option("rtichoke.auto_width", set_width_on_resize)
-
-        if mp.auto_width:
-            interface.set_option("width", mp.app.output.get_size().columns)
+        output_width = mp.app.output.get_size().columns
+        if output_width and mp.auto_width:
+            interface.set_option("width", output_width)
 
         # necessary on windows
         interface.set_option("menu.graphics", False)
@@ -141,7 +141,7 @@ class RtichokeApplication(object):
                 if tic == 10:
                     tic = 0
                     output_width = app.output.get_size().columns
-                    if terminal_width[0] != output_width:
+                    if output_width and terminal_width[0] != output_width:
                         terminal_width[0] = output_width
                         interface.set_option("width", max(terminal_width[0], 20))
 
