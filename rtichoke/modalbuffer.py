@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.search_state import SearchState
+from prompt_toolkit.search import SearchState, SearchDirection
 from prompt_toolkit.document import Document
-from prompt_toolkit.enums import SearchDirection
 
 
 class ModalBuffer(Buffer):

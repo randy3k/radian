@@ -16,7 +16,7 @@ from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.formatted_text.utils import split_lines, fragment_list_to_text
 from prompt_toolkit.lexers import Lexer, SimpleLexer
 from prompt_toolkit.mouse_events import MouseEventType
-from prompt_toolkit.search_state import SearchState
+from prompt_toolkit.search import SearchState
 from prompt_toolkit.selection import SelectionType
 from prompt_toolkit.utils import get_cwidth
 
@@ -777,7 +777,3 @@ class SearchBufferControl(BufferControl):
         # If this BufferControl is used as a search field for one or more other
         # BufferControls, then represents the search state.
         self.searcher_search_state = SearchState(ignore_case=ignore_case)
-
-
-# Deprecated aliases.
-TokenListControl = FormattedTextControl

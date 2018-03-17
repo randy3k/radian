@@ -220,8 +220,8 @@ class Prompt(object):
     _fields = (
         'message', 'lexer', 'completer', 'complete_in_thread', 'is_password',
         'editing_mode', 'key_bindings', 'is_password', 'bottom_toolbar',
-        'style', 'include_default_pygments_style', 'rprompt', 'multiline',
-        'prompt_continuation', 'wrap_lines', 'history',
+        'style', 'color_depth', 'include_default_pygments_style', 'rprompt',
+        'multiline', 'prompt_continuation', 'wrap_lines', 'history',
         'enable_history_search', 'search_ignore_case', 'complete_while_typing',
         'validate_while_typing', 'complete_style', 'mouse_support',
         'auto_suggest', 'clipboard', 'validator', 'refresh_interval',
@@ -253,6 +253,7 @@ class Prompt(object):
             complete_style=None,
             auto_suggest=None,
             style=None,
+            color_depth=None,
             include_default_pygments_style=True,
             history=None,
             clipboard=None,
@@ -393,7 +394,8 @@ class Prompt(object):
             ],
             ignore_case=dyncond('search_ignore_case'))
 
-        system_toolbar = SystemToolbar()
+        system_toolbar = SystemToolbar(
+            enable_global_bindings=dyncond('enable_system_prompt'))
 
         def get_search_buffer_control():
             " Return the UIControl to be focused when searching start. "
@@ -503,15 +505,13 @@ class Prompt(object):
                         has_focus(DEFAULT_BUFFER)),
                     prompt_bindings
                 ]),
-                ConditionalKeyBindings(
-                    system_toolbar.get_global_key_bindings(),
-                    dyncond('enable_system_prompt')),
                 DynamicKeyBindings(lambda: self.key_bindings),
             ]),
             mouse_support=dyncond('mouse_support'),
             editing_mode=editing_mode,
             erase_when_done=erase_when_done,
             reverse_vi_search_direction=True,
+            color_depth=lambda: self.color_depth,
 
             # I/O.
             input=self.input,
@@ -629,15 +629,16 @@ class Prompt(object):
             default='', editing_mode=None,
             refresh_interval=None, vi_mode=None, lexer=None, completer=None,
             complete_in_thread=None, is_password=None, key_bindings=None,
-            bottom_toolbar=None, style=None, include_default_pygments_style=None,
-            rprompt=None, multiline=None, prompt_continuation=None,
-            wrap_lines=None, history=None, enable_history_search=None,
-            search_ignore_case=None, complete_while_typing=None,
-            validate_while_typing=None, complete_style=None, auto_suggest=None,
-            validator=None, clipboard=None, mouse_support=None,
-            input_processors=None, reserve_space_for_menu=None,
-            enable_system_prompt=None, enable_suspend=None,
-            enable_open_in_editor=None, tempfile_suffix=None, inputhook=None,
+            bottom_toolbar=None, style=None, color_depth=None,
+            include_default_pygments_style=None, rprompt=None, multiline=None,
+            prompt_continuation=None, wrap_lines=None, history=None,
+            enable_history_search=None, search_ignore_case=None,
+            complete_while_typing=None, validate_while_typing=None,
+            complete_style=None, auto_suggest=None, validator=None,
+            clipboard=None, mouse_support=None, input_processors=None,
+            reserve_space_for_menu=None, enable_system_prompt=None,
+            enable_suspend=None, enable_open_in_editor=None,
+            tempfile_suffix=None, inputhook=None,
             async_=False):
         """
         Display the prompt. All the arguments are the same as for the

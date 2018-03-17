@@ -109,6 +109,7 @@ PROMPT_TOOLKIT_STYLE = [
     ('b',                                       'bold'),
     ('em',                                      'italic'),
     ('strong',                                  'bold'),
+    ('hidden',                                  'hidden'),
 
     # It should be possible to use the style names in HTML.
     # <reverse>...</reverse>  or <noreverse>...</noreverse>.
@@ -127,7 +128,7 @@ PROMPT_TOOLKIT_STYLE = [
 
 
 # Style that will turn for instance the class 'red' into 'red'.
-COLOR_STYLES = [
+COLORS_STYLE = [
     (name, 'fg:' + name) for name in ANSI_COLOR_NAMES
 ] + [
     (name.lower(), 'fg:' + name) for name in NAMED_COLORS
@@ -178,7 +179,6 @@ PYGMENTS_DEFAULT_STYLE = {
     'pygments.comment':                   "italic #408080",
     'pygments.comment.preproc':           "noitalic #bc7a00",
 
-    # keyword:                   "bold #aa22ff",
     'pygments.keyword':                   "bold #008000",
     'pygments.keyword.pseudo':            "nobold",
     'pygments.keyword.type':              "nobold #b00040",
@@ -199,15 +199,16 @@ PYGMENTS_DEFAULT_STYLE = {
     'pygments.name.tag':                  "bold #008000",
     'pygments.name.decorator':            "#aa22ff",
 
-    'pygments.string':                    "#ba2121",
-    'pygments.string.doc':                "italic",
-    'pygments.string.interpol':           "bold #bb6688",
-    'pygments.string.escape':             "bold #bb6622",
-    'pygments.string.regex':              "#bb6688",
-    # 'pygments.string.symbol':             "#b8860b",
-    'pygments.string.symbol':             "#19177c",
-    'pygments.string.other':              "#008000",
-    'pygments.number':                    "#666666",
+    # Note: In Pygments, Token.String is an alias for Token.Literal.String,
+    #       and Token.Number as an alias for Token.Literal.Number.
+    'pygments.literal.string':            "#ba2121",
+    'pygments.literal.string.doc':        "italic",
+    'pygments.literal.string.interpol':   "bold #bb6688",
+    'pygments.literal.string.escape':     "bold #bb6622",
+    'pygments.literal.string.regex':      "#bb6688",
+    'pygments.literal.string.symbol':     "#19177c",
+    'pygments.literal.string.other':      "#008000",
+    'pygments.literal.number':            "#666666",
 
     'pygments.generic.heading':           "bold #000080",
     'pygments.generic.subheading':        "bold #800080",
@@ -231,7 +232,7 @@ def default_ui_style():
     """
     return merge_styles([
         Style(PROMPT_TOOLKIT_STYLE),
-        Style(COLOR_STYLES),
+        Style(COLORS_STYLE),
         Style(WIDGETS_STYLE),
     ])
 

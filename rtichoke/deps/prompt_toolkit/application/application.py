@@ -12,17 +12,17 @@ from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.input.typeahead import store_typeahead, get_typeahead
 from prompt_toolkit.key_binding.bindings.page_navigation import load_page_navigation_bindings
 from prompt_toolkit.key_binding.defaults import load_key_bindings
-from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings, KeyBindingsBase, merge_key_bindings
+from prompt_toolkit.key_binding.key_bindings import KeyBindings, ConditionalKeyBindings, KeyBindingsBase, merge_key_bindings, GlobalOnlyKeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyProcessor
 from prompt_toolkit.key_binding.vi_state import ViState
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.dummy import create_dummy_layout
-from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.layout.layout import Layout, walk
 from prompt_toolkit.output import Output, ColorDepth
 from prompt_toolkit.output.defaults import get_default_output
 from prompt_toolkit.renderer import Renderer, print_formatted_text
-from prompt_toolkit.search_state import SearchState
+from prompt_toolkit.search import SearchState
 from prompt_toolkit.styles import BaseStyle, default_ui_style, default_pygments_style, merge_styles, DynamicStyle, DummyStyle
 from prompt_toolkit.utils import Event, in_main_thread
 from .current import set_app
@@ -31,6 +31,7 @@ from .run_in_terminal import run_in_terminal, run_coroutine_in_terminal
 from subprocess import Popen
 from traceback import format_tb
 import os
+import re
 import signal
 import six
 import sys
@@ -55,7 +56,7 @@ class Application(object):
     :param on_exit: What to do when Control-D is pressed.
     :param full_screen: When True, run the application on the alternate screen buffer.
     :param color_depth: Any :class:`~prompt_toolkit.output.ColorDepth` value,
-        or `None` for default.
+        a callable that returns a ColorDepth or `None` for default.
     :param erase_when_done: (bool) Clear the application output when it finishes.
     :param reverse_vi_search_direction: Normally, in Vi mode, a '/' searches
         forward and a '?' searches backward. In readline mode, this is usually
@@ -144,7 +145,8 @@ class Application(object):
         assert key_bindings is None or isinstance(key_bindings, KeyBindingsBase)
         assert clipboard is None or isinstance(clipboard, Clipboard)
         assert isinstance(full_screen, bool)
-        assert color_depth is None or color_depth in ColorDepth._ALL
+        assert (color_depth is None or callable(color_depth) or
+                color_depth in ColorDepth._ALL), 'Got color_depth: %r' % (color_depth, )
         assert isinstance(editing_mode, six.string_types)
         assert style is None or isinstance(style, BaseStyle)
         assert isinstance(erase_when_done, bool)
@@ -172,7 +174,7 @@ class Application(object):
         self.layout = layout
         self.clipboard = clipboard or InMemoryClipboard()
         self.full_screen = full_screen
-        self.color_depth = color_depth or ColorDepth.default()
+        self._color_depth = color_depth
         self.mouse_support = mouse_support
 
         self.paste_mode = paste_mode
@@ -266,6 +268,21 @@ class Application(object):
             conditional_pygments_style,
             DynamicStyle(lambda: self.style),
         ])
+
+    @property
+    def color_depth(self):
+        """
+        Active `ColorDepth`.
+        """
+        depth = self._color_depth
+
+        if callable(depth):
+            depth = depth()
+
+        if depth is None:
+            depth = ColorDepth.default()
+
+        return depth
 
     @property
     def current_buffer(self):
@@ -782,6 +799,15 @@ class Application(object):
     def is_done(self):
         return self.future and self.future.done()
 
+    def get_used_style_strings(self):
+        """
+        Return a list of used style strings. This is helpful for debugging, and
+        for writing a new `Style`.
+        """
+        return sorted([
+            re.sub(r'\s+', ' ', style_str).strip()
+            for style_str in self.app.renderer._attrs_for_style.keys()])
+
 
 class _CombinedRegistry(KeyBindingsBase):
     """
@@ -805,18 +831,32 @@ class _CombinedRegistry(KeyBindingsBase):
         `UIControl` with all the parent controls and the global key bindings.
         """
         key_bindings = []
+        collected_containers = set()
 
         # Collect key bindings from currently focused control and all parent
         # controls. Don't include key bindings of container parent controls.
         container = current_window
-        while container is not None:
+        while True:
+            collected_containers.add(container)
             kb = container.get_key_bindings()
             if kb is not None:
                 key_bindings.append(kb)
 
             if container.is_modal():
                 break
-            container = self.app.layout.get_parent(container)
+
+            parent = self.app.layout.get_parent(container)
+            if parent is None:
+                break
+            else:
+                container = parent
+
+        # Include global bindings (starting at the top-model container).
+        for c in walk(container):
+            if c not in collected_containers:
+                kb = c.get_key_bindings()
+                if kb is not None:
+                    key_bindings.append(GlobalOnlyKeyBindings(kb))
 
         # Add App key bindings
         if self.app.key_bindings:
