@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 try:
     import pypandoc
     long_description = pypandoc.convert_file('README.md', 'rst')
-except:
+except Exception:
     long_description = ''
 
 
@@ -17,6 +17,7 @@ def get_version(package):
     with open(path, 'rb') as f:
         init_py = f.read().decode('utf-8')
     return re.search("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
+
 
 setup(
     name='rtichoke',
@@ -33,8 +34,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'rtichoke = rtichoke:main',
-            'rice = rtichoke:deprecated_main'
+            'rtichoke = rtichoke:main'
         ]
     }
 )

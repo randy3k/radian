@@ -103,8 +103,3 @@ def main():
 
     from .rtichokeapp import RtichokeApplication
     RtichokeApplication(r_home).run(options)
-
-
-def deprecated_main():
-    print("The program `rice` has been deprecated, use `rtichoke` instead.")
-    main()
