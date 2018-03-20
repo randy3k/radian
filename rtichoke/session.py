@@ -121,7 +121,7 @@ class RSession(object):
         rstart.R_Quiet = 1
         rstart.R_Interactive = 1
         rstart.RestoreAction = 0 if options.restore_data is not True else 1
-        rstart.SaveAction = 0 if options.save is not True else 5
+        rstart.SaveAction = 3 if options.save is not True else 4
 
         self.libR.R_SetParams(pointer(rstart))
 
