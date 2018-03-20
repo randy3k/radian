@@ -52,3 +52,21 @@ def clean_up(save_type, status, runlast):
 def show_message(buf):
     sys.stdout.write(buf.decode(ENCODING))
     sys.stdout.flush()
+
+
+def ask_yes_no_cancel(string):
+    while True:
+        try:
+            result = str(input("{} [y/n/c]: ".format(string.decode(ENCODING))))
+            if result in ["Y", "y"]:
+                return 1
+            elif result in ["N", "n"]:
+                return 2
+            else:
+                return 0
+        except EOFError:
+            return 0
+        except KeyboardInterrupt:
+            return 0
+        except Exception:
+            pass

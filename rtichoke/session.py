@@ -63,9 +63,13 @@ class RSession(object):
         if not hasattr(self.libR, "R_tryCatchError"):
             raise RuntimeError("rtichoke requires R 3.4.0 or above.")
 
-    def run(self):
+    def run(self, options):
 
-        _argv = ["rtichoke", "--no-save", "--no-restore-data", "--quiet"]
+        _argv = ["rtichoke", "--quiet"]
+        if options.save is not True:
+            _argv.append("--no-save")
+        if options.restore_data is not True:
+            _argv.append("--no-restore-data")
         argn = len(_argv)
         argv = (c_char_p * argn)()
         for i, a in enumerate(_argv):
@@ -73,11 +77,11 @@ class RSession(object):
 
         if sys.platform.startswith("win"):
             self.libR.R_setStartTime()
-            self.setup_callbacks_win32()
+            self.setup_callbacks_win32(options)
             self.libR.R_set_command_line_arguments(argn, argv)
         else:
             self.libR.Rf_initialize_R(argn, argv)
-            self.setup_callbacks_posix()
+            self.setup_callbacks_posix(options)
 
         self.libR.Rf_mainloop()
 
@@ -92,13 +96,10 @@ class RSession(object):
     def polled_events(self):
         pass
 
-    def ask_yes_no_cancel(self, string):
-        raise "not yet implemented"
-
     def r_busy(self, which):
         pass
 
-    def setup_callbacks_win32(self):
+    def setup_callbacks_win32(self, options):
         rstart = RStart()
         self.libR.R_DefParams(pointer(rstart))
 
@@ -119,14 +120,14 @@ class RSession(object):
 
         rstart.R_Quiet = 1
         rstart.R_Interactive = 1
-        rstart.RestoreAction = 0
-        rstart.SaveAction = 0
+        rstart.RestoreAction = 0 if options.restore_data is not True else 1
+        rstart.SaveAction = 0 if options.save is not True else 5
 
         self.libR.R_SetParams(pointer(rstart))
 
         self.rstart = rstart
 
-    def setup_callbacks_posix(self):
+    def setup_callbacks_posix(self, options):
 
         # ptr_R_Suicide
 

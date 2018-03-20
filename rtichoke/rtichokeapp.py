@@ -221,8 +221,9 @@ class RtichokeApplication(object):
         rsession.write_console_ex = callbacks.write_console_ex
         rsession.clean_up = callbacks.clean_up
         rsession.show_message = callbacks.show_message
+        rsession.ask_yes_no_cancel = callbacks.ask_yes_no_cancel  # windows only
 
         # to make api work
         api.rsession = rsession
 
-        rsession.run()
+        rsession.run(options)
