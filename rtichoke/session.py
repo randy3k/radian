@@ -66,7 +66,7 @@ class RSession(object):
     def run(self, options):
 
         _argv = ["rtichoke", "--quiet"]
-        if options.save is not True:
+        if options.ask_save is not True:
             _argv.append("--no-save")
         if options.restore_data is not True:
             _argv.append("--no-restore-data")
@@ -121,7 +121,7 @@ class RSession(object):
         rstart.R_Quiet = 1
         rstart.R_Interactive = 1
         rstart.RestoreAction = 0 if options.restore_data is not True else 1
-        rstart.SaveAction = 3 if options.save is not True else 4
+        rstart.SaveAction = 3 if options.ask_save is not True else 5
 
         self.libR.R_SetParams(pointer(rstart))
 
