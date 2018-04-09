@@ -5,7 +5,6 @@ from prompt_toolkit.application.current import get_app
 
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.key_binding.bindings.named_commands import backward_delete_char
 from prompt_toolkit.filters import Condition, has_focus, \
     emacs_insert_mode, vi_insert_mode, in_paste_mode, app
 from prompt_toolkit.enums import DEFAULT_BUFFER
@@ -85,14 +84,14 @@ def create_prompt_bindings():
     """
     kb = KeyBindings()
     handle = kb.add
-    default_focussed = has_focus(DEFAULT_BUFFER)
+    default_focused = has_focus(DEFAULT_BUFFER)
 
-    @handle('enter', filter=default_focussed)
+    @handle('enter', filter=default_focused)
     def _(event):
         " Accept input when enter has been pressed. "
         event.current_buffer.validate_and_handle()
 
-    @handle('c-c', filter=default_focussed)
+    @handle('c-c', filter=default_focused)
     def _(event):
         " Abort when Control-C has been pressed. "
         event.app.exit(exception=KeyboardInterrupt, style='class:aborting')
@@ -105,7 +104,7 @@ def create_prompt_bindings():
         return (app.current_buffer.name == DEFAULT_BUFFER and
                 not app.current_buffer.text)
 
-    @handle('c-d', filter=ctrl_d_condition & default_focussed)
+    @handle('c-d', filter=ctrl_d_condition & default_focused)
     def _(event):
         " Exit when Control-D has been pressed. "
         event.app.exit(exception=EOFError, style='class:exiting')
