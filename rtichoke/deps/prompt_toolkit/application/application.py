@@ -213,7 +213,16 @@ class Application(object):
         #: after "\x1b". This little timer will consider "\x1b" to be escape if
         #: nothing did follow in this time span.
         #: This seems to work like the `ttimeoutlen` option in Vim.
-        self.input_timeout = .5
+        self.ttimeoutlen = .5  # Seconds.
+
+        #: Like Vim's `timeoutlen` option. This can be `None` or a float.  For
+        #: instance, suppose that we have a key binding AB and a second key
+        #: binding A. If the uses presses A and then waits, we don't handle
+        #: this binding yet (unless it was marked 'eager'), because we don't
+        #: know what will follow. This timeout is the maximum amount of time
+        #: that we wait until we call the handlers anyway. Pass `None` to
+        #: disable this timeout.
+        self.timeoutlen = 1.0
 
         #: The `Renderer` instance.
         # Make sure that the same stdout is used, when a custom renderer has been passed.
@@ -316,8 +325,7 @@ class Application(object):
         # content in the other buffers to remain unchanged between several
         # calls of `run`. (And the same is true for the focus stack.)
 
-        self._exit_flag = False
-        self._abort_flag = False
+        self.exit_style = ''
 
         self.renderer.reset()
         self.key_processor.reset()
@@ -537,7 +545,7 @@ class Application(object):
             def auto_flush_input(counter):
                 # Flush input after timeout.
                 # (Used for flushing the enter key.)
-                time.sleep(self.input_timeout)
+                time.sleep(self.ttimeoutlen)
 
                 if flush_counter[0] == counter:
                     call_from_executor(flush_input)
@@ -671,27 +679,28 @@ class Application(object):
             self.output.flush()
         run_in_terminal(in_terminal)
 
-    def exit(self):
-        " Set exit. When Control-D has been pressed. "
-        self._exit_flag = True
-        self.future.set_exception(EOFError)
-
-    def abort(self):
-        " Set abort. When Control-C has been pressed. "
-        self._abort_flag = True
-        self.future.set_exception(KeyboardInterrupt)
-
-    def set_result(self, value):
+    def exit(self, result=None, exception=None, style=''):
         """
-        Set a return value. The eventloop can retrieve the result it by calling
-        `return_value`.
+        Exit application.
+
+        :param result: Set this result for the application.
+        :param exception: Set this exception as the result for an application. For
+            a prompt, this is often `EOFError` or `KeyboardInterrupt`.
+        :param style: Apply this style on the whole content when quitting,
+            often this is 'class:exiting' for a prompt. (Used when
+            `erase_when_done` is not set.)
         """
-        if not self.future.done():
-            self.future.set_result(value)
-        else:
+        assert result is None or exception is None
+
+        if self.future.done():
             raise Exception('Return value already set.')
 
-    set_return_value = set_result  # For backwards-compatibility.
+        self.exit_style = style
+
+        if exception is not None:
+            self.future.set_exception(exception)
+        else:
+            self.future.set_result(result)
 
     def _request_absolute_cursor_position(self):
         """
@@ -784,16 +793,6 @@ class Application(object):
     def is_running(self):
         " `True` when the application is currently active/running. "
         return self._is_running
-
-    @property
-    def is_exiting(self):
-        " ``True`` when the exit flag as been set. "
-        return self._exit_flag
-
-    @property
-    def is_aborting(self):
-        " ``True`` when the abort flag as been set. "
-        return self._abort_flag
 
     @property
     def is_done(self):
@@ -903,7 +902,7 @@ def _do_wait_for_enter(wait_text):
 
     @key_bindings.add('enter')
     def _(event):
-        event.app.set_result(None)
+        event.app.exit()
 
     @key_bindings.add(Keys.Any)
     def _(event):

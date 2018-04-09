@@ -95,7 +95,7 @@ def create_prompt_bindings():
     @handle('c-c', filter=default_focussed)
     def _(event):
         " Abort when Control-C has been pressed. "
-        event.app.abort()
+        event.app.exit(exception=KeyboardInterrupt, style='class:aborting')
 
     @Condition
     def ctrl_d_condition():
@@ -108,7 +108,7 @@ def create_prompt_bindings():
     @handle('c-d', filter=ctrl_d_condition & default_focussed)
     def _(event):
         " Exit when Control-D has been pressed. "
-        event.app.exit()
+        event.app.exit(exception=EOFError, style='class:exiting')
 
     suspend_supported = Condition(suspend_to_background_supported)
 

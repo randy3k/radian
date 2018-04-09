@@ -292,10 +292,6 @@ def create_modal_prompt(options, history_file, inputhook):
         else:
             return ModalFileHistory(os.path.join(os.path.expanduser("~"), history_file))
 
-    def after_render(app):
-        if app.is_aborting and mp.insert_new_line and mp.prompt_mode not in ["readline"]:
-            app.output.write("\n")
-
     def accept(buff):
         buff.last_working_index = buff.working_index
         app = get_app()
@@ -305,7 +301,7 @@ def create_modal_prompt(options, history_file, inputhook):
                 mp.add_history = False
 
         if mp.prompt_mode in ["r", "browse", "readline"]:
-            app.set_return_value(buff.document.text)
+            app.exit(result=buff.document.text)
             app.pre_run_callables.append(buff.reset)
 
         elif mp.prompt_mode in ["shell"]:
@@ -323,7 +319,6 @@ def create_modal_prompt(options, history_file, inputhook):
         history=get_history(),
         extra_key_bindings=create_keybindings(),
         tempfile_suffix=".R",
-        after_render=after_render,
         accept=accept,
         inputhook=inputhook
     )

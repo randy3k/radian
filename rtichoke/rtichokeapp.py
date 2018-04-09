@@ -166,7 +166,7 @@ class RtichokeApplication(object):
             else:
                 if mp.interrupted:
                     mp.interrupted = False
-                if mp.insert_new_line:
+                elif mp.insert_new_line:
                     sys.stdout.write("\n")
 
             mp.add_history = add_history == 1
@@ -213,6 +213,8 @@ class RtichokeApplication(object):
                         mp.interrupted = True
                         api.interrupts_pending(True)
                         api.check_user_interrupt()
+                    else:
+                        mp.app.output.write("\n")
 
             return text
 

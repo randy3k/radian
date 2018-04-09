@@ -27,7 +27,7 @@ def generate_completions(event):
     if b.complete_state:
         b.complete_next()
     else:
-        b.start_completion(insert_common_part=True, select_first=False)
+        b.start_completion(insert_common_part=True)
 
 
 def display_completions_like_readline(event):
@@ -154,7 +154,7 @@ def _create_more_prompt(message='--MORE--'):
     @bindings.add(Keys.ControlM)
     @bindings.add(Keys.ControlI)  # Tab.
     def _(event):
-        event.app.set_result(True)
+        event.app.exit(result=True)
 
     @bindings.add('n')
     @bindings.add('N')
@@ -162,7 +162,7 @@ def _create_more_prompt(message='--MORE--'):
     @bindings.add('Q')
     @bindings.add(Keys.ControlC)
     def _(event):
-        event.app.set_result(False)
+        event.app.exit(result=False)
 
     @bindings.add(Keys.Any)
     def _(event):

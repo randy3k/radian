@@ -50,7 +50,7 @@ class CompletionsMenuControl(UIControl):
     def preferred_height(self, width, max_available_height, wrap_lines):
         complete_state = get_app().current_buffer.complete_state
         if complete_state:
-            return len(complete_state.current_completions)
+            return len(complete_state.completions)
         else:
             return 0
 
@@ -60,7 +60,7 @@ class CompletionsMenuControl(UIControl):
         """
         complete_state = get_app().current_buffer.complete_state
         if complete_state:
-            completions = complete_state.current_completions
+            completions = complete_state.completions
             index = complete_state.complete_index  # Can be None!
 
             # Calculate width of completions menu.
@@ -87,14 +87,14 @@ class CompletionsMenuControl(UIControl):
         """
         Return ``True`` if we need to show a column with meta information.
         """
-        return any(c.display_meta for c in complete_state.current_completions)
+        return any(c.display_meta for c in complete_state.completions)
 
     def _get_menu_width(self, max_width, complete_state):
         """
         Return the width of the main column.
         """
         return min(max_width, max(self.MIN_WIDTH, max(get_cwidth(c.display)
-                   for c in complete_state.current_completions) + 2))
+                   for c in complete_state.completions) + 2))
 
     def _get_menu_meta_width(self, max_width, complete_state):
         """
@@ -102,7 +102,7 @@ class CompletionsMenuControl(UIControl):
         """
         if self._show_meta(complete_state):
             return min(max_width, max(get_cwidth(c.display_meta)
-                       for c in complete_state.current_completions) + 2)
+                       for c in complete_state.completions) + 2)
         else:
             return 0
 
@@ -253,7 +253,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         """
         complete_state = get_app().current_buffer.complete_state
         column_width = self._get_column_width(complete_state)
-        result = int(column_width * math.ceil(len(complete_state.current_completions) / float(self.min_rows)))
+        result = int(column_width * math.ceil(len(complete_state.completions) / float(self.min_rows)))
 
         # When the desired width is still more than the maximum available,
         # reduce by removing columns until we are less than the available
@@ -270,7 +270,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         column_width = self._get_column_width(complete_state)
         column_count = max(1, (width - self._required_margin) // column_width)
 
-        return int(math.ceil(len(complete_state.current_completions) / float(column_count)))
+        return int(math.ceil(len(complete_state.completions) / float(column_count)))
 
     def create_content(self, width, height):
         """
@@ -307,7 +307,7 @@ class MultiColumnCompletionMenuControl(UIControl):
 
             visible_columns = max(1, (width - self._required_margin) // column_width)
 
-            columns_ = list(grouper(height, complete_state.current_completions))
+            columns_ = list(grouper(height, complete_state.completions))
             rows_ = list(zip(*columns_))
 
             # Make sure the current completion is always visible: update scroll offset.
@@ -368,7 +368,7 @@ class MultiColumnCompletionMenuControl(UIControl):
         """
         Return the width of each column.
         """
-        return max(get_cwidth(c.display) for c in complete_state.current_completions) + 1
+        return max(get_cwidth(c.display) for c in complete_state.completions) + 1
 
     def _get_menu_item_fragments(self, completion, is_current_completion, width):
         if is_current_completion:
@@ -422,6 +422,58 @@ class MultiColumnCompletionMenuControl(UIControl):
                 if completion:
                     b.apply_completion(completion)
 
+    def get_key_bindings(self):
+        """
+        Expose key bindings that handle the left/right arrow keys when the menu
+        is displayed.
+        """
+        from prompt_toolkit.key_binding.key_bindings import KeyBindings
+        kb = KeyBindings()
+
+        @Condition
+        def filter():
+            " Only handle key bindings if this menu is visible. "
+            app = get_app()
+            complete_state = app.current_buffer.complete_state
+
+            # There need to be completions, and one needs to be selected.
+            if complete_state is None or complete_state.complete_index is None:
+                return False
+
+            # This menu needs to be visible.
+            return any(
+                window.content == self
+                for window in app.layout.visible_windows)
+
+        def move(right=False):
+            buff = get_app().current_buffer
+            complete_state = buff.complete_state
+
+            if complete_state is not None and \
+                    buff.complete_state.complete_index is not None:
+                # Calculate new complete index.
+                new_index = buff.complete_state.complete_index
+                if right:
+                    new_index += self._rendered_rows
+                else:
+                    new_index -= self._rendered_rows
+
+                if 0 <= new_index < len(complete_state.completions):
+                    buff.go_to_completion(new_index)
+
+        # NOTE: the is_global is required because the completion menu will
+        #       never be focussed.
+
+        @kb.add('left', is_global=True, filter=filter)
+        def _(event):
+            move()
+
+        @kb.add('right', is_global=True, filter=filter)
+        def _(event):
+            move(True)
+
+        return kb
+
 
 class MultiColumnCompletionsMenu(HSplit):
     """
@@ -440,7 +492,7 @@ class MultiColumnCompletionsMenu(HSplit):
 
         @Condition
         def any_completion_has_meta():
-            return any(c.display_meta for c in get_app().current_buffer.complete_state.current_completions)
+            return any(c.display_meta for c in get_app().current_buffer.complete_state.completions)
 
         # Create child windows.
         completions_window = ConditionalContainer(
@@ -478,7 +530,7 @@ class _SelectedCompletionMetaControl(UIControl):
         app = get_app()
         if app.current_buffer.complete_state:
             state = app.current_buffer.complete_state
-            return 2 + max(get_cwidth(c.display_meta) for c in state.current_completions)
+            return 2 + max(get_cwidth(c.display_meta) for c in state.completions)
         else:
             return 0
 
