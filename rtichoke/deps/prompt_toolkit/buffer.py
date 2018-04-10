@@ -1508,6 +1508,9 @@ class Buffer(object):
                         # exactly one match.)
                         if len(completions) == 1:
                             self.go_to_completion(0)
+                else:
+                    # reset completion state anyway
+                    self.complete_state = None
 
             else:
                 # If the last operation was an insert, (not a delete), restart
