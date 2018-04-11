@@ -146,6 +146,17 @@ def create_keybindings():
     def _(event):
         event.current_buffer.validate_and_handle()
 
+    @handle('c-j', filter=insert_mode & default_focussed & prompt_mode("r") & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
+    @handle('enter', filter=insert_mode & default_focussed & prompt_mode("r") & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
+    def _(event):
+        copy_margin = not in_paste_mode() and event.app.auto_indentation
+        event.current_buffer.newline(copy_margin=copy_margin)
+        if event.app.auto_indentation:
+            tab_size = event.app.tab_size
+            event.current_buffer.insert_text(" " * tab_size)
+        event.current_buffer.insert_text("\n")
+        event.current_buffer.cursor_position -= 1
+
     # auto match
     @handle('(', filter=insert_mode & default_focussed & prompt_mode("r", "browse") & auto_match & following_text(r"[)}\]]|$"))
     def _(event):
