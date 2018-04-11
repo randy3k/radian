@@ -274,8 +274,8 @@ def create_keybindings():
         event.current_buffer.validate_and_handle()
 
     # emit completion
-    @handle('c-j', filter=insert_mode & default_focussed & app.has_completions)
-    @handle('enter', filter=insert_mode & default_focussed & app.has_completions)
+    @handle('c-j', filter=insert_mode & default_focussed & app.completion_is_selected)
+    @handle('enter', filter=insert_mode & default_focussed & app.completion_is_selected)
     def _(event):
         event.current_buffer.complete_state = None
 
