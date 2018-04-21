@@ -279,7 +279,7 @@ def create_keybindings():
     def _(event):
         event.current_buffer.complete_state = None
 
-    # cancle completion
+    # cancel completion
     @handle('c-c', filter=default_focussed & app.has_completions)
     def _(event):
         event.current_buffer.cancel_completion()

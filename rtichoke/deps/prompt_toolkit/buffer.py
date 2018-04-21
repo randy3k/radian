@@ -1476,6 +1476,7 @@ class Buffer(object):
                 # When there are no completions, reset completion state anyway.
                 if not completions:
                     self.complete_state = None
+                    self.on_completions_changed.fire()
                     return
 
                 # Select first/last or insert common part, depending on the key
