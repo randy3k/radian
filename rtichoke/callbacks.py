@@ -32,17 +32,13 @@ def create_read_console(get_text):
 
 
 def write_console_ex(buf, buflen, otype):
-    try:
-        output = buf.decode(ENCODING)
-        if otype == 0:
-            sys.stdout.write(output)
-            sys.stdout.flush()
-        else:
-            sys.stderr.write(output)
-            sys.stderr.flush()
-    except UnicodeEncodeError as e:
-        # catch print error when terminal doesn't support unicode
-        pass
+    if otype == 0:
+        sys.stdout.buffer.write(buf)
+        sys.stdout.buffer.flush()
+    else:
+        sys.stderr.buffer.write(buf)
+        sys.stderr.buffer.flush()
+    pass
 
 
 def clean_up(save_type, status, runlast):
@@ -50,8 +46,8 @@ def clean_up(save_type, status, runlast):
 
 
 def show_message(buf):
-    sys.stdout.write(buf.decode(ENCODING))
-    sys.stdout.flush()
+    sys.stdout.buffer.write(buf)
+    sys.stdout.buffer.flush()
 
 
 def ask_yes_no_cancel(string):
