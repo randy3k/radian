@@ -139,7 +139,6 @@ class ModalPrompt(object):
             get_tempfile_suffix=lambda: self.tempfile_suffix)
 
         search_buffer = Buffer(name=SEARCH_BUFFER)
-
         search_toolbar = SearchToolbar(search_buffer)
 
         # Create processors list.
@@ -154,6 +153,7 @@ class ModalPrompt(object):
             buffer=default_buffer,
             search_buffer_control=search_toolbar.control,
             input_processors=all_input_processors,
+            include_default_input_processors=False,
             lexer=DynamicLexer(lambda: self.lexer),
             preview_search=True)
 
