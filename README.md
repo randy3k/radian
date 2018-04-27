@@ -1,5 +1,7 @@
 # rtichoke: A 21 century R console
 
+[![](https://img.shields.io/pypi/v/rtichoke.svg)](https://pypi.org/project/rtichoke/)
+
 <img src="rtichoke.png"></img>
 
 _rtichoke_ is an enhanced console for the R program. `rtichoke` is built on top of the python library `prompt-toolkit`. In some sense, one would consider `rtichoke` as a [ipython](https://github.com/ipython/ipython) clone for R. _rtichoke_ was previously named as _rice_.
