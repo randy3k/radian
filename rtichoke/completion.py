@@ -17,6 +17,10 @@ LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 class RCompleter(Completer):
     initialized = False
 
+    def __init__(self, timeout=0.02):
+        self.timeout = timeout
+        super(RCompleter, self).__init__()
+
     def get_utils_func(self, fname):
         utils = api.protect(api.mk_string("utils"))
         f = api.protect(api.mk_string(fname))
@@ -25,7 +29,16 @@ class RCompleter(Completer):
         api.unprotect(2)
         return f
 
+    def get_base_func(self, fname):
+        base = api.protect(api.mk_string("base"))
+        f = api.protect(api.mk_string(fname))
+        f = interface.rlang(api.mk_symbol(":::"), base, f)
+        api.preserve_object(f)
+        api.unprotect(2)
+        return f
+
     def initialize(self):
+        self.setTimeLimit = self.get_base_func("setTimeLimit")
         self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
         self.assignEnd = self.get_utils_func(".assignEnd")
         self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
@@ -47,7 +60,10 @@ class RCompleter(Completer):
         api.unprotect(1)
         interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
         token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
-        if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
+        completion_requested = complete_event.completion_requested
+        if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
+            if not completion_requested:
+                interface.rcall(self.setTimeLimit, api.scalar_real(self.timeout))
             try:
                 interface.rcall(
                     api.mk_symbol("try"),
@@ -56,6 +72,9 @@ class RCompleter(Completer):
                 completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
             except Exception:
                 return
+            finally:
+                if not completion_requested:
+                    interface.rcall(self.setTimeLimit, api.scalar_real(-1))
 
         for c in completions:
             yield Completion(c, -len(token))

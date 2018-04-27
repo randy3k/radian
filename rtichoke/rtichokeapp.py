@@ -114,6 +114,7 @@ class RtichokeApplication(object):
         output_width = mp.app.output.get_size().columns
         if output_width and mp.auto_width:
             interface.set_option("width", output_width)
+        mp.completion_timeout = interface.get_option("rtichoke.completion_timeout", 0.02)
 
         # necessary on windows
         interface.set_option("menu.graphics", False)

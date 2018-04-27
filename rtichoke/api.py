@@ -96,6 +96,10 @@ def scalar_integer(i):
     return rccall("Rf_ScalarInteger", c_void_p, [c_int], i)
 
 
+def scalar_real(i):
+    return rccall("Rf_ScalarReal", c_void_p, [c_double], i)
+
+
 toplevel_exec_functype = CFUNCTYPE(None, POINTER(py_object))
 
 

@@ -279,7 +279,7 @@ def create_modal_prompt(options, history_file, inputhook):
 
     def get_completer():
         if mp.prompt_mode in ["r", "browse"]:
-            return RCompleter()
+            return RCompleter(timeout=mp.completion_timeout)
         elif mp.prompt_mode == "shell":
             return SmartPathCompleter()
         return None

@@ -65,6 +65,7 @@ options(
 
     # pop up completion while typing
     rtichoke.complete_while_typing = TRUE,
+    rtichoke.complete_timeout = 0.02,
 
     # automatically adjust R buffer size based on terminal width
     rtichoke.auto_width = TRUE,
