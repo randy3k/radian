@@ -1,12 +1,15 @@
 from __future__ import unicode_literals
 import ctypes
 import sys
+import re
 
 # to be set by RtichokeApplication
 if sys.platform.startswith("win"):
     ENCODING = "latin-1"
 else:
     ENCODING = "utf-8"
+
+UTFPATTERN = re.compile(b"\x02\xff\xfe(.*?)\x03\xff\xfe")
 
 
 def create_read_console(get_text):
@@ -31,13 +34,26 @@ def create_read_console(get_text):
     return _read_console
 
 
+def rconsole2str(buf, encoding):
+    ret = ""
+    m = UTFPATTERN.search(buf)
+    while m:
+        a, b = m.span()
+        ret += buf[:a].decode(encoding) + m.group(1).decode("utf-8")
+        buf = buf[b:]
+        m = UTFPATTERN.search(buf)
+    ret += buf.decode(encoding)
+    return ret
+
+
 def write_console_ex(buf, buflen, otype):
+    buf = rconsole2str(buf, ENCODING)
     if otype == 0:
-        sys.stdout.buffer.write(buf)
-        sys.stdout.buffer.flush()
+        sys.stdout.write(buf)
+        sys.stdout.flush()
     else:
-        sys.stderr.buffer.write(buf)
-        sys.stderr.buffer.flush()
+        sys.stderr.write(buf)
+        sys.stderr.flush()
     pass
 
 
@@ -46,8 +62,9 @@ def clean_up(save_type, status, runlast):
 
 
 def show_message(buf):
-    sys.stdout.buffer.write(buf)
-    sys.stdout.buffer.flush()
+    buf = rconsole2str(buf, ENCODING)
+    sys.stdout.write(buf)
+    sys.stdout.flush()
 
 
 def ask_yes_no_cancel(string):
