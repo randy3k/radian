@@ -21,66 +21,55 @@ class RCompleter(Completer):
         self.timeout = timeout
         super(RCompleter, self).__init__()
 
-    def get_utils_func(self, fname):
-        utils = api.protect(api.mk_string("utils"))
-        f = api.protect(api.mk_string(fname))
-        f = interface.rlang(api.mk_symbol(":::"), utils, f)
-        api.preserve_object(f)
-        api.unprotect(2)
-        return f
-
-    def get_base_func(self, fname):
-        base = api.protect(api.mk_string("base"))
-        f = api.protect(api.mk_string(fname))
-        f = interface.rlang(api.mk_symbol(":::"), base, f)
-        api.preserve_object(f)
-        api.unprotect(2)
-        return f
-
-    def initialize(self):
-        self.setTimeLimit = self.get_base_func("setTimeLimit")
-        self.assignLinebuffer = self.get_utils_func(".assignLinebuffer")
-        self.assignEnd = self.get_utils_func(".assignEnd")
-        self.guessTokenFromLine = self.get_utils_func(".guessTokenFromLine")
-        self.completeToken = self.get_utils_func(".completeToken")
-        self.completeTokenCall = api.lang1(self.completeToken)
-        api.preserve_object(self.completeTokenCall)
-        self.retrieveCompletions = self.get_utils_func(".retrieveCompletions")
-        self.initialized = True
-
     def get_completions(self, document, complete_event):
-        if not self.initialized:
-            self.initialize()
         token = ""
         text = document.current_line_before_cursor
+
         completions = []
-        s = api.mk_string(text)
-        api.protect(s)
-        interface.rcall(self.assignLinebuffer, s)
-        api.unprotect(1)
-        interface.rcall(self.assignEnd, api.scalar_integer(len(text)))
-        token = interface.rcopy(interface.rcall(self.guessTokenFromLine))[0]
+        interface.rcall(interface.reval("utils:::.assignLinebuffer"), api.mk_string(text))
+        interface.rcall(interface.reval("utils:::.assignEnd"), api.scalar_integer(len(text)))
+        token = interface.rcopy(
+            interface.rcall(interface.reval("utils:::.guessTokenFromLine")))[0]
         completion_requested = complete_event.completion_requested
+        completions = []
+        library_prefix = LIBRARY_PATTERN.match(text)
+
         if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
-            if not completion_requested:
-                interface.rcall(self.setTimeLimit, api.scalar_real(self.timeout))
+            orig_stderr = sys.stderr
+            sys.stderr = None
             try:
-                interface.rcall(
-                    api.mk_symbol("try"),
-                    self.completeTokenCall,
-                    silent=api.scalar_integer(1))
-                completions = interface.rcopy(interface.rcall(self.retrieveCompletions))
-            except Exception:
+                interface.reval("""
+                    tryCatch(
+                        {{
+                            local({{
+                                if ({settimelimit}) base::setTimeLimit({timeout})
+                                utils:::.completeToken()
+                                if ({settimelimit}) base::setTimeLimit()
+                            }})
+                        }},
+                        error = function(e) {{
+                            base::setTimeLimit()
+                            assign("comps", NULL, env = utils:::.CompletionEnv)
+                        }}
+                    )
+                    """.format(
+                        settimelimit="TRUE" if not completion_requested else "FALSE",
+                        timeout=str(self.timeout))
+                )
+            except Exception as e:
                 return
             finally:
-                if not completion_requested:
-                    interface.rcall(self.setTimeLimit, api.scalar_real(-1))
+                sys.stderr = orig_stderr
+
+            completions = interface.rcopy(interface.rcall(interface.reval("utils:::.retrieveCompletions")))
+            if not completions:
+                completions = []
 
         for c in completions:
             yield Completion(c, -len(token))
 
-        if token and not LIBRARY_PATTERN.match(text):
-            if (len(token) >= 3 and text[-1].isalnum()) or complete_event.completion_requested:
+        if token and not library_prefix:
+            if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
                 packages = interface.installed_packages()
                 for p in packages:
                     if p.startswith(token):

@@ -52,8 +52,9 @@ def write_console_ex(buf, buflen, otype):
         sys.stdout.write(buf)
         sys.stdout.flush()
     else:
-        sys.stderr.write(buf)
-        sys.stderr.flush()
+        if sys.stderr:
+            sys.stderr.write(buf)
+            sys.stderr.flush()
     pass
 
 
