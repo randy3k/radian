@@ -1,11 +1,14 @@
 import os
 import sys
+
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import DynamicCompleter
 from prompt_toolkit.lexers import DynamicLexer, PygmentsLexer
+from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.utils import is_windows
 
 from pygments.lexers.r import SLexer
+
 from .modalprompt import ModalPrompt
 from .modalhistory import ModalInMemoryHistory, ModalFileHistory
 from . import shell_cmd
@@ -67,6 +70,7 @@ def create_rtichoke_prompt(options, history_file, inputhook):
     mp = ModalPrompt(
         lexer=DynamicLexer(get_lexer),
         completer=DynamicCompleter(get_completer),
+        color_depth=ColorDepth.default(term=os.environ.get("TERM")),
         history=history,
         extra_key_bindings=create_keybindings(),
         tempfile_suffix=".R",

@@ -11,7 +11,7 @@ from prompt_toolkit.formatted_text import to_formatted_text
 from prompt_toolkit.input.defaults import get_default_input
 from prompt_toolkit.key_binding.bindings.open_in_editor import load_open_in_editor_bindings
 from prompt_toolkit.key_binding.key_bindings import \
-    DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings
+    KeyBindings, DynamicKeyBindings, merge_key_bindings, ConditionalKeyBindings
 from prompt_toolkit.layout import Window, HSplit, FloatContainer, Float
 from prompt_toolkit.layout.containers import ConditionalContainer
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
@@ -24,13 +24,55 @@ from prompt_toolkit.layout.processors import \
     HighlightMatchingBracketProcessor, DisplayMultipleCursors
 from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.widgets.toolbars import SearchToolbar
-from prompt_toolkit.output import get_default_output, ColorDepth
+from prompt_toolkit.output import get_default_output
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.styles import DynamicStyle
-import os
+from prompt_toolkit.utils import suspend_to_background_supported
 
 from .modalbuffer import ModalBuffer
-from .keybinding import create_prompt_bindings
+
+
+def create_prompt_bindings():
+    """
+    Create the KeyBindings for a prompt application.
+    """
+    kb = KeyBindings()
+    handle = kb.add
+    default_focused = has_focus(DEFAULT_BUFFER)
+
+    @handle('enter', filter=default_focused)
+    def _(event):
+        " Accept input when enter has been pressed. "
+        event.current_buffer.validate_and_handle()
+
+    @handle('c-c', filter=default_focused)
+    def _(event):
+        " Abort when Control-C has been pressed. "
+        event.app.exit(exception=KeyboardInterrupt, style='class:aborting')
+
+    @Condition
+    def ctrl_d_condition():
+        """ Ctrl-D binding is only active when the default buffer is selected
+        and empty. """
+        app = get_app()
+        return (app.current_buffer.name == DEFAULT_BUFFER and
+                not app.current_buffer.text)
+
+    @handle('c-d', filter=ctrl_d_condition & default_focused)
+    def _(event):
+        " Exit when Control-D has been pressed. "
+        event.app.exit(exception=EOFError, style='class:exiting')
+
+    suspend_supported = Condition(suspend_to_background_supported)
+
+    @handle('c-z', filter=suspend_supported)
+    def _(event):
+        """
+        Suspend process to background.
+        """
+        event.app.suspend_to_background()
+
+    return kb
 
 
 class ModalPrompt(object):
@@ -55,6 +97,7 @@ class ModalPrompt(object):
             lexer=None,
             style=None,
             completer=None,
+            color_depth=None,
             extra_key_bindings=None,
             tempfile_suffix=None,
             input=None,
@@ -68,6 +111,7 @@ class ModalPrompt(object):
         self.lexer = lexer
         self.style = style
         self.completer = completer
+        self.color_depth = color_depth or get_default_input()
         self.extra_key_bindings = extra_key_bindings
         self.tempfile_suffix = tempfile_suffix
         self.input = input or get_default_input()
@@ -212,7 +256,7 @@ class ModalPrompt(object):
             layout=self.create_layout(),
             style=DynamicStyle(lambda: self.style),
             include_default_pygments_style=True,
-            color_depth=ColorDepth.default(term=os.environ.get("TERM")),
+            color_depth=self.color_depth,
             key_bindings=merge_key_bindings([
                 merge_key_bindings([
                     ConditionalKeyBindings(
