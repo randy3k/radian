@@ -18,7 +18,7 @@ from pygments.styles import get_style_by_name
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.enums import EditingMode
 
-from .modalprompt import create_modal_prompt
+from .rtichokeprompt import create_rtichoke_prompt
 
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
@@ -123,10 +123,8 @@ class RtichokeApplication(object):
         if interface.rcopy(interface.reval("rc.settings('ipck')")) is None:
             interface.reval("rc.settings(ipck = TRUE)")
 
-        interface.installed_packages()
-
         # print welcome message
-        sys.stdout.write(interface.greeting())
+        mp.app.output.write(interface.greeting())
 
     def get_inputhook(self):
         terminal_width = [None]
@@ -155,20 +153,21 @@ class RtichokeApplication(object):
     def run(self, options):
         self.set_cli_options(options)
 
-        mp = create_modal_prompt(options, history_file=".rtichoke_history", inputhook=self.get_inputhook())
-        mp.interrupted = False
+        mp = create_rtichoke_prompt(
+            options, history_file=".rtichoke_history", inputhook=self.get_inputhook())
+        interrupted = [False]
 
         def result_from_prompt(message, add_history=1):
             if not self.initialized:
                 self.app_initialize(mp)
                 message = mp.default_prompt
                 self.initialized = True
-                sys.stdout.write("\n")
+                mp.app.output.write("\n")
             else:
-                if mp.interrupted:
-                    mp.interrupted = False
+                if interrupted[0]:
+                    interrupted[0] = False
                 elif mp.insert_new_line:
-                    sys.stdout.write("\n")
+                    mp.app.output.write("\n")
 
             mp.add_history = add_history == 1
 
@@ -211,7 +210,7 @@ class RtichokeApplication(object):
                         return None
                 except KeyboardInterrupt:
                     if mp.prompt_mode in ["readline"]:
-                        mp.interrupted = True
+                        interrupted[0] = True
                         api.interrupts_pending(True)
                         api.check_user_interrupt()
                     else:

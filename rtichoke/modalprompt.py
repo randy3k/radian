@@ -22,31 +22,15 @@ from prompt_toolkit.layout.menus import MultiColumnCompletionsMenu
 from prompt_toolkit.layout.processors import \
     HighlightIncrementalSearchProcessor, HighlightSelectionProcessor, \
     HighlightMatchingBracketProcessor, DisplayMultipleCursors
-from prompt_toolkit.lexers import PygmentsLexer, DynamicLexer
+from prompt_toolkit.lexers import DynamicLexer
 from prompt_toolkit.widgets.toolbars import SearchToolbar
 from prompt_toolkit.output import get_default_output, ColorDepth
 from prompt_toolkit.shortcuts.prompt import _split_multiline_prompt
 from prompt_toolkit.styles import DynamicStyle
-from prompt_toolkit.utils import is_windows
-
-import sys
 import os
-from pygments.lexers.r import SLexer
 
 from .modalbuffer import ModalBuffer
-from .modalhistory import ModalInMemoryHistory, ModalFileHistory
-from . import shell_cmd
-from .keybinding import create_prompt_bindings, create_keybindings
-from .completion import RCompleter, SmartPathCompleter
-
-
-if not is_windows():
-    from prompt_toolkit.input.vt100 import Vt100Input
-
-    class CustomVt100Input(Vt100Input):
-        @property
-        def responds_to_cpr(self):
-            return False
+from .keybinding import create_prompt_bindings
 
 
 class ModalPrompt(object):
@@ -82,22 +66,15 @@ class ModalPrompt(object):
         self.editing_mode = editing_mode
         self.history = history
         self.lexer = lexer
-        self.style = None
+        self.style = style
         self.completer = completer
         self.extra_key_bindings = extra_key_bindings
         self.tempfile_suffix = tempfile_suffix
-        if not is_windows():
-            self.input = input or CustomVt100Input(sys.stdin)
-        else:
-            self.input = input or get_default_input()
+        self.input = input or get_default_input()
         self.output = output or get_default_output()
-
         self.after_render = after_render
-
         self.accept = accept
-
         self.inputhook = inputhook
-
         self.create_application()
 
     def set_prompt_mode_message(self, mode, message):
@@ -268,66 +245,3 @@ class ModalPrompt(object):
         finally:
             for name in _fields:
                 setattr(self, name, backup[name])
-
-
-def create_modal_prompt(options, history_file, inputhook):
-
-    def get_lexer():
-        if mp.prompt_mode in ["r", "browse"]:
-            return PygmentsLexer(SLexer)
-        return None
-
-    def get_completer():
-        if mp.prompt_mode in ["r", "browse"]:
-            return RCompleter(timeout=mp.completion_timeout)
-        elif mp.prompt_mode == "shell":
-            return SmartPathCompleter()
-        return None
-
-    def get_history():
-        if options.no_history:
-            return ModalInMemoryHistory()
-        elif not options.global_history and os.path.exists(history_file):
-            return ModalFileHistory(os.path.abspath(history_file))
-        else:
-            return ModalFileHistory(os.path.join(os.path.expanduser("~"), history_file))
-
-    def accept(buff):
-        buff.last_working_index = buff.working_index
-        app = get_app()
-
-        if mp.prompt_mode == "browse":
-            if buff.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
-                mp.add_history = False
-
-        if mp.prompt_mode in ["r", "browse", "readline"]:
-            app.exit(result=buff.document.text)
-            app.pre_run_callables.append(buff.reset)
-
-        elif mp.prompt_mode in ["shell"]:
-            # buffer will be reset to empty, we need to append history at this time point.
-            mp.add_history = True
-            buff.append_to_history()
-            if mp.insert_new_line:
-                sys.stdout.write("\n")
-            shell_cmd.run_shell_command(buff.text)
-            buff.reset()
-
-    mp = ModalPrompt(
-        lexer=DynamicLexer(get_lexer),
-        completer=DynamicCompleter(get_completer),
-        history=get_history(),
-        extra_key_bindings=create_keybindings(),
-        tempfile_suffix=".R",
-        accept=accept,
-        inputhook=inputhook
-    )
-
-    # r mode message is set by RtichokeApplication.app_initialize()
-    mp.prompt_mode = "r"
-    mp.top_level_modes = ["r", "shell"]
-
-    mp.auto_width = False
-    mp.add_history = False
-
-    return mp
