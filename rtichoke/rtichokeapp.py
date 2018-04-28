@@ -207,13 +207,13 @@ class RtichokeApplication(object):
                         print(e)
                         import traceback
                         traceback.print_exc()
-                        return None
+                        sys.exit(1)
                 except KeyboardInterrupt:
                     if mp.prompt_mode in ["readline"]:
                         interrupted[0] = True
                         api.interrupts_pending(True)
                         api.check_user_interrupt()
-                    else:
+                    elif mp.insert_new_line:
                         mp.app.output.write("\n")
 
             return text
