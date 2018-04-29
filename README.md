@@ -120,6 +120,11 @@ $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
 $ rtichoke
 ```
 
+### Fail to load library
+
+Some packages may not be loaded properly with `rtichoke` but they work well with the bare R. The issue could be caused by several reasons, check
+[#38](https://github.com/randy3k/rtichoke/issues/38) and [#46](https://github.com/randy3k/rtichoke/issues/46). Open an issue if it still doesn't work.
+
 ### History file
 
 _rtichoke_ maintains its own history file `.rtichoke_history` and doesn't use the `.Rhistory` file. A local `.rtichoke_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rtichoke_history` would be used. To override the default behavior, you could launch _rtichoke_ with the options: `rtichoke --local-history`, `rtichoke --global-history` or `rtichoke --no-history`.
