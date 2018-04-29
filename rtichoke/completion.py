@@ -39,21 +39,19 @@ class RCompleter(Completer):
             sys.stderr = None
             try:
                 interface.reval("""
-                    tryCatch(
+                    local({{tryCatch(
                         {{
-                            local({{
-                                if ({settimelimit}) base::setTimeLimit({timeout})
-                                utils:::.completeToken()
-                                if ({settimelimit}) base::setTimeLimit()
-                            }})
+                            if ({settimelimit}) base::setTimeLimit({timeout})
+                            utils:::.completeToken()
+                            if ({settimelimit}) base::setTimeLimit()
                         }},
                         error = function(e) {{
-                            base::setTimeLimit()
+                            if ({settimelimit}) base::setTimeLimit()
                             assign("comps", NULL, env = utils:::.CompletionEnv)
                         }}
-                    )
+                    )}})
                     """.format(
-                        settimelimit="TRUE" if not completion_requested else "FALSE",
+                        settimelimit="TRUE" if not completion_requested and self.timeout > 0 else "FALSE",
                         timeout=str(self.timeout))
                 )
             except Exception as e:

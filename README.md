@@ -65,6 +65,7 @@ options(
 
     # pop up completion while typing
     rtichoke.complete_while_typing = TRUE,
+    # timeout to cancel completion if it takes too long, set it to 0 to disable it
     rtichoke.complete_timeout = 0.05,
 
     # automatically adjust R buffer size based on terminal width
@@ -146,6 +147,19 @@ libreadline.so.6: undefined symbol: PC
 If you are using conda and encounter this error, it is likely because the `readline` from conda is bugged. Install it again via `conda-forge`.
 ```python
 conda install -c conda-forge readline=6.2
+```
+
+### setTimeLimit not working
+
+`rtichoke` utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
+global environment. A workaround is to put the code inside a block or a function,
+
+```r
+{
+    setTimeLimit(1)
+    while(1) {}
+    setTimeLimit()
+}
 ```
 
 
