@@ -245,4 +245,9 @@ def create_keybindings():
     # def _(event):
     #     event.current_buffer.complete_state = None
 
+    @handle('escape', 'enter', filter=emacs_insert_mode)
+    def _(event):
+        copy_margin = not in_paste_mode() and event.app.auto_indentation
+        event.current_buffer.newline(copy_margin=copy_margin)
+
     return kb
