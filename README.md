@@ -65,7 +65,7 @@ options(
 
     # pop up completion while typing
     rtichoke.complete_while_typing = TRUE,
-    # timeout to cancel completion if it takes too long, set it to 0 to disable it
+    # timeout in seconds to cancel completion if it takes too long, set it to 0 to disable it
     rtichoke.complete_timeout = 0.05,
 
     # automatically adjust R buffer size based on terminal width
