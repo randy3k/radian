@@ -32,10 +32,14 @@ class ModalBuffer(Buffer):
         self.search_history = []
         super(ModalBuffer, self).reset(document, append_to_history)
 
+    def _set_history_search(self):
+        if self._is_last_history():
+            self.history_search_text = self.document.text_before_cursor
+
     def history_forward(self, count=1):
         if len(self.text) == 0 and self._is_last_history() and self.last_working_index >= 0:
             self.go_to_history(self.last_working_index)
-            self.history_search_text = ""
+            self.history_search_text = None
             self.last_working_index = -1
 
         super(ModalBuffer, self).history_forward(count)
