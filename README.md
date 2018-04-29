@@ -156,6 +156,8 @@ libreadline.so.6: undefined symbol: PC
 If you are using conda and encounter this error, it is likely because the `readline` from conda is bugged. Install it again via `conda-forge`.
 ```python
 conda install -c conda-forge readline=6.2
+# or
+conda upgrade -c conda-forge readline
 ```
 
 ### setTimeLimit not working
