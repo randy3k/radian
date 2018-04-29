@@ -4,9 +4,12 @@
 
 <img src="rtichoke.png"></img>
 
-_rtichoke_ is an enhanced console for the R program. `rtichoke` is built on top of the python library `prompt-toolkit`. In some sense, one would consider `rtichoke` as a [ipython](https://github.com/ipython/ipython) clone for R. _rtichoke_ was previously named as _rice_.
+_rtichoke_ is an improved console for the R program with multiline editing and rich syntax highlight and more ...
 
-_rtichoke_ is still under active development, any feedbacks will be welcome. Users should also use it at their own risks 
+
+Under the hood, _rtichoke_ is built on top of the python library `prompt-toolkit`. One would consider _rtichoke_ as a [ipython](https://github.com/ipython/ipython) clone for R, though the keybindings of _rtichoke_ are closely resembling those of [julia](https://julialang.org).
+
+Any feedbacks will be welcome. However, users should use it at their own risks.
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
@@ -18,6 +21,7 @@ _rtichoke_ is still under active development, any feedbacks will be welcome. Use
 - [x] multiline editing
 - [x] syntax highlight
 - [x] auto completion
+- [x] better history search and navigation
 - [x] auto matching parens/quotes.
 - [x] brackated paste mode
 - [x] cross platform, runs on Windows, macOS and Linux
@@ -89,12 +93,12 @@ options(
 
 ## Alias on unix system
 
-You could alias `r` to `rtichoke` by putting
+You could alias `r` to _rtichoke_ by putting
 
 ```bash
 alias r="rtichoke"
 ```
-in `~/.bash_profile` such that `r` would open `rtichoke` and `R` would still open the tranditional R console.
+in `~/.bash_profile` such that `r` would open _rtichoke_ and `R` would still open the tranditional R console.
 (`R` is still useful, e.g, running `R CMD BUILD`.)
 
 ## FAQ
@@ -118,7 +122,7 @@ $ rtichoke
 
 ### History file
 
-_rtichoke_ maintains its own history file `.rtichoke_history` and doesn't use the `.Rhistory` file. A local `.rtichoke_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rtichoke_history` would be used. To override the default behavior, you could launch `rtichoke` with the options: `rtichoke --local-history`, `rtichoke --global-history` or `rtichoke --no-history`.
+_rtichoke_ maintains its own history file `.rtichoke_history` and doesn't use the `.Rhistory` file. A local `.rtichoke_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rtichoke_history` would be used. To override the default behavior, you could launch _rtichoke_ with the options: `rtichoke --local-history`, `rtichoke --global-history` or `rtichoke --no-history`.
 
 
 ### Does it slow down my R program?
@@ -151,7 +155,7 @@ conda install -c conda-forge readline=6.2
 
 ### setTimeLimit not working
 
-`rtichoke` utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
+_rtichoke_ utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
 global environment. A workaround is to put the code inside a block or a function,
 
 ```r
@@ -165,8 +169,8 @@ global environment. A workaround is to put the code inside a block or a function
 
 ## Credits
 
-`rtichoke` wouldn't be possible witout the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
+_rtichoke_ wouldn't be possible witout the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
 
-The name `rtichoke` was suggested by [thefringthing](https://www.reddit.com/r/rstats/comments/7zibhj/any_suggestions_of_a_new_name_of_rice/).
+The name _rtichoke_ was suggested by [thefringthing](https://www.reddit.com/r/rstats/comments/7zibhj/any_suggestions_of_a_new_name_of_rice/).
 
 <div>Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
