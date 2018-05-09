@@ -255,9 +255,9 @@ class RtichokeApplication(object):
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(result_from_prompt))
         embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
-        # embedded.set_callback("R_Busy", None)
-        # embedded.set_callback("R_PolledEvents", None)
-        # embedded.set_callback("R_YesNoCancel", None)
+        embedded.set_callback("R_Busy", rapi.defaults.R_Busy)
+        embedded.set_callback("R_PolledEvents", rapi.defaults.R_PolledEvents)
+        embedded.set_callback("R_YesNoCancel", rapi.defaults.R_YesNoCancel)
 
         embedded.initialize(libR, arguments=["rapi", "--quiet", "--no-save"])
 
