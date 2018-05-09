@@ -7,9 +7,13 @@ import rapi
 
 def encoding():
     if sys.platform == "win32":
-        cp = rapi.utils.cglobal("localeCP", rapi.libR, ctypes.c_int)
-        if cp and cp.value:
-            return "cp" + str(cp.value)
+        if rapi.libR:
+            try:
+                cp = rapi.utils.cglobal("localeCP", rapi.libR, ctypes.c_int)
+                if cp and cp.value:
+                    return "cp" + str(cp.value)
+            except Exception:
+                pass
 
     return "utf-8"
 
