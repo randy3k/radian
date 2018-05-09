@@ -70,6 +70,67 @@ def greeting():
         info["version.string"], info["nickname"], info["platform"], 8 * struct.calcsize("P"))
 
 
+def get_prompt(mp):
+    interrupted = [False]
+
+    def _(message, add_history=1):
+        if interrupted[0]:
+            interrupted[0] = False
+        elif mp.insert_new_line:
+            mp.app.output.write("\n")
+
+        mp.add_history = add_history == 1
+
+        text = None
+
+        # a hack to stop rtichoke when exiting if an error occurs in process_events
+        # however, please note that it doesn't in general guarantee to work
+        # the best practice is to restart rtichoke
+        if mp.app._is_running:
+            mp.app._is_running = False
+            set_event_loop(None)
+
+        while text is None:
+            try:
+                if message == mp.default_prompt:
+                    mp.prompt_mode = "r"
+                elif BROWSE_PATTERN.match(message):
+                    level = BROWSE_PATTERN.match(message).group(1)
+                    mp.prompt_mode = "browse"
+                    mp.set_prompt_mode_message(
+                        "browse",
+                        ANSI(mp.browse_prompt.format(level)))
+                else:
+                    # invoked by `readline`
+                    mp.prompt_mode = "readline"
+                    mp.set_prompt_mode_message("readline", ANSI(message))
+
+                text = mp.run()
+
+            except Exception as e:
+                if isinstance(e, EOFError):
+                    # todo: confirmation in "r" mode
+                    return None
+                else:
+                    print("unexpected error was caught.")
+                    print("please report to https://github.com/randy3k/rtichoke for such error.")
+                    print(e)
+                    import traceback
+                    traceback.print_exc()
+                    sys.exit(1)
+            except KeyboardInterrupt:
+                if mp.prompt_mode in ["readline"]:
+                    interrupted[0] = True
+                    interrupts_pending(True)
+                    check_user_interrupt()
+                elif mp.insert_new_line:
+                    mp.app.output.write("\n")
+
+        return text
+
+    return _
+
+
 class RtichokeApplication(object):
     r_home = None
 
@@ -163,69 +224,13 @@ class RtichokeApplication(object):
         self.set_env_vars(options)
 
         mp = create_rtichoke_prompt(options, history_file=".rtichoke_history")
-        interrupted = [False]
-
-        def result_from_prompt(message, add_history=1):
-            if interrupted[0]:
-                interrupted[0] = False
-            elif mp.insert_new_line:
-                mp.app.output.write("\n")
-
-            mp.add_history = add_history == 1
-
-            text = None
-
-            # a hack to stop rtichoke when exiting if an error occurs in process_events
-            # however, please note that it doesn't in general guarantee to work
-            # the best practice is to restart rtichoke
-            if mp.app._is_running:
-                mp.app._is_running = False
-                set_event_loop(None)
-
-            while text is None:
-                try:
-                    if message == mp.default_prompt:
-                        mp.prompt_mode = "r"
-                    elif BROWSE_PATTERN.match(message):
-                        level = BROWSE_PATTERN.match(message).group(1)
-                        mp.prompt_mode = "browse"
-                        mp.set_prompt_mode_message(
-                            "browse",
-                            ANSI(mp.browse_prompt.format(level)))
-                    else:
-                        # invoked by `readline`
-                        mp.prompt_mode = "readline"
-                        mp.set_prompt_mode_message("readline", ANSI(message))
-
-                    text = mp.run()
-
-                except Exception as e:
-                    if isinstance(e, EOFError):
-                        # todo: confirmation in "r" mode
-                        return None
-                    else:
-                        print("unexpected error was caught.")
-                        print("please report to https://github.com/randy3k/rtichoke for such error.")
-                        print(e)
-                        import traceback
-                        traceback.print_exc()
-                        sys.exit(1)
-                except KeyboardInterrupt:
-                    if mp.prompt_mode in ["readline"]:
-                        interrupted[0] = True
-                        interrupts_pending(True)
-                        check_user_interrupt()
-                    elif mp.insert_new_line:
-                        mp.app.output.write("\n")
-
-            return text
 
         ensure_path(self.r_home)
         libR = get_libR(self.r_home)
         globals()["libR"] = libR
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
-        embedded.set_callback("R_ReadConsole", callbacks.create_read_console(result_from_prompt))
+        embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(mp)))
         embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
         embedded.set_callback("R_Busy", rapi.defaults.R_Busy)
         embedded.set_callback("R_PolledEvents", rapi.defaults.R_PolledEvents)
