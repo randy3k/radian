@@ -20,6 +20,7 @@ def main():
     parser.add_option("--vanilla", action="store_true", dest="vanilla", help="Combine --no-history --no-environ --no-site-file --no-init-file")
     parser.add_option("--ask-save", action="store_true", dest="ask_save", help="Ask to save R data")
     parser.add_option("--restore-data", action="store_true", dest="restore_data", help="Restore previously saved objects")
+    parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
 
     options, args = parser.parse_args()
 

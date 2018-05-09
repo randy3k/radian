@@ -252,7 +252,7 @@ class RtichokeApplication(object):
 
         embedded.initialize(libR, arguments=args)
 
-        bootstrap(libR, verbose=True)  # should be set False
+        bootstrap(libR, verbose=options.debug)
 
         self.prompt_initialize(mp)
 
