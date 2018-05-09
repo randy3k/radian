@@ -87,15 +87,14 @@ def create_rtichoke_prompt(options, history_file):
 
     def accept(buff):
         buff.last_working_index = buff.working_index
-        app = get_app()
 
         if mp.prompt_mode == "browse":
             if buff.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
                 mp.add_history = False
 
         if mp.prompt_mode in ["r", "browse", "readline"]:
-            app.exit(result=buff.document.text)
-            app.pre_run_callables.append(buff.reset)
+            mp.app.exit(result=buff.document.text)
+            mp.app.pre_run_callables.append(buff.reset)
 
         elif mp.prompt_mode in ["shell"]:
             # buffer will be reset to empty, we need to append history at this time point.
@@ -115,21 +114,15 @@ def create_rtichoke_prompt(options, history_file):
         terminal_width = [None]
 
         def _(context):
-            tic = 0
             while True:
                 if context.input_is_ready():
                     break
                 interface.process_events()
 
-                app = get_app()
-                if tic == 10:
-                    tic = 0
-                    output_width = app.output.get_size().columns
-                    if output_width and terminal_width[0] != output_width:
-                        terminal_width[0] = output_width
-                        interface.set_option("width", max(terminal_width[0], 20))
-
-                tic += 1
+                output_width = mp.app.output.get_size().columns
+                if output_width and terminal_width[0] != output_width:
+                    terminal_width[0] = output_width
+                    interface.set_option("width", max(terminal_width[0], 20))
                 time.sleep(1.0 / 30)
 
         return _
