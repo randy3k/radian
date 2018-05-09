@@ -30,7 +30,8 @@ setup(
     install_requires=[
         'pygments',
         'six',
-        'wcwidth'
+        'wcwidth',
+        'rapi>=0.0.3'
     ],
     entry_points={
         'console_scripts': [

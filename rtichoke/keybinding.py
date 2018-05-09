@@ -9,8 +9,10 @@ from prompt_toolkit.filters import Condition, has_focus, \
     emacs_insert_mode, vi_insert_mode, in_paste_mode, app
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
-from . import interface
+from rapi.interface import rexec_p, rstring_p
+from rapi.internals import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
 
+from ctypes import c_int
 
 default_focussed = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
@@ -23,7 +25,14 @@ def prompt_mode(*modes):
 @Condition
 def prase_complete():
     app = get_app()
-    return interface.prase_input_complete(app.current_buffer.text)
+    status = c_int()
+    s = Rf_protect(rstring_p(app.current_buffer.text))
+    try:
+        rexec_p(R_ParseVector, s, -1, status, R_NilValue)
+    finally:
+        Rf_unprotect(1)
+        return True
+    return status.value != 2
 
 
 def preceding_text(pattern):

@@ -5,8 +5,7 @@ import sys
 import shlex
 import re
 
-from . import api
-from . import interface
+from rapi.interface import rcall, reval, rcopy, rstring, rint
 
 from six import text_type
 
@@ -26,10 +25,9 @@ class RCompleter(Completer):
         text = document.current_line_before_cursor
 
         completions = []
-        interface.rcall(interface.reval("utils:::.assignLinebuffer"), api.mk_string(text))
-        interface.rcall(interface.reval("utils:::.assignEnd"), api.scalar_integer(len(text)))
-        token = interface.rcopy(
-            interface.rcall(interface.reval("utils:::.guessTokenFromLine")))[0]
+        rcall(reval("utils:::.assignLinebuffer"), rstring(text))
+        rcall(reval("utils:::.assignEnd"), rint(len(text)))
+        token = rcopy(str, rcall(reval("utils:::.guessTokenFromLine")))
         completion_requested = complete_event.completion_requested
         completions = []
         library_prefix = LIBRARY_PATTERN.match(text)
@@ -38,7 +36,7 @@ class RCompleter(Completer):
             orig_stderr = sys.stderr
             sys.stderr = None
             try:
-                interface.reval("""
+                reval("""
                     local(suppressWarnings({{tryCatch(
                         {{
                             if ({settimelimit}) base::setTimeLimit({timeout})
@@ -52,14 +50,13 @@ class RCompleter(Completer):
                     )}}))
                     """.format(
                         settimelimit="TRUE" if not completion_requested and self.timeout > 0 else "FALSE",
-                        timeout=str(self.timeout))
-                )
+                        timeout=str(self.timeout)))
             except Exception as e:
                 return
             finally:
                 sys.stderr = orig_stderr
 
-            completions = interface.rcopy(interface.rcall(interface.reval("utils:::.retrieveCompletions")))
+            completions = rcopy(list, rcall(reval("utils:::.retrieveCompletions")))
             if not completions:
                 completions = []
 
@@ -68,7 +65,7 @@ class RCompleter(Completer):
 
         if token and not library_prefix:
             if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
-                packages = interface.installed_packages()
+                packages = rcopy(list, reval("base::rownames(installed.packages())"))
                 for p in packages:
                     if p.startswith(token):
                         comp = p + "::"

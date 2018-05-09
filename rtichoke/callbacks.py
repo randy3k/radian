@@ -2,12 +2,17 @@ from __future__ import unicode_literals
 import ctypes
 import sys
 import re
+import rapi
 
-# to be set by RtichokeApplication
-if sys.platform.startswith("win"):
-    ENCODING = "latin-1"
-else:
-    ENCODING = "utf-8"
+
+def encoding():
+    if sys.platform == "win32":
+        cp = rapi.utils.cglobal("localeCP", rapi.libR, ctypes.c_int)
+        if cp and cp.value:
+            return "cp" + str(cp.value)
+
+    return "utf-8"
+
 
 UTFPATTERN = re.compile(b"\x02\xff\xfe(.*?)\x03\xff\xfe")
 
@@ -17,10 +22,10 @@ def create_read_console(get_text):
 
     def _read_console(p, buf, buflen, add_history):
         if not code[0]:
-            text = get_text(p.decode(ENCODING), add_history)
+            text = get_text(p.decode(encoding()), add_history)
             if text is None:
                 return 0
-            code[0] = text.encode(ENCODING)
+            code[0] = text.encode(encoding())
 
         addr = ctypes.addressof(buf.contents)
         c2 = (ctypes.c_char * buflen).from_address(addr)
@@ -47,7 +52,7 @@ def rconsole2str(buf, encoding):
 
 
 def write_console_ex(buf, buflen, otype):
-    buf = rconsole2str(buf, ENCODING)
+    buf = rconsole2str(buf, encoding())
     if otype == 0:
         sys.stdout.write(buf)
         sys.stdout.flush()
@@ -63,7 +68,7 @@ def clean_up(save_type, status, runlast):
 
 
 def show_message(buf):
-    buf = rconsole2str(buf, ENCODING)
+    buf = rconsole2str(buf, encoding())
     sys.stdout.write(buf)
     sys.stdout.flush()
 
@@ -71,7 +76,7 @@ def show_message(buf):
 def ask_yes_no_cancel(string):
     while True:
         try:
-            result = str(input("{} [y/n/c]: ".format(string.decode(ENCODING))))
+            result = str(input("{} [y/n/c]: ".format(string.decode(encoding()))))
             if result in ["Y", "y"]:
                 return 1
             elif result in ["N", "n"]:

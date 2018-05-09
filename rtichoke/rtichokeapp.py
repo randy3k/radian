@@ -4,10 +4,15 @@ import time
 import os
 import re
 
-from .session import RSession
-from . import interface
-from . import api
 from . import callbacks
+
+import rapi
+from rapi import get_libR, embedded, ensure_path, bootstrap, interface
+from rapi import rcopy, rsym, rcall
+from rapi.utils import cglobal, ccall
+
+from ctypes import c_int
+import struct
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop import set_event_loop
@@ -38,6 +43,30 @@ difficulties in loading `reticulate`.
 """.format(sys.executable).strip()
 
 
+def interrupts_pending(pending=True):
+    if sys.platform == "win32":
+        cglobal("UserBreak", rapi.libR, c_int).value = int(pending)
+    else:
+        cglobal("R_interrupts_pending", rapi.libR, c_int).value = int(pending)
+
+
+def check_user_interrupt():
+    ccall("R_CheckUserInterrupt", rapi.libR, None, [])
+
+
+def reticulate_set_message(message):
+    rapi.reval("""
+    setHook(packageEvent("reticulate", "onLoad"),
+            function(...) packageStartupMessage("{}"))
+    """.format(message.replace('\\', '\\\\').replace('"', '\\"')))
+
+
+def greeting():
+    info = rcopy(rcall(rsym("R.Version")))
+    return "{} -- \"{}\"\nPlatform: {} ({}-bit)\n".format(
+        info["version.string"], info["nickname"], info["platform"], 8 * struct.calcsize("P"))
+
+
 class RtichokeApplication(object):
     initialized = False
     r_home = None
@@ -46,7 +75,7 @@ class RtichokeApplication(object):
         self.r_home = r_home
         super(RtichokeApplication, self).__init__()
 
-    def set_cli_options(self, options):
+    def set_env_vars(self, options):
         if options.vanilla:
             options.no_history = True
             options.no_environ = True
@@ -67,13 +96,15 @@ class RtichokeApplication(object):
             if not os.path.exists(".rtichoke_history"):
                 open(".rtichoke_history", 'w+').close()
 
-    def app_initialize(self, mp):
-        if sys.platform.startswith('win'):
-            encoding = api.encoding()
-            callbacks.ENCODING = encoding
+        os.environ["RETICULATE_PYTHON"] = sys.executable
 
+        os.environ["R_DOC_DIR"] = os.path.join(self.r_home, "doc")
+        os.environ["R_INCLUDE_DIR"] = os.path.join(self.r_home, "include")
+        os.environ["R_SHARE_DIR"] = os.path.join(self.r_home, "share")
+
+    def app_initialize(self, mp):
         if not interface.get_option("rtichoke.suppress_reticulate_message", False):
-            interface.reticulate_set_message(RETICULATE_MESSAGE)
+            reticulate_set_message(RETICULATE_MESSAGE)
 
         if interface.get_option("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
             mp.app.editing_mode = EditingMode.VI
@@ -124,7 +155,7 @@ class RtichokeApplication(object):
             interface.reval("rc.settings(ipck = TRUE)")
 
         # print welcome message
-        mp.app.output.write(interface.greeting())
+        mp.app.output.write(greeting())
 
     def get_inputhook(self):
         terminal_width = [None]
@@ -134,7 +165,7 @@ class RtichokeApplication(object):
             while True:
                 if context.input_is_ready():
                     break
-                api.process_events()
+                interface.process_events()
 
                 app = get_app()
                 if tic == 10:
@@ -151,7 +182,7 @@ class RtichokeApplication(object):
         return process_events
 
     def run(self, options):
-        self.set_cli_options(options)
+        self.set_env_vars(options)
 
         mp = create_rtichoke_prompt(
             options, history_file=".rtichoke_history", inputhook=self.get_inputhook())
@@ -211,21 +242,24 @@ class RtichokeApplication(object):
                 except KeyboardInterrupt:
                     if mp.prompt_mode in ["readline"]:
                         interrupted[0] = True
-                        api.interrupts_pending(True)
-                        api.check_user_interrupt()
+                        interrupts_pending(True)
+                        check_user_interrupt()
                     elif mp.insert_new_line:
                         mp.app.output.write("\n")
 
             return text
 
-        rsession = RSession(self.r_home)
-        rsession.read_console = callbacks.create_read_console(result_from_prompt)
-        rsession.write_console_ex = callbacks.write_console_ex
-        rsession.clean_up = callbacks.clean_up
-        rsession.show_message = callbacks.show_message
-        rsession.ask_yes_no_cancel = callbacks.ask_yes_no_cancel  # windows only
+        libR = get_libR(self.r_home)
+        ensure_path(self.r_home)
 
-        # to make api work
-        api.rsession = rsession
+        embedded.set_callback("R_ShowMessage", callbacks.show_message)
+        embedded.set_callback("R_ReadConsole", callbacks.create_read_console(result_from_prompt))
+        embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
+        # embedded.set_callback("R_Busy", None)
+        # embedded.set_callback("R_PolledEvents", None)
+        # embedded.set_callback("R_YesNoCancel", None)
 
-        rsession.run(options)
+        embedded.initialize(libR, arguments=["rapi", "--quiet", "--no-save"])
+
+        bootstrap(libR, verbose=True)  # should be set False
+        embedded.run_loop(libR)
