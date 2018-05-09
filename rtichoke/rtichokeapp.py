@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import sys
-import time
 import os
 import re
 
@@ -14,7 +13,6 @@ from rapi.utils import cglobal, ccall
 from ctypes import c_int
 import struct
 
-from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop import set_event_loop
 
 from prompt_toolkit.styles import style_from_pygments_cls
@@ -43,15 +41,20 @@ difficulties in loading `reticulate`.
 """.format(sys.executable).strip()
 
 
+# ugly hack, works for now
+libR = None
+
+
 def interrupts_pending(pending=True):
+
     if sys.platform == "win32":
-        cglobal("UserBreak", rapi.libR, c_int).value = int(pending)
+        cglobal("UserBreak", libR, c_int).value = int(pending)
     else:
-        cglobal("R_interrupts_pending", rapi.libR, c_int).value = int(pending)
+        cglobal("R_interrupts_pending", libR, c_int).value = int(pending)
 
 
 def check_user_interrupt():
-    ccall("R_CheckUserInterrupt", rapi.libR, None, [])
+    ccall("R_CheckUserInterrupt", libR, None, [])
 
 
 def reticulate_set_message(message):
@@ -68,7 +71,6 @@ def greeting():
 
 
 class RtichokeApplication(object):
-    initialized = False
     r_home = None
 
     def __init__(self, r_home):
@@ -102,7 +104,7 @@ class RtichokeApplication(object):
         os.environ["R_INCLUDE_DIR"] = os.path.join(self.r_home, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(self.r_home, "share")
 
-    def app_initialize(self, mp):
+    def prompt_initialize(self, mp):
         if not interface.get_option("rtichoke.suppress_reticulate_message", False):
             reticulate_set_message(RETICULATE_MESSAGE)
 
@@ -157,48 +159,17 @@ class RtichokeApplication(object):
         # print welcome message
         mp.app.output.write(greeting())
 
-    def get_inputhook(self):
-        terminal_width = [None]
-
-        def process_events(context):
-            tic = 0
-            while True:
-                if context.input_is_ready():
-                    break
-                interface.process_events()
-
-                app = get_app()
-                if tic == 10:
-                    tic = 0
-                    output_width = app.output.get_size().columns
-                    if output_width and terminal_width[0] != output_width:
-                        terminal_width[0] = output_width
-                        interface.set_option("width", max(terminal_width[0], 20))
-
-                tic += 1
-
-                time.sleep(1.0 / 30)
-
-        return process_events
-
     def run(self, options):
         self.set_env_vars(options)
 
-        mp = create_rtichoke_prompt(
-            options, history_file=".rtichoke_history", inputhook=self.get_inputhook())
+        mp = create_rtichoke_prompt(options, history_file=".rtichoke_history")
         interrupted = [False]
 
         def result_from_prompt(message, add_history=1):
-            if not self.initialized:
-                self.app_initialize(mp)
-                message = mp.default_prompt
-                self.initialized = True
+            if interrupted[0]:
+                interrupted[0] = False
+            elif mp.insert_new_line:
                 mp.app.output.write("\n")
-            else:
-                if interrupted[0]:
-                    interrupted[0] = False
-                elif mp.insert_new_line:
-                    mp.app.output.write("\n")
 
             mp.add_history = add_history == 1
 
@@ -251,6 +222,7 @@ class RtichokeApplication(object):
 
         ensure_path(self.r_home)
         libR = get_libR(self.r_home)
+        globals()["libR"] = libR
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(result_from_prompt))
@@ -259,7 +231,29 @@ class RtichokeApplication(object):
         embedded.set_callback("R_PolledEvents", rapi.defaults.R_PolledEvents)
         embedded.set_callback("R_YesNoCancel", rapi.defaults.R_YesNoCancel)
 
-        embedded.initialize(libR, arguments=["rapi", "--quiet", "--no-save"])
+        args = ["rapi", "--quiet", "--no-restore-history"]
+
+        if options.no_environ:
+            args.append("--no-environ")
+
+        if options.no_site_file:
+            args.append("--no-site-file")
+
+        if options.no_init_file:
+            args.append("--no-init-file")
+
+        if options.ask_save is not True:
+            args.append("--no-save")
+
+        if options.restore_data:
+            args.append("--restore-data")
+        else:
+            args.append("--no-restore-data")
+
+        embedded.initialize(libR, arguments=args)
 
         bootstrap(libR, verbose=True)  # should be set False
+
+        self.prompt_initialize(mp)
+
         embedded.run_loop(libR)

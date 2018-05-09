@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import errno
 
 from prompt_toolkit.application.current import get_app
@@ -9,6 +10,8 @@ from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 
 from pygments.lexers.r import SLexer
+
+from rapi import interface
 
 from .modalprompt import ModalPrompt
 from .modalhistory import ModalInMemoryHistory, ModalFileHistory
@@ -61,7 +64,7 @@ if not is_windows():
                     raise
 
 
-def create_rtichoke_prompt(options, history_file, inputhook):
+def create_rtichoke_prompt(options, history_file):
 
     def get_lexer():
         if mp.prompt_mode in ["r", "browse"]:
@@ -108,6 +111,29 @@ def create_rtichoke_prompt(options, history_file, inputhook):
     else:
         output = CustomVt100Output.from_pty(sys.stdout, term=get_term_environment_variable())
 
+    def get_inputhook():
+        terminal_width = [None]
+
+        def _(context):
+            tic = 0
+            while True:
+                if context.input_is_ready():
+                    break
+                interface.process_events()
+
+                app = get_app()
+                if tic == 10:
+                    tic = 0
+                    output_width = app.output.get_size().columns
+                    if output_width and terminal_width[0] != output_width:
+                        terminal_width[0] = output_width
+                        interface.set_option("width", max(terminal_width[0], 20))
+
+                tic += 1
+                time.sleep(1.0 / 30)
+
+        return _
+
     mp = ModalPrompt(
         lexer=DynamicLexer(get_lexer),
         completer=DynamicCompleter(get_completer),
@@ -118,7 +144,7 @@ def create_rtichoke_prompt(options, history_file, inputhook):
         accept=accept,
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,
         output=output,
-        inputhook=inputhook
+        inputhook=get_inputhook()
     )
 
     # r mode message is set by RtichokeApplication.app_initialize()
