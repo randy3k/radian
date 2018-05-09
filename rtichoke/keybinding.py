@@ -22,17 +22,21 @@ def prompt_mode(*modes):
     return Condition(lambda: get_app().mp.prompt_mode in modes)
 
 
-@Condition
-def prase_complete():
-    app = get_app()
+def prase_text_complete(text):
     status = c_int()
-    s = Rf_protect(rstring_p(app.current_buffer.text))
+    s = Rf_protect(rstring_p(text))
     try:
         rexec_p(R_ParseVector, s, -1, status, R_NilValue)
     finally:
         Rf_unprotect(1)
         return True
     return status.value != 2
+
+
+@Condition
+def prase_complete():
+    app = get_app()
+    return prase_text_complete(app.current_buffer.text)
 
 
 def preceding_text(pattern):
@@ -204,7 +208,7 @@ def create_keybindings():
 
         shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
         # todo: allow partial prase complete
-        if shouldeval and interface.prase_input_complete(data):
+        if shouldeval and prase_text_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
             event.current_buffer.validate_and_handle()
