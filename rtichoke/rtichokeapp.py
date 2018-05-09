@@ -249,8 +249,8 @@ class RtichokeApplication(object):
 
             return text
 
-        libR = get_libR(self.r_home)
         ensure_path(self.r_home)
+        libR = get_libR(self.r_home)
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(result_from_prompt))
