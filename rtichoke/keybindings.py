@@ -34,9 +34,10 @@ def prase_text_complete(text):
     s = Rf_protect(rstring_p(text))
     try:
         rexec_p(R_ParseVector, s, -1, status, R_NilValue)
+    except Exception:
+        return True
     finally:
         Rf_unprotect(1)
-        return True
     return status.value != 2
 
 
