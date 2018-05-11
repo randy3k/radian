@@ -40,7 +40,7 @@ def get_prompt(session):
     def _(message, add_history=1):
         if interrupted[0]:
             interrupted[0] = False
-        elif session.insert_new_line:
+        elif session.insert_new_line and session.current_mode_name is not "readline":
             session.app.output.write("\n")
 
         text = None
