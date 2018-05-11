@@ -50,11 +50,5 @@ def main():
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
-    from .deps import dependencies_loaded
-
-    if not dependencies_loaded:
-        print("Dependencies not loaded.")
-        return
-
     from .rtichokeapp import RtichokeApplication
     RtichokeApplication(r_home).run(options)

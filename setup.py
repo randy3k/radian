@@ -30,10 +30,8 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages('.'),
     install_requires=[
-        'pygments',
-        'six',
-        'wcwidth',
-        'rapi>=0.0.3'
+        'rapi>=0.0.3',
+        'lineedit>=0.0.1'
     ],
     entry_points={
         'console_scripts': [

@@ -6,40 +6,17 @@ import re
 from . import callbacks
 
 import rapi
-from rapi import get_libR, embedded, ensure_path, bootstrap, interface
+from rapi import get_libR, embedded, ensure_path, bootstrap
 from rapi import rcopy, rsym, rcall
 from rapi.utils import cglobal, ccall
 
 from ctypes import c_int
 import struct
 
-from prompt_toolkit.eventloop import set_event_loop
-
-from prompt_toolkit.styles import style_from_pygments_cls
-from pygments.styles import get_style_by_name
-
-from prompt_toolkit.formatted_text import ANSI
-from prompt_toolkit.enums import EditingMode
-
-from .rtichokeprompt import create_rtichoke_prompt
+from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
 
 
-PROMPT = "\x1b[34mr$>\x1b[0m "
-SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
-BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
-
-
-RETICULATE_MESSAGE = """
-The host python environment is {}
-and `rtichoke` is forcing `reticulate` to use this version of python.
-Any python packages needed, e.g., `tensorflow` and `keras`,
-have to be available to the current python environment.
-
-File an issue at https://github.com/randy3k/rtichoke if you encounter any
-difficulties in loading `reticulate`.
-""".format(sys.executable).strip()
-
 
 # ugly hack, works for now
 libR = None
@@ -57,55 +34,36 @@ def check_user_interrupt():
     ccall("R_CheckUserInterrupt", libR, None, [])
 
 
-def reticulate_set_message(message):
-    rapi.reval("""
-    setHook(packageEvent("reticulate", "onLoad"),
-            function(...) packageStartupMessage("{}"))
-    """.format(message.replace('\\', '\\\\').replace('"', '\\"')))
-
-
 def greeting():
     info = rcopy(rcall(rsym("R.Version")))
     return "{} -- \"{}\"\nPlatform: {} ({}-bit)\n".format(
         info["version.string"], info["nickname"], info["platform"], 8 * struct.calcsize("P"))
 
 
-def get_prompt(mp):
+def get_prompt(session):
     interrupted = [False]
 
     def _(message, add_history=1):
         if interrupted[0]:
             interrupted[0] = False
-        elif mp.insert_new_line:
-            mp.app.output.write("\n")
-
-        mp.add_history = add_history == 1
+        elif session.insert_new_line:
+            session.app.output.write("\n")
 
         text = None
 
-        # a hack to stop rtichoke when exiting if an error occurs in process_events
-        # however, please note that it doesn't in general guarantee to work
-        # the best practice is to restart rtichoke
-        if mp.app._is_running:
-            mp.app._is_running = False
-            set_event_loop(None)
-
         while text is None:
             try:
-                if message == mp.default_prompt:
-                    mp.prompt_mode = "r"
+                if message == session.default_prompt:
+                    session.activate_mode("r")
                 elif BROWSE_PATTERN.match(message):
-                    level = BROWSE_PATTERN.match(message).group(1)
-                    mp.prompt_mode = "browse"
-                    mp.set_prompt_mode_message(
-                        "browse",
-                        ANSI(mp.browse_prompt.format(level)))
+                    session.browse_level = BROWSE_PATTERN.match(message).group(1)
+                    session.activate_mode("browse")
                 else:
                     # invoked by `readline`
-                    mp.prompt_mode = "readline"
-                    mp.set_prompt_mode_message("readline", ANSI(message))
+                    session.activate_mode("readline")
+                    session.readline_prompt = message
 
-                text = mp.run()
+                text = session.prompt(add_history=add_history)
 
             except Exception as e:
                 if isinstance(e, EOFError):
@@ -119,12 +77,12 @@ def get_prompt(mp):
                     traceback.print_exc()
                     sys.exit(1)
             except KeyboardInterrupt:
-                if mp.prompt_mode in ["readline"]:
+                if session.current_mode_name in ["readline"]:
                     interrupted[0] = True
                     interrupts_pending(True)
                     check_user_interrupt()
-                elif mp.insert_new_line:
-                    mp.app.output.write("\n")
+                elif session.insert_new_line:
+                    session.app.output.write("\n")
 
         return text
 
@@ -165,72 +123,17 @@ class RtichokeApplication(object):
         os.environ["R_INCLUDE_DIR"] = os.path.join(self.r_home, "include")
         os.environ["R_SHARE_DIR"] = os.path.join(self.r_home, "share")
 
-    def prompt_initialize(self, mp):
-        if not interface.get_option("rtichoke.suppress_reticulate_message", False):
-            reticulate_set_message(RETICULATE_MESSAGE)
-
-        if interface.get_option("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
-            mp.app.editing_mode = EditingMode.VI
-        else:
-            mp.app.editing_mode = EditingMode.EMACS
-
-        color_scheme = interface.get_option("rtichoke.color_scheme", "native")
-        mp.style = style_from_pygments_cls(get_style_by_name(color_scheme))
-
-        mp.app.auto_match = interface.get_option("rtichoke.auto_match", False)
-        mp.app.auto_indentation = interface.get_option("rtichoke.auto_indentation", True)
-        mp.app.tab_size = int(interface.get_option("rtichoke.tab_size", 4))
-        mp.complete_while_typing = interface.get_option("rtichoke.complete_while_typing", True)
-        mp.history_search_no_duplicates = interface.get_option("rtichoke.history_search_no_duplicates", False)
-        mp.insert_new_line = interface.get_option("rtichoke.insert_new_line", True)
-
-        prompt = interface.get_option("rtichoke.prompt", None)
-        if prompt:
-            mp.set_prompt_mode_message("r", ANSI(prompt))
-        else:
-            sys_prompt = interface.get_option("prompt")
-            if sys_prompt == "> ":
-                prompt = PROMPT
-            else:
-                prompt = sys_prompt
-
-        mp.default_prompt = prompt
-        mp.set_prompt_mode_message("r", ANSI(prompt))
-        interface.set_option("prompt", prompt)
-
-        shell_prompt = interface.get_option("rtichoke.shell_prompt", SHELL_PROMPT)
-        mp.set_prompt_mode_message("shell", ANSI(shell_prompt))
-
-        mp.browse_prompt = interface.get_option("rtichoke.browse_prompt", BROWSE_PROMPT)
-
-        set_width_on_resize = interface.get_option("setWidthOnResize", True)
-        mp.auto_width = interface.get_option("rtichoke.auto_width", set_width_on_resize)
-        output_width = mp.app.output.get_size().columns
-        if output_width and mp.auto_width:
-            interface.set_option("width", output_width)
-        mp.completion_timeout = interface.get_option("rtichoke.completion_timeout", 0.05)
-
-        # necessary on windows
-        interface.set_option("menu.graphics", False)
-
-        # enables completion of installed package names
-        if interface.rcopy(interface.reval("rc.settings('ipck')")) is None:
-            interface.reval("rc.settings(ipck = TRUE)")
-
-        # print welcome message
-        mp.app.output.write(greeting())
-
     def run(self, options):
         self.set_env_vars(options)
 
-        mp = create_rtichoke_prompt(options, history_file=".rtichoke_history")
+        session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
 
         ensure_path(self.r_home)
         libR = get_libR(self.r_home)
         globals()["libR"] = libR
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
-        embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(mp)))
+        embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
         embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
         embedded.set_callback("R_Busy", rapi.defaults.R_Busy)
         embedded.set_callback("R_PolledEvents", rapi.defaults.R_PolledEvents)
@@ -259,6 +162,11 @@ class RtichokeApplication(object):
 
         bootstrap(libR, verbose=options.debug)
 
-        self.prompt_initialize(mp)
+        session_initialize(session)
+
+        intialize_modes(session)
+
+        # print welcome message
+        session.app.output.write(greeting())
 
         embedded.run_loop(libR)
