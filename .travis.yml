@@ -1,17 +1,11 @@
 language: python
 python: 3.5
 
-addons:
-  apt_packages:
-    - pandoc
-
 install:
   - pip install .
 script:
   - rtichoke --version
 
-before_deploy:
-  - pip install pypandoc
 
 deploy:
   provider: pypi
