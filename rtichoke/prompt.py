@@ -17,7 +17,7 @@ from pygments.lexers.r import SLexer
 
 from rapi import reval, rexec, interface
 
-from .keybinding import create_r_ish_keybindings, create_shell_keybindings, \
+from .keybindings import create_r_ish_keybindings, create_shell_keybindings, \
     create_readline_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
 

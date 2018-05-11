@@ -6,11 +6,8 @@ import re
 from . import callbacks
 
 import rapi
-from rapi import get_libR, embedded, ensure_path, bootstrap
+from rapi import get_libR, embedded, ensure_path, bootstrap, internals
 from rapi import rcopy, rsym, rcall
-from rapi.utils import cglobal, ccall
-
-from ctypes import c_int
 import struct
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
@@ -18,20 +15,17 @@ from .prompt import create_rtichoke_prompt_session, intialize_modes, session_ini
 
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
-# ugly hack, works for now
-libR = None
-
 
 def interrupts_pending(pending=True):
 
     if sys.platform == "win32":
-        cglobal("UserBreak", libR, c_int).value = int(pending)
+        internals.UserBreak.value = int(pending)
     else:
-        cglobal("R_interrupts_pending", libR, c_int).value = int(pending)
+        internals.R_interrupts_pending.value = int(pending)
 
 
 def check_user_interrupt():
-    ccall("R_CheckUserInterrupt", libR, None, [])
+    internals.R_CheckUserInterrupt()
 
 
 def greeting():
@@ -130,7 +124,6 @@ class RtichokeApplication(object):
 
         ensure_path(self.r_home)
         libR = get_libR(self.r_home)
-        globals()["libR"] = libR
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
