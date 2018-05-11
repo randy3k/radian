@@ -238,6 +238,11 @@ def create_shell_keybindings():
     def _(event):
         event.app.session.change_mode("r")
 
+    @handle('c-j', filter=insert_mode & default_focussed)
+    @handle('enter', filter=insert_mode & default_focussed)
+    def _(event):
+        event.current_buffer.validate_and_handle()
+
     return kb
 
 

@@ -97,7 +97,7 @@ def intialize_modes(session):
     shellmode = Mode(
         "shell",
         message=ANSI(session.shell_prompt),
-        multiline=False,
+        multiline=True,
         complete_while_typing=False,
         completer=SmartPathCompleter(),
         prompt_key_bindings=create_shell_keybindings()
