@@ -8,7 +8,6 @@ install:
 script:
   - rtichoke --version
 
-
 deploy:
   provider: pypi
   user: randy3k
