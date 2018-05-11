@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import re
+import sys
 
 from prompt_toolkit.application.current import get_app
 
@@ -33,10 +34,13 @@ def prase_text_complete(text):
     status = c_int()
     s = Rf_protect(rstring_p(text))
     try:
+        orig_stderr = sys.stderr
+        sys.stderr = None
         rexec_p(R_ParseVector, s, -1, status, R_NilValue)
     except Exception:
         return True
     finally:
+        sys.stderr = orig_stderr
         Rf_unprotect(1)
     return status.value != 2
 
