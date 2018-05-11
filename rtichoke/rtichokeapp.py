@@ -11,7 +11,7 @@ from rapi import rcopy, rsym, rcall
 import struct
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
-
+from .shell import run_command
 
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
@@ -77,6 +77,11 @@ def get_prompt(session):
                     check_user_interrupt()
                 elif session.insert_new_line:
                     session.app.output.write("\n")
+
+            if session.current_mode_name == "shell":
+                session.default_buffer.reset()
+                run_command(text)
+                text = None
 
         return text
 
