@@ -99,6 +99,7 @@ def intialize_modes(session):
         message=ANSI(session.shell_prompt),
         multiline=True,
         complete_while_typing=False,
+        lexer=None,
         completer=SmartPathCompleter(),
         prompt_key_bindings=create_shell_keybindings()
     )
@@ -119,6 +120,9 @@ def intialize_modes(session):
         "readline",
         message=lambda: ANSI(session.readline_prompt),
         multiline=False,
+        complete_while_typing=False,
+        lexer=None,
+        completer=None,
         prompt_key_bindings=create_readline_keybindings(),
         switchable_from=False,
         switchable_to=False
