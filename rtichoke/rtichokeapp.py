@@ -38,6 +38,16 @@ def get_prompt(session):
     interrupted = [False]
 
     def _(message, add_history=1):
+        if message == session.default_prompt:
+            session.activate_mode("r")
+        elif BROWSE_PATTERN.match(message):
+            session.browse_level = BROWSE_PATTERN.match(message).group(1)
+            session.activate_mode("browse")
+        else:
+            # invoked by `readline`
+            session.activate_mode("readline")
+            session.readline_prompt = message
+
         if interrupted[0]:
             interrupted[0] = False
         elif session.insert_new_line and session.current_mode_name is not "readline":
@@ -47,16 +57,6 @@ def get_prompt(session):
 
         while text is None:
             try:
-                if message == session.default_prompt:
-                    session.activate_mode("r")
-                elif BROWSE_PATTERN.match(message):
-                    session.browse_level = BROWSE_PATTERN.match(message).group(1)
-                    session.activate_mode("browse")
-                else:
-                    # invoked by `readline`
-                    session.activate_mode("readline")
-                    session.readline_prompt = message
-
                 text = session.prompt(add_history=add_history)
 
             except Exception as e:
