@@ -119,7 +119,7 @@ def intialize_modes(session):
     readlinemode = Mode(
         "readline",
         message=lambda: ANSI(session.readline_prompt),
-        multiline=False,
+        # multiline=False,
         complete_while_typing=False,
         lexer=None,
         completer=None,
