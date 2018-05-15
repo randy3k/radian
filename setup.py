@@ -31,7 +31,7 @@ setup(
     packages=find_packages('.'),
     install_requires=[
         'rapi>=0.0.6',
-        'lineedit>=0.0.2'
+        'lineedit>=0.0.3'
     ],
     entry_points={
         'console_scripts': [
