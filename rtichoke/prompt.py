@@ -85,6 +85,7 @@ if not is_windows():
 def intialize_modes(session):
     rmode = Mode(
         "r",
+        history_share=["browse"],
         message=lambda: ANSI(session.default_prompt),
         multiline=True,
         complete_while_typing=True,
@@ -106,6 +107,7 @@ def intialize_modes(session):
 
     browsemode = Mode(
         "browse",
+        history_share=["r"],
         message=lambda: ANSI(session.browse_prompt.format(session.browse_level)),
         multiline=True,
         complete_while_typing=True,
