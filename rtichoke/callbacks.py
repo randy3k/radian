@@ -31,12 +31,12 @@ def create_read_console(get_text):
                 return 0
             code[0] = text.encode(encoding())
 
-        addr = ctypes.addressof(buf.contents)
-        c2 = (ctypes.c_char * buflen).from_address(addr)
         nb = min(len(code[0]), buflen - 2)
-        c2[:nb] = code[0][:nb]
+        for i in range(nb):
+            buf[i] = code[0][i]
         if nb < buflen - 2:
-            c2[nb:(nb + 2)] = b'\n\0'
+            buf[nb] = b'\n'
+            buf[nb + 1] = b'\0'
         code[0] = code[0][nb:]
         return 1
 
