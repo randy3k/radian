@@ -27,7 +27,7 @@ class RCompleter(Completer):
         completions = []
         rcall(reval("utils:::.assignLinebuffer"), rstring(text))
         rcall(reval("utils:::.assignEnd"), rint(len(text)))
-        token = rcopy(str, rcall(reval("utils:::.guessTokenFromLine")))
+        token = rcopy(text_type, rcall(reval("utils:::.guessTokenFromLine")))
         completion_requested = complete_event.completion_requested
         completions = []
         library_prefix = LIBRARY_PATTERN.match(text)
