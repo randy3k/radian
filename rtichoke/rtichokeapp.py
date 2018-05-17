@@ -5,6 +5,7 @@ import re
 
 from . import callbacks
 
+import rapi
 from rapi import get_libR, embedded, ensure_path, bootstrap, internals
 from rapi import rcopy, rsym, rcall
 import struct
@@ -131,6 +132,7 @@ class RtichokeApplication(object):
         libR = get_libR(self.r_home)
 
         enc = locale.getpreferredencoding()
+        rapi.set_encoding(enc)
         callbacks.set_encoding(enc)
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
