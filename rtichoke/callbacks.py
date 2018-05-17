@@ -23,7 +23,7 @@ def rconsole2str(buf, encoding):
     return ret
 
 
-def set_encoding(enc):
+def set_system_encoding(enc):
     global ENCODING
     ENCODING = enc
 
@@ -33,10 +33,10 @@ def create_read_console(get_text):
 
     def _read_console(p, buf, buflen, add_history):
         if not code[0]:
-            text = get_text(p.decode(ENCODING), add_history)
+            text = get_text(rconsole2str(p, ENCODING), add_history)
             if text is None:
                 return 0
-            code[0] = text.encode(ENCODING)
+            code[0] = text.encode(ENCODING, "backslashreplace")
 
         nb = min(len(code[0]), buflen - 2)
         for i in range(nb):
@@ -80,10 +80,10 @@ def show_message(buf):
     sys.stdout.flush()
 
 
-def ask_yes_no_cancel(string):
+def ask_yes_no_cancel(p):
     while True:
         try:
-            result = str(input("{} [y/n/c]: ".format(string.decode(ENCODING))))
+            result = str(input("{} [y/n/c]: ".format(rconsole2str(p, ENCODING))))
             if result in ["Y", "y"]:
                 return 1
             elif result in ["N", "n"]:

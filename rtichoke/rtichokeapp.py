@@ -132,7 +132,7 @@ class RtichokeApplication(object):
         libR = get_libR(self.r_home)
 
         enc = locale.getpreferredencoding()
-        callbacks.set_encoding(enc)
+        callbacks.set_system_encoding(enc)
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
