@@ -62,7 +62,15 @@ def write_console_ex(buf, buflen, otype):
     pass
 
 
+def busy(which):
+    pass
+
+
 def clean_up(save_type, status, runlast):
+    pass
+
+
+def polled_events():
     pass
 
 
