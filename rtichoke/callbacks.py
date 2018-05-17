@@ -16,10 +16,10 @@ def rconsole2str(buf, encoding):
     m = UTFPATTERN.search(buf)
     while m:
         a, b = m.span()
-        ret += buf[:a].decode(encoding) + m.group(1).decode("utf-8")
+        ret += buf[:a].decode(encoding, "replace") + m.group(1).decode("utf-8", "replace")
         buf = buf[b:]
         m = UTFPATTERN.search(buf)
-    ret += buf.decode(encoding)
+    ret += buf.decode(encoding, "replace")
     return ret
 
 
