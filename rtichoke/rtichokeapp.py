@@ -9,11 +9,23 @@ import rapi
 from rapi import get_libR, embedded, ensure_path, bootstrap, internals
 from rapi import rcopy, rsym, rcall
 import struct
+from ctypes import c_int
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
 from .shell import run_command
 
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
+
+
+def encoding(libR):
+    if sys.platform == "win32":
+        try:
+            cp = rapi.utils.cglobal("localeCP", libR, c_int)
+            if cp and cp.value:
+                return "cp" + str(cp.value)
+        except Exception:
+            return "latin-1"
+    return "utf-8"
 
 
 def interrupts_pending(pending=True):
@@ -130,12 +142,16 @@ class RtichokeApplication(object):
         ensure_path(self.r_home)
         libR = get_libR(self.r_home)
 
+        enc = encoding(libR)
+        rapi.defaults.set_encoding(enc)
+        callbacks.set_encoding(enc)
+
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
         embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
         embedded.set_callback("R_Busy", rapi.defaults.R_Busy)
         embedded.set_callback("R_PolledEvents", rapi.defaults.R_PolledEvents)
-        embedded.set_callback("R_YesNoCancel", rapi.defaults.R_YesNoCancel)
+        embedded.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
 
         args = ["rapi", "--quiet", "--no-restore-history"]
 
