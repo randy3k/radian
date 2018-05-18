@@ -6,13 +6,6 @@ import ctypes
 
 if sys.platform == "win32":
     import ctypes
-    from ctypes import wintypes
-
-    MultiByteToWideChar = ctypes.windll.kernel32.MultiByteToWideChar
-    MultiByteToWideChar.argtypes = [wintypes.UINT, wintypes.DWORD,
-                                    wintypes.LPCSTR, ctypes.c_int,
-                                    wintypes.LPWSTR, ctypes.c_int]
-    MultiByteToWideChar.restype = ctypes.c_int
 
     wctomb = ctypes.cdll.msvcrt.wctomb
     wctomb.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_wchar]
@@ -38,11 +31,9 @@ def rconsole2str(buf, encoding):
 
 
 def utf8tosystem(text):
-    wcbuf = ctypes.create_unicode_buffer(len(text) + 1)
-    MultiByteToWideChar(65001, 0, text.encode(), -1, wcbuf, len(wcbuf))
     s = ctypes.create_string_buffer(10)
     buf = b""
-    for c in wcbuf[0:-1]:
+    for c in text:
         n = wctomb(s, c)
         if n > 0:
             buf += s[:n]
