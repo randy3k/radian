@@ -1,9 +1,23 @@
 from __future__ import unicode_literals
 import sys
 import re
+import ctypes
 
 
 if sys.platform == "win32":
+    import ctypes
+    from ctypes import wintypes
+
+    MultiByteToWideChar = ctypes.windll.kernel32.MultiByteToWideChar
+    MultiByteToWideChar.argtypes = [wintypes.UINT, wintypes.DWORD,
+                                    wintypes.LPCSTR, ctypes.c_int,
+                                    wintypes.LPWSTR, ctypes.c_int]
+    MultiByteToWideChar.restype = ctypes.c_int
+
+    wctomb = ctypes.cdll.msvcrt.wctomb
+    wctomb.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_wchar]
+    wctomb.restype = ctypes.c_int
+
     ENCODING = "latin-1"
 else:
     ENCODING = "utf-8"
@@ -23,6 +37,18 @@ def rconsole2str(buf, encoding):
     return ret
 
 
+def utf8tosystem(text):
+    wcbuf = ctypes.create_unicode_buffer(len(text) + 1)
+    MultiByteToWideChar(65001, 0, text.encode(), -1, wcbuf, len(wcbuf))
+    s = ctypes.create_string_buffer(10)
+    buf = b""
+    for c in wcbuf[0:-1]:
+        n = wctomb(s, c)
+        if n > 0:
+            buf += s[:n]
+    return buf
+
+
 def set_system_encoding(enc):
     global ENCODING
     ENCODING = enc
@@ -36,7 +62,10 @@ def create_read_console(get_text):
             text = get_text(rconsole2str(p, ENCODING), add_history)
             if text is None:
                 return 0
-            code[0] = text.encode(ENCODING, "backslashreplace")
+            if sys.platform == "win32":
+                code[0] = utf8tosystem(text)
+            else:
+                code[0] = text.encode(ENCODING)
 
         nb = min(len(code[0]), buflen - 2)
         for i in range(nb):
