@@ -5,7 +5,7 @@ import re
 
 from . import callbacks
 
-from rapi import get_libR, embedded, ensure_path, bootstrap, internals
+import rapi
 from rapi import rcopy, rsym, rcall
 import struct
 
@@ -16,15 +16,14 @@ BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 
 def interrupts_pending(pending=True):
-
     if sys.platform == "win32":
-        internals.UserBreak.value = int(pending)
+        rapi.internals.UserBreak.value = int(pending)
     else:
-        internals.R_interrupts_pending.value = int(pending)
+        rapi.internals.R_interrupts_pending.value = int(pending)
 
 
 def check_user_interrupt():
-    internals.R_CheckUserInterrupt()
+    rapi.internals.R_CheckUserInterrupt()
 
 
 def greeting():
@@ -126,15 +125,15 @@ class RtichokeApplication(object):
 
         session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
 
-        ensure_path(self.r_home)
-        libR = get_libR(self.r_home)
+        rapi.utils.ensure_path(self.r_home)
+        libR = rapi.utils.get_libR(self.r_home)
 
-        embedded.set_callback("R_ShowMessage", callbacks.show_message)
-        embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
-        embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
-        embedded.set_callback("R_Busy", callbacks.busy)
-        embedded.set_callback("R_PolledEvents", callbacks.polled_events)
-        embedded.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
+        rapi.embedded.set_callback("R_ShowMessage", callbacks.show_message)
+        rapi.embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
+        rapi.embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
+        rapi.embedded.set_callback("R_Busy", callbacks.busy)
+        rapi.embedded.set_callback("R_PolledEvents", callbacks.polled_events)
+        rapi.embedded.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
 
         args = ["rapi", "--quiet", "--no-restore-history"]
 
@@ -155,9 +154,9 @@ class RtichokeApplication(object):
         else:
             args.append("--no-restore-data")
 
-        embedded.initialize(libR, arguments=args)
+        rapi.embedded.initialize(libR, arguments=args)
 
-        bootstrap(libR, verbose=options.debug)
+        rapi.bootstrap(libR, verbose=options.debug)
 
         session_initialize(session)
 
@@ -166,4 +165,4 @@ class RtichokeApplication(object):
         # print welcome message
         session.app.output.write(greeting())
 
-        embedded.run_loop(libR)
+        rapi.embedded.run_loop(libR)
