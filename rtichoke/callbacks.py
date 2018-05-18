@@ -2,47 +2,65 @@ from __future__ import unicode_literals
 import sys
 import re
 import ctypes
+import locale
 
 
 if sys.platform == "win32":
-    import ctypes
-
     wctomb = ctypes.cdll.msvcrt.wctomb
     wctomb.argtypes = [ctypes.POINTER(ctypes.c_char), ctypes.c_wchar]
     wctomb.restype = ctypes.c_int
 
-    ENCODING = "latin-1"
-else:
-    ENCODING = "utf-8"
+    mbtowc = ctypes.cdll.msvcrt.mbtowc
+    mbtowc.argtypes = [ctypes.POINTER(ctypes.c_wchar), ctypes.POINTER(ctypes.c_char), ctypes.c_size_t]
+    mbtowc.restype = ctypes.c_int
+
 
 UTFPATTERN = re.compile(b"\x02\xff\xfe(.*?)\x03\xff\xfe")
 
 
-def rconsole2str(buf, encoding):
+def rconsole2str(buf):
     ret = ""
     m = UTFPATTERN.search(buf)
     while m:
         a, b = m.span()
-        ret += buf[:a].decode(encoding, "replace") + m.group(1).decode("utf-8", "replace")
+        ret += system2utf8(buf[:a]) + m.group(1).decode("utf-8", "backslashreplace")
         buf = buf[b:]
         m = UTFPATTERN.search(buf)
-    ret += buf.decode(encoding, "replace")
+    ret += system2utf8(buf)
     return ret
 
 
-def utf8tosystem(text):
-    s = ctypes.create_string_buffer(10)
-    buf = b""
-    for c in text:
-        n = wctomb(s, c)
-        if n > 0:
-            buf += s[:n]
-    return buf
+if sys.platform == "win32":
 
+    def system2utf8(buf):
+        wcbuf = ctypes.create_unicode_buffer(1)
+        text = ""
+        while buf:
+            n = mbtowc(wcbuf, buf, len(buf))
+            if n <= 0:
+                break
+            text += wcbuf[0]
+            buf = buf[n:]
+        return text
 
-def set_system_encoding(enc):
-    global ENCODING
-    ENCODING = enc
+    def utf8tosystem(text):
+        cp = locale.getpreferredencoding()
+        s = ctypes.create_string_buffer(10)
+        buf = b""
+        for c in text:
+            n = wctomb(s, c)
+            if n > 0:
+                buf += s[:n]
+            else:
+                buf += c.encode(cp, "backslashreplace")
+        return buf
+
+else:
+    def system2utf8(buf):
+        return buf.decode("utf-8", "backslashreplace")
+
+    def utf8tosystem(text):
+        return text.encode("utf-8", "backslashreplace")
 
 
 def create_read_console(get_text):
@@ -50,13 +68,10 @@ def create_read_console(get_text):
 
     def _read_console(p, buf, buflen, add_history):
         if not code[0]:
-            text = get_text(rconsole2str(p, ENCODING), add_history)
+            text = get_text(rconsole2str(p), add_history)
             if text is None:
                 return 0
-            if sys.platform == "win32":
-                code[0] = utf8tosystem(text)
-            else:
-                code[0] = text.encode(ENCODING)
+            code[0] = utf8tosystem(text)
 
         nb = min(len(code[0]), buflen - 2)
         for i in range(nb):
@@ -71,7 +86,7 @@ def create_read_console(get_text):
 
 
 def write_console_ex(buf, buflen, otype):
-    buf = rconsole2str(buf, ENCODING)
+    buf = rconsole2str(buf)
     if otype == 0:
         sys.stdout.write(buf)
         sys.stdout.flush()
@@ -95,7 +110,7 @@ def polled_events():
 
 
 def show_message(buf):
-    buf = rconsole2str(buf, ENCODING)
+    buf = rconsole2str(buf)
     sys.stdout.write(buf)
     sys.stdout.flush()
 
@@ -103,7 +118,7 @@ def show_message(buf):
 def ask_yes_no_cancel(p):
     while True:
         try:
-            result = str(input("{} [y/n/c]: ".format(rconsole2str(p, ENCODING))))
+            result = str(input("{} [y/n/c]: ".format(rconsole2str(p))))
             if result in ["Y", "y"]:
                 return 1
             elif result in ["N", "n"]:

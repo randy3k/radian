@@ -5,11 +5,9 @@ import re
 
 from . import callbacks
 
-import rapi
 from rapi import get_libR, embedded, ensure_path, bootstrap, internals
 from rapi import rcopy, rsym, rcall
 import struct
-import locale
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
 from .shell import run_command
@@ -130,9 +128,6 @@ class RtichokeApplication(object):
 
         ensure_path(self.r_home)
         libR = get_libR(self.r_home)
-
-        enc = locale.getpreferredencoding()
-        callbacks.set_system_encoding(enc)
 
         embedded.set_callback("R_ShowMessage", callbacks.show_message)
         embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
