@@ -4,4 +4,4 @@ rtichoke is undergoing a major refactoring to extract the R initialization code 
 
 Other features:
 
-- Some unicode support on Windows
+- Unicode support on Windows
