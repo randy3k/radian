@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import optparse
 import os
 import sys
-from rapi.utils import get_rhome, rversion2
+from rapi.utils import which_rhome, rversion2
 
 
 __version__ = '0.2.0.dev0'
@@ -24,7 +24,7 @@ def main():
 
     options, args = parser.parse_args()
 
-    r_home = get_rhome()
+    r_home = which_rhome()
 
     if options.version:
         if r_home:

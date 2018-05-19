@@ -126,7 +126,7 @@ class RtichokeApplication(object):
         session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
 
         rapi.utils.ensure_path(self.r_home)
-        libR = rapi.utils.get_libR(self.r_home)
+        libR = rapi.utils.find_libR(self.r_home)
 
         rapi.embedded.set_callback("R_ShowMessage", callbacks.show_message)
         rapi.embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
