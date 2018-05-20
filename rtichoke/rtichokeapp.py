@@ -6,7 +6,7 @@ import re
 from . import callbacks
 
 import rapi
-from rapi import rcopy, rsym, rcall
+from rapi import rcopy, rsym, rcall, machine
 import struct
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
@@ -123,18 +123,6 @@ class RtichokeApplication(object):
     def run(self, options):
         self.set_env_vars(options)
 
-        session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
-
-        rapi.utils.ensure_path(self.r_home)
-        libR = rapi.utils.find_libR(self.r_home)
-
-        rapi.embedded.set_callback("R_ShowMessage", callbacks.show_message)
-        rapi.embedded.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
-        rapi.embedded.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
-        rapi.embedded.set_callback("R_Busy", callbacks.busy)
-        rapi.embedded.set_callback("R_PolledEvents", callbacks.polled_events)
-        rapi.embedded.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
-
         args = ["rapi", "--quiet", "--no-restore-history"]
 
         if options.no_environ:
@@ -154,15 +142,21 @@ class RtichokeApplication(object):
         else:
             args.append("--no-restore-data")
 
-        rapi.embedded.initialize(libR, arguments=args)
+        session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
 
-        rapi.bootstrap(libR, verbose=options.debug)
+        engine = machine.Engine(verbose=options.debug)
+        engine.set_callback("R_ShowMessage", callbacks.show_message)
+        engine.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
+        engine.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
+        engine.set_callback("R_Busy", callbacks.busy)
+        engine.set_callback("R_PolledEvents", callbacks.polled_events)
+        engine.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
+        engine.start(arguments=args)
 
         session_initialize(session)
-
         intialize_modes(session)
 
         # print welcome message
         session.app.output.write(greeting())
 
-        rapi.embedded.run_loop(libR)
+        engine.run_repl()
