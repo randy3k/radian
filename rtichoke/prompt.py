@@ -236,6 +236,7 @@ def create_rtichoke_prompt_session(options, history_file):
     session = ModalPromptSession(
         color_depth=ColorDepth.default(term=os.environ.get("TERM")),
         history=history,
+        enable_history_search=True,
         tempfile_suffix=".R",
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,
         output=output,
