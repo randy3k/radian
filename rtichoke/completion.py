@@ -61,7 +61,8 @@ class RCompleter(Completer):
                 completions = []
 
         for c in completions:
-            yield Completion(c, -len(token))
+            if c.startswith(token):
+                yield Completion(c, -len(token))
 
         if token and not library_prefix:
             if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
