@@ -123,7 +123,7 @@ class RtichokeApplication(object):
     def run(self, options):
         self.set_env_vars(options)
 
-        args = ["rapi", "--quiet", "--no-restore-history"]
+        args = ["rapi", "--quiet", "--no-restore-history", "--no-readline"],
 
         if options.no_environ:
             args.append("--no-environ")
