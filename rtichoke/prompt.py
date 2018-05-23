@@ -146,51 +146,51 @@ def reticulate_set_message(message):
 
 
 def session_initialize(session):
-    if not interface.get_option("rtichoke.suppress_reticulate_message", False):
+    if not interface.roption("rtichoke.suppress_reticulate_message", False):
         reticulate_set_message(RETICULATE_MESSAGE)
 
-    if interface.get_option("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
+    if interface.roption("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
         session.app.editing_mode = EditingMode.VI
     else:
         session.app.editing_mode = EditingMode.EMACS
 
-    color_scheme = interface.get_option("rtichoke.color_scheme", "native")
+    color_scheme = interface.roption("rtichoke.color_scheme", "native")
     session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
 
-    session.auto_match = interface.get_option("rtichoke.auto_match", False)
-    session.auto_indentation = interface.get_option("rtichoke.auto_indentation", True)
-    session.tab_size = int(interface.get_option("rtichoke.tab_size", 4))
-    session.complete_while_typing = interface.get_option("rtichoke.complete_while_typing", True)
-    session.completion_timeout = interface.get_option("rtichoke.completion_timeout", 0.05)
+    session.auto_match = interface.roption("rtichoke.auto_match", False)
+    session.auto_indentation = interface.roption("rtichoke.auto_indentation", True)
+    session.tab_size = int(interface.roption("rtichoke.tab_size", 4))
+    session.complete_while_typing = interface.roption("rtichoke.complete_while_typing", True)
+    session.completion_timeout = interface.roption("rtichoke.completion_timeout", 0.05)
 
-    session.history_search_no_duplicates = interface.get_option("rtichoke.history_search_no_duplicates", False)
-    session.insert_new_line = interface.get_option("rtichoke.insert_new_line", True)
+    session.history_search_no_duplicates = interface.roption("rtichoke.history_search_no_duplicates", False)
+    session.insert_new_line = interface.roption("rtichoke.insert_new_line", True)
 
-    prompt = interface.get_option("rtichoke.prompt", None)
+    prompt = interface.roption("rtichoke.prompt", None)
     if not prompt:
-        sys_prompt = interface.get_option("prompt")
+        sys_prompt = interface.roption("prompt")
         if sys_prompt == "> ":
             prompt = PROMPT
         else:
             prompt = sys_prompt
 
     session.default_prompt = prompt
-    interface.set_option("prompt", prompt)
+    interface.setoption("prompt", prompt)
 
-    shell_prompt = interface.get_option("rtichoke.shell_prompt", SHELL_PROMPT)
+    shell_prompt = interface.roption("rtichoke.shell_prompt", SHELL_PROMPT)
     session.shell_prompt = shell_prompt
 
-    browse_prompt = interface.get_option("rtichoke.browse_prompt", BROWSE_PROMPT)
+    browse_prompt = interface.roption("rtichoke.browse_prompt", BROWSE_PROMPT)
     session.browse_prompt = browse_prompt
 
-    set_width_on_resize = interface.get_option("setWidthOnResize", True)
-    session.auto_width = interface.get_option("rtichoke.auto_width", set_width_on_resize)
+    set_width_on_resize = interface.roption("setWidthOnResize", True)
+    session.auto_width = interface.roption("rtichoke.auto_width", set_width_on_resize)
     output_width = session.app.output.get_size().columns
     if output_width and session.auto_width:
-        interface.set_option("width", output_width)
+        interface.setoption("width", output_width)
 
     # necessary on windows
-    interface.set_option("menu.graphics", False)
+    interface.setoption("menu.graphics", False)
 
     # enables completion of installed package names
     if interface.rcopy(interface.reval("rc.settings('ipck')")) is None:
@@ -228,7 +228,7 @@ def create_rtichoke_prompt_session(options, history_file):
                 output_width = session.app.output.get_size().columns
                 if output_width and terminal_width[0] != output_width:
                     terminal_width[0] = output_width
-                    interface.set_option("width", max(terminal_width[0], 20))
+                    interface.setoption("width", max(terminal_width[0], 20))
                 time.sleep(1.0 / 30)
 
         return _
