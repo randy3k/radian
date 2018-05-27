@@ -147,6 +147,19 @@ let R_bracketed_paste = 1
 in your vim config. 
 
 
+### reticulate Error
+
+```
+SystemError: initialization of _heapq did not return an extension module
+```
+
+You would need to install [this](https://github.com/rstudio/reticulate/pull/279) particular version of reticulate for now.
+
+```r
+devtools::install_github("rstudio/reticulate#279")
+```
+
+
 ### Readline Error
 
 ```
