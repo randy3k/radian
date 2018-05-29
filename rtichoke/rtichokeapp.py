@@ -149,7 +149,7 @@ class RtichokeApplication(object):
 
         session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
 
-        m = Machine(verbose=options.debug)
+        m = Machine(set_default_callbacks=False, verbose=options.debug)
         m.set_callback("R_ShowMessage", callbacks.show_message)
         m.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
         m.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
