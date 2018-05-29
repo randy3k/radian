@@ -6,7 +6,8 @@ import re
 from . import callbacks
 
 import rapi
-from rapi import rcopy, rsym, rcall, machine
+from rapi import rcopy, rsym, rcall, namespace
+from rapi.setup import Machine
 import struct
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
@@ -89,8 +90,9 @@ def get_prompt(session):
 class RtichokeApplication(object):
     r_home = None
 
-    def __init__(self, r_home):
+    def __init__(self, r_home, ver):
         self.r_home = r_home
+        self.ver = ver
         super(RtichokeApplication, self).__init__()
 
     def set_env_vars(self, options):
@@ -147,19 +149,25 @@ class RtichokeApplication(object):
 
         session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
 
-        engine = machine.Engine(verbose=options.debug)
-        engine.set_callback("R_ShowMessage", callbacks.show_message)
-        engine.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
-        engine.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
-        engine.set_callback("R_Busy", callbacks.busy)
-        engine.set_callback("R_PolledEvents", callbacks.polled_events)
-        engine.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
-        engine.start(arguments=args)
+        m = Machine(verbose=options.debug)
+        m.set_callback("R_ShowMessage", callbacks.show_message)
+        m.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
+        m.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
+        m.set_callback("R_Busy", callbacks.busy)
+        m.set_callback("R_PolledEvents", callbacks.polled_events)
+        m.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
+        m.start(arguments=args)
 
         session_initialize(session)
         intialize_modes(session)
 
+        # setup rtichoke namespace
+        ns = namespace.make_namespace("rtichoke", version=self.ver)
+        namespace.assign("version", lambda: self.ver, ns)
+        namespace.namespace_export(ns, ["version"])
+        namespace.seal_namespace(ns)
+
         # print welcome message
         session.app.output.write(greeting())
 
-        engine.run_repl()
+        m.run_loop()

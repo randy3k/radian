@@ -51,4 +51,4 @@ def main():
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
     from .rtichokeapp import RtichokeApplication
-    RtichokeApplication(r_home).run(options)
+    RtichokeApplication(r_home, ver=__version__).run(options)
