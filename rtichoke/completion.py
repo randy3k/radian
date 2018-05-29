@@ -66,7 +66,7 @@ class RCompleter(Completer):
 
         if token and not library_prefix:
             if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
-                packages = rcopy(list, reval("base::rownames(installed.packages())"))
+                packages = rcopy(list, reval("base::rownames(utils::installed.packages())"))
                 for p in packages:
                     if p.startswith(token):
                         comp = p + "::"
