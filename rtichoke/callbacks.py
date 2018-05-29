@@ -30,6 +30,14 @@ def rconsole2str(buf):
     return ret
 
 
+if sys.version >= "3":
+    def ask_input(s):
+        return input(s)
+else:
+    def ask_input(s):
+        return raw_input(s).decode("utf-8", "backslashreplace")
+
+
 if sys.platform == "win32":
 
     def system2utf8(buf):
@@ -118,7 +126,7 @@ def show_message(buf):
 def ask_yes_no_cancel(p):
     while True:
         try:
-            result = str(input("{} [y/n/c]: ".format(rconsole2str(p))))
+            result = ask_input("{} [y/n/c]: ".format(rconsole2str(p)))
             if result in ["Y", "y"]:
                 return 1
             elif result in ["N", "n"]:
