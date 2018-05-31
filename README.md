@@ -42,10 +42,15 @@ Requirements:
 ```sh
 # install released version
 pip install -U rtichoke
-# or the development version
-pip install -U git+https://github.com/randy3k/rtichoke
 # to run rtichoke
 rtichoke
+```
+
+```sh
+# or the development version
+pip install -U git+https://github.com/randy3k/rapi
+pip install -U git+https://github.com/randy3k/lineedit
+pip install -U git+https://github.com/randy3k/rtichoke
 ```
 
 ## Settings
