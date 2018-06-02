@@ -30,7 +30,7 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages('.'),
     install_requires=[
-        'rapi>=0.0.11',
+        'rapi>=0.0.12',
         'lineedit>=0.0.4'
     ],
     entry_points={
