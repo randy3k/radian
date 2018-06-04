@@ -52,3 +52,8 @@ def main():
 
     from .rtichokeapp import RtichokeApplication
     RtichokeApplication(r_home, ver=__version__).run(options)
+
+
+def get_app():
+    from .rtichokeapp import RtichokeApplication
+    return RtichokeApplication.instance

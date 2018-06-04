@@ -7,13 +7,11 @@ from . import callbacks
 
 import rapi
 from rapi import rcopy, rsym, rcall, namespace
-from rapi.setup import Machine
+from rapi import Machine
 import struct
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
-from .shell import run_command
 
-BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 
 def interrupts_pending(pending=True):
@@ -37,19 +35,21 @@ def get_prompt(session):
     interrupted = [False]
 
     def _(message, add_history=1):
-        if message == session.default_prompt:
-            session.activate_mode("r")
-        elif BROWSE_PATTERN.match(message):
-            session.browse_level = BROWSE_PATTERN.match(message).group(1)
-            session.activate_mode("browse")
-        else:
-            # invoked by `readline`
-            session.activate_mode("readline")
-            session.readline_prompt = message
+        session.prompt_text = message
+
+        activated = False
+        for name in reversed(session.modes):
+            mode = session.modes[name]
+            if hasattr(mode, "activator") and mode.activator(session):
+                session.activate_mode(name)
+                activated = True
+                break
+        if not activated:
+            session.activate_mode("unknown")
 
         if interrupted[0]:
             interrupted[0] = False
-        elif session.insert_new_line and session.current_mode_name is not "readline":
+        elif session.insert_new_line and session.current_mode_name != "unknown":
             session.app.output.write("\n")
 
         text = None
@@ -70,16 +70,22 @@ def get_prompt(session):
                     traceback.print_exc()
                     sys.exit(1)
             except KeyboardInterrupt:
-                if session.current_mode_name in ["readline"]:
-                    interrupted[0] = True
+                interrupted[0] = True
+
+            current_mode = session.current_mode
+
+            if interrupted[0]:
+                if current_mode.native:
                     interrupts_pending(True)
                     check_user_interrupt()
                 elif session.insert_new_line:
                     session.app.output.write("\n")
+                    text = None
+                    continue
 
-            if session.current_mode_name == "shell":
+            if not current_mode.native and hasattr(current_mode, "on_done"):
+                current_mode.on_done(session)
                 session.default_buffer.reset()
-                run_command(text)
                 text = None
 
         return text
@@ -88,9 +94,11 @@ def get_prompt(session):
 
 
 class RtichokeApplication(object):
+    instance = None
     r_home = None
 
     def __init__(self, r_home, ver):
+        RtichokeApplication.instance = self
         self.r_home = r_home
         self.ver = ver
         super(RtichokeApplication, self).__init__()
@@ -148,6 +156,7 @@ class RtichokeApplication(object):
             args.append("--no-restore-data")
 
         session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
+        self.session = session
 
         m = Machine(set_default_callbacks=False, verbose=options.debug)
         m.set_callback("R_ShowMessage", callbacks.show_message)
@@ -157,14 +166,20 @@ class RtichokeApplication(object):
         m.set_callback("R_PolledEvents", callbacks.polled_events)
         m.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
         m.start(arguments=args)
+        self.machine = m
 
         session_initialize(session)
         intialize_modes(session)
 
-        # setup rtichoke namespace
         ns = namespace.make_namespace("rtichoke", version=self.ver)
-        namespace.assign("version", lambda: self.ver, ns)
-        namespace.namespace_export(ns, ["version"])
+        namespace.assign("machine", m, ns)
+        namespace.assign("version", self.ver, ns)
+        namespace.assign("session", session, ns)
+        namespace.namespace_export(ns, [
+            "machine",
+            "session",
+            "version",
+        ])
         namespace.seal_namespace(ns)
 
         # print welcome message

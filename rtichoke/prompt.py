@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import os
+import re
 import sys
 import time
 import errno
@@ -17,16 +18,18 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.styles import get_style_by_name
 from pygments.lexers.r import SLexer
 
-from rapi import reval, rexec, interface
+from rapi import rcall, rcopy, reval, rexec
+from rapi.interface import roption, setoption, process_events
+from rapi.namespace import set_hook, package_event
 
-from .keybindings import create_r_ish_keybindings, create_shell_keybindings, \
-    create_readline_keybindings, create_keybindings
+from .keybindings import create_r_ish_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
 
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
 SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
+BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 
 RETICULATE_MESSAGE = """
@@ -85,10 +88,31 @@ if not is_windows():
 
 
 def intialize_modes(session):
-    rmode = Mode(
+    from .shell import run_command
+
+    def browse_activator(session):
+        message = session.prompt_text
+        if BROWSE_PATTERN.match(message):
+            session.browse_level = BROWSE_PATTERN.match(message).group(1)
+            return True
+        else:
+            return False
+
+    def browse_on_pre_accept(session):
+        if session.default_buffer.text.strip() in [
+                "n", "s", "f", "c", "cont", "Q", "where", "help"]:
+            session.add_history = False
+
+    def shell_process_text(session):
+        text = session.default_buffer.text
+        run_command(text)
+
+    session.register_mode(
         "r",
-        history_share=["browse"],
-        message=lambda: ANSI(session.default_prompt),
+        native=True,
+        activator=lambda session: session.prompt_text == session.default_prompt,
+        history_share_with=lambda m: m == "browse",
+        message=ANSI(session.default_prompt),
         multiline=True,
         complete_while_typing=session.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
@@ -96,9 +120,10 @@ def intialize_modes(session):
         key_bindings=create_keybindings(),
         prompt_key_bindings=create_r_ish_keybindings()
     )
-
-    shellmode = Mode(
+    session.register_mode(
         "shell",
+        native=False,
+        on_done=shell_process_text,
         message=ANSI(session.shell_prompt),
         multiline=True,
         complete_while_typing=session.complete_while_typing,
@@ -106,95 +131,86 @@ def intialize_modes(session):
         completer=SmartPathCompleter(),
         prompt_key_bindings=create_shell_keybindings()
     )
-
-    browsemode = Mode(
+    session.register_mode(
         "browse",
-        history_share=["r"],
+        native=True,
+        activator=browse_activator,
+        history_share_with=lambda m: m == "r",
         message=lambda: ANSI(session.browse_prompt.format(session.browse_level)),
         multiline=True,
-        complete_while_typing=session.complete_while_typing,
+        complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
         prompt_key_bindings=create_r_ish_keybindings(),
-        switchable_from=False,
-        switchable_to=False
+        switchable_from=lambda m: False,
+        switchable_to=lambda m: False
     )
-
-    readlinemode = Mode(
-        "readline",
-        message=lambda: ANSI(session.readline_prompt),
-        # multiline=False,
+    session.register_mode(
+        "unknown",
+        native=True,
+        message=lambda: ANSI(session.prompt_text),
         complete_while_typing=False,
         lexer=None,
         completer=None,
-        prompt_key_bindings=create_readline_keybindings(),
-        switchable_from=False,
-        switchable_to=False
+        prompt_key_bindings=None,
+        switchable_from=lambda m: False,
+        switchable_to=lambda m: False
     )
-
-    session.register_mode(rmode)
-    session.register_mode(shellmode)
-    session.register_mode(browsemode)
-    session.register_mode(readlinemode)
-
-
-def reticulate_set_message(message):
-    reval("""
-    setHook(packageEvent("reticulate", "onLoad"),
-            function(...) packageStartupMessage("{}"))
-    """.format(message.replace('\\', '\\\\').replace('"', '\\"')))
 
 
 def session_initialize(session):
-    if not interface.roption("rtichoke.suppress_reticulate_message", False):
-        reticulate_set_message(RETICULATE_MESSAGE)
+    if not roption("rtichoke.suppress_reticulate_message", False):
+        def reticulate_hook(*args):
+            rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
-    if interface.roption("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
+        set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
+
+    if roption("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
         session.app.editing_mode = EditingMode.VI
     else:
         session.app.editing_mode = EditingMode.EMACS
 
-    color_scheme = interface.roption("rtichoke.color_scheme", "native")
+    color_scheme = roption("rtichoke.color_scheme", "native")
     session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
 
-    session.auto_match = interface.roption("rtichoke.auto_match", False)
-    session.auto_indentation = interface.roption("rtichoke.auto_indentation", True)
-    session.tab_size = int(interface.roption("rtichoke.tab_size", 4))
-    session.complete_while_typing = interface.roption("rtichoke.complete_while_typing", True)
-    session.completion_timeout = interface.roption("rtichoke.completion_timeout", 0.05)
+    session.auto_match = roption("rtichoke.auto_match", False)
+    session.auto_indentation = roption("rtichoke.auto_indentation", True)
+    session.tab_size = int(roption("rtichoke.tab_size", 4))
+    session.complete_while_typing = roption("rtichoke.complete_while_typing", True)
+    session.completion_timeout = roption("rtichoke.completion_timeout", 0.05)
 
-    session.history_search_no_duplicates = interface.roption("rtichoke.history_search_no_duplicates", False)
-    session.insert_new_line = interface.roption("rtichoke.insert_new_line", True)
+    session.history_search_no_duplicates = roption("rtichoke.history_search_no_duplicates", False)
+    session.insert_new_line = roption("rtichoke.insert_new_line", True)
 
-    prompt = interface.roption("rtichoke.prompt", None)
+    prompt = roption("rtichoke.prompt", None)
     if not prompt:
-        sys_prompt = interface.roption("prompt")
+        sys_prompt = roption("prompt")
         if sys_prompt == "> ":
             prompt = PROMPT
         else:
             prompt = sys_prompt
 
     session.default_prompt = prompt
-    interface.setoption("prompt", prompt)
+    setoption("prompt", prompt)
 
-    shell_prompt = interface.roption("rtichoke.shell_prompt", SHELL_PROMPT)
+    shell_prompt = roption("rtichoke.shell_prompt", SHELL_PROMPT)
     session.shell_prompt = shell_prompt
 
-    browse_prompt = interface.roption("rtichoke.browse_prompt", BROWSE_PROMPT)
+    browse_prompt = roption("rtichoke.browse_prompt", BROWSE_PROMPT)
     session.browse_prompt = browse_prompt
 
-    set_width_on_resize = interface.roption("setWidthOnResize", True)
-    session.auto_width = interface.roption("rtichoke.auto_width", set_width_on_resize)
+    set_width_on_resize = roption("setWidthOnResize", True)
+    session.auto_width = roption("rtichoke.auto_width", set_width_on_resize)
     output_width = session.app.output.get_size().columns
     if output_width and session.auto_width:
-        interface.setoption("width", output_width)
+        setoption("width", output_width)
 
     # necessary on windows
-    interface.setoption("menu.graphics", False)
+    setoption("menu.graphics", False)
 
     # enables completion of installed package names
-    if interface.rcopy(interface.reval("rc.settings('ipck')")) is None:
-        interface.reval("rc.settings(ipck = TRUE)")
+    if rcopy(reval("rc.settings('ipck')")) is None:
+        reval("rc.settings(ipck = TRUE)")
 
 
 def create_rtichoke_prompt_session(options, history_file):
@@ -205,11 +221,6 @@ def create_rtichoke_prompt_session(options, history_file):
         history = ModalFileHistory(os.path.abspath(history_file))
     else:
         history = ModalFileHistory(os.path.join(os.path.expanduser("~"), history_file))
-
-    def before_accept(buff):
-        if session.current_mode_name == "browse":
-            if buff.text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
-                session.add_history = False
 
     if is_windows():
         output = None
@@ -223,12 +234,12 @@ def create_rtichoke_prompt_session(options, history_file):
             while True:
                 if context.input_is_ready():
                     break
-                rexec(interface.process_events)
+                rexec(process_events)
 
                 output_width = session.app.output.get_size().columns
                 if output_width and terminal_width[0] != output_width:
                     terminal_width[0] = output_width
-                    interface.setoption("width", max(terminal_width[0], 20))
+                    setoption("width", max(terminal_width[0], 20))
                 time.sleep(1.0 / 30)
 
         return _
@@ -240,8 +251,7 @@ def create_rtichoke_prompt_session(options, history_file):
         tempfile_suffix=".R",
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,
         output=output,
-        inputhook=get_inputhook(),
-        before_accept=before_accept
+        inputhook=get_inputhook()
     )
 
     return session

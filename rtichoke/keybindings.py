@@ -25,7 +25,6 @@ def prompt_mode(*modes):
 
 is_r_mode = prompt_mode("r")
 is_shell_mode = prompt_mode("shell")
-is_readline_mode = prompt_mode("readline")
 is_browse_mode = prompt_mode("browse")
 is_r_ish_mode = is_r_mode | is_browse_mode
 
@@ -252,13 +251,6 @@ def create_shell_keybindings():
     @handle('enter', filter=insert_mode & default_focussed)
     def _(event):
         event.current_buffer.validate_and_handle()
-
-    return kb
-
-
-def create_readline_keybindings():
-    kb = KeyBindings()
-    handle = kb.add
 
     return kb
 
