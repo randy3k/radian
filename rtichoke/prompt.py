@@ -190,6 +190,13 @@ def session_initialize(session):
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
 
+    if roption("rtichoke.register_reticulate_prompt", True):
+        def reticulate_prompt(*args):
+            rcall(("base", "source"),
+                os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"))
+
+        set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
+
     if roption("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
         session.app.editing_mode = EditingMode.VI
     else:
