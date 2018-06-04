@@ -23,10 +23,10 @@ def prompt_mode(*modes):
     return Condition(lambda: get_app().session.current_mode_name in modes)
 
 
-is_r_mode = prompt_mode("r")
-is_shell_mode = prompt_mode("shell")
-is_browse_mode = prompt_mode("browse")
-is_r_ish_mode = is_r_mode | is_browse_mode
+in_r_mode = prompt_mode("r")
+in_shell_mode = prompt_mode("shell")
+in_browse_mode = prompt_mode("browse")
+in_r_insert_mode = in_r_mode | in_browse_mode
 
 
 def prase_text_complete(text):
@@ -107,12 +107,12 @@ def if_no_repeat(event):
 
 
 # keybinds for both r mond and browse mode
-def create_r_ish_keybindings():
+def create_r_keybindings():
     kb = KeyBindings()
     handle = kb.add
 
     # r mode
-    @handle(';', filter=insert_mode & default_focussed & is_r_mode & is_begin_of_buffer)
+    @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & is_begin_of_buffer)
     def _(event):
         event.app.session.change_mode("shell")
 

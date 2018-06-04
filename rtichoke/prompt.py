@@ -22,7 +22,7 @@ from rapi import rcall, rcopy, reval, rexec
 from rapi.interface import roption, setoption, process_events
 from rapi.namespace import set_hook, package_event
 
-from .keybindings import create_r_ish_keybindings, create_shell_keybindings, create_keybindings
+from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
 
 
@@ -87,6 +87,27 @@ if not is_windows():
                     raise
 
 
+class RtichokeMode(Mode):
+    def __init__(
+            self,
+            name,
+            native,
+            on_done=None,
+            activator=None,
+            insert_new_line=False,
+            **kwargs):
+
+        self.native = native
+        if native:
+            assert on_done is None
+        else:
+            assert on_done is not None
+        self.on_done = on_done
+        self.activator = activator
+        self.insert_new_line = insert_new_line
+        super(RtichokeMode, self).__init__(name, **kwargs)
+
+
 def intialize_modes(session):
     from .shell import run_command
 
@@ -111,19 +132,21 @@ def intialize_modes(session):
         "r",
         native=True,
         activator=lambda session: session.prompt_text == session.default_prompt,
-        history_share_with=lambda m: m == "browse",
+        insert_new_line=True,
+        history_share_with="browse",
         message=ANSI(session.default_prompt),
         multiline=True,
         complete_while_typing=session.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
         key_bindings=create_keybindings(),
-        prompt_key_bindings=create_r_ish_keybindings()
+        prompt_key_bindings=create_r_keybindings()
     )
     session.register_mode(
         "shell",
         native=False,
         on_done=shell_process_text,
+        insert_new_line=True,
         message=ANSI(session.shell_prompt),
         multiline=True,
         complete_while_typing=session.complete_while_typing,
@@ -135,26 +158,28 @@ def intialize_modes(session):
         "browse",
         native=True,
         activator=browse_activator,
-        history_share_with=lambda m: m == "r",
+        insert_new_line=True,
+        history_share_with="r",
         message=lambda: ANSI(session.browse_prompt.format(session.browse_level)),
         multiline=True,
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        prompt_key_bindings=create_r_ish_keybindings(),
-        switchable_from=lambda m: False,
-        switchable_to=lambda m: False
+        prompt_key_bindings=create_r_keybindings(),
+        switchable_from=False,
+        switchable_to=False
     )
     session.register_mode(
         "unknown",
         native=True,
+        insert_new_line=False,
         message=lambda: ANSI(session.prompt_text),
         complete_while_typing=False,
         lexer=None,
         completer=None,
         prompt_key_bindings=None,
-        switchable_from=lambda m: False,
-        switchable_to=lambda m: False
+        switchable_from=False,
+        switchable_to=False
     )
 
 
@@ -251,7 +276,8 @@ def create_rtichoke_prompt_session(options, history_file):
         tempfile_suffix=".R",
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,
         output=output,
-        inputhook=get_inputhook()
+        inputhook=get_inputhook(),
+        mode_class=RtichokeMode
     )
 
     return session

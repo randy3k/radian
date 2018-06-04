@@ -40,7 +40,7 @@ def get_prompt(session):
         activated = False
         for name in reversed(session.modes):
             mode = session.modes[name]
-            if hasattr(mode, "activator") and mode.activator(session):
+            if mode.activator and mode.activator(session):
                 session.activate_mode(name)
                 activated = True
                 break
@@ -49,7 +49,7 @@ def get_prompt(session):
 
         if interrupted[0]:
             interrupted[0] = False
-        elif session.insert_new_line and session.current_mode_name != "unknown":
+        elif session.insert_new_line and session.current_mode.insert_new_line:
             session.app.output.write("\n")
 
         text = None
@@ -78,14 +78,16 @@ def get_prompt(session):
                 if current_mode.native:
                     interrupts_pending(True)
                     check_user_interrupt()
-                elif session.insert_new_line:
+                elif session.insert_new_line and session.current_mode.insert_new_line:
                     session.app.output.write("\n")
                     text = None
                     continue
 
-            if not current_mode.native and hasattr(current_mode, "on_done"):
+            if not current_mode.native and current_mode.on_done:
                 current_mode.on_done(session)
                 session.default_buffer.reset()
+                if session.insert_new_line and current_mode.insert_new_line:
+                    session.app.output.write("\n")
                 text = None
 
         return text
