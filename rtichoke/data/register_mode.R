@@ -1,9 +1,9 @@
 # register a custom prompt which evaluates R expressions in an sandbox environment
 
-rtichoke <- .py::py_import("rtichoke")
-prompt_toolkit <- .py::py_import("prompt_toolkit")
-pygments <- .py::py_import("pygments")
-operator <- .py::py_import("operator")
+rtichoke <- .py::import("rtichoke")
+prompt_toolkit <- .py::import("prompt_toolkit")
+pygments <- .py::import("pygments")
+operator <- .py::import("operator")
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
