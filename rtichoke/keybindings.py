@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import re
-import sys
 
 from prompt_toolkit.application.current import get_app
 
@@ -10,10 +9,6 @@ from prompt_toolkit.filters import Condition, has_focus, \
     emacs_insert_mode, vi_insert_mode, in_paste_mode, app
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
-from rapi.interface import rexec_p, rstring_p
-from rapi.internals import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
-
-from ctypes import c_int
 
 default_focussed = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
@@ -27,27 +22,6 @@ in_r_mode = prompt_mode("r")
 in_shell_mode = prompt_mode("shell")
 in_browse_mode = prompt_mode("browse")
 in_r_insert_mode = in_r_mode | in_browse_mode
-
-
-def prase_text_complete(text):
-    status = c_int()
-    s = Rf_protect(rstring_p(text))
-    try:
-        orig_stderr = sys.stderr
-        sys.stderr = None
-        rexec_p(R_ParseVector, s, -1, status, R_NilValue)
-    except Exception:
-        return True
-    finally:
-        sys.stderr = orig_stderr
-        Rf_unprotect(1)
-    return status.value != 2
-
-
-@Condition
-def prase_complete():
-    app = get_app()
-    return prase_text_complete(app.current_buffer.text)
 
 
 def preceding_text(pattern):
@@ -90,6 +64,7 @@ def auto_indentation():
 def auto_match():
     return get_app().session.auto_match
 
+
 @Condition
 def has_complete_index():
     app = get_app()
@@ -102,20 +77,18 @@ def is_multiline():
     app = get_app()
     return app.session.multiline
 
+
 def if_no_repeat(event):
     return not event.is_repeat
 
 
-# keybinds for both r mond and browse mode
-def create_r_keybindings():
-    kb = KeyBindings()
+def add_prompt_keybindings(kb, prase_text_complete):
     handle = kb.add
 
-    # r mode
-    @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & is_begin_of_buffer)
-    def _(event):
-        event.app.session.change_mode("shell")
-
+    @Condition
+    def prase_complete():
+        app = get_app()
+        return prase_text_complete(app.current_buffer.text)
 
     @handle('c-j', filter=insert_mode & default_focussed)
     @handle('enter', filter=insert_mode & default_focussed)
@@ -231,6 +204,19 @@ def create_r_keybindings():
             event.current_buffer.validate_and_handle()
         else:
             event.current_buffer.insert_text(data)
+
+
+# keybinds for both r mond and browse mode
+def create_r_keybindings(prase_text_complete):
+    kb = KeyBindings()
+    handle = kb.add
+
+    # r mode
+    @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & is_begin_of_buffer)
+    def _(event):
+        event.app.session.change_mode("shell")
+
+    add_prompt_keybindings(kb, prase_text_complete)
 
     return kb
 

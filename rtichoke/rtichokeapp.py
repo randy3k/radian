@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 import sys
 import os
-import re
 
 from . import callbacks
 
@@ -11,7 +10,6 @@ from rapi import Machine
 import struct
 
 from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
-
 
 
 def interrupts_pending(pending=True):
@@ -47,9 +45,11 @@ def get_prompt(session):
         if not activated:
             session.activate_mode("unknown")
 
+        current_mode = session.current_mode
+
         if interrupted[0]:
             interrupted[0] = False
-        elif session.insert_new_line and session.current_mode.insert_new_line:
+        elif session.insert_new_line and current_mode.insert_new_line:
             session.app.output.write("\n")
 
         text = None
@@ -81,11 +81,10 @@ def get_prompt(session):
                 elif session.insert_new_line and session.current_mode.insert_new_line:
                     session.app.output.write("\n")
                     text = None
-                    continue
-
-            if not current_mode.native and current_mode.on_done:
-                current_mode.on_done(session)
-                session.default_buffer.reset()
+            elif not current_mode.native:
+                result = current_mode.on_done(session)
+                if current_mode.return_result and current_mode.return_result(result):
+                    return result
                 if session.insert_new_line and current_mode.insert_new_line:
                     session.app.output.write("\n")
                 text = None

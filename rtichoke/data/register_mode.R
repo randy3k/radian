@@ -14,18 +14,18 @@ local({
     `&.PyObject` <- function(x, y) .py::py_call(operator$and_, x, y)
 
     emacs_insert_mode <- prompt_toolkit$filters$emacs_insert_mode
-    vi_insert_mode <-  prompt_toolkit$filters$vi_insert_mode
-    insert_mode = vi_insert_mode | emacs_insert_mode
+    vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
+    insert_mode <- vi_insert_mode | emacs_insert_mode
     is_begin_of_buffer <- rtichoke$keybindings$is_begin_of_buffer
     default_focussed <- rtichoke$keybindings$default_focussed
 
     kb <- KeyBindings()
-    kb$add("#", filter=insert_mode & default_focussed & is_begin_of_buffer)(
+    kb$add("#", filter = insert_mode & default_focussed & is_begin_of_buffer)(
         function(event) event$app$session$change_mode("env")
     )
 
     pkb <- KeyBindings()
-    pkb$add("backspace", filter=insert_mode & default_focussed & is_begin_of_buffer)(
+    pkb$add("backspace", filter = insert_mode & default_focussed & is_begin_of_buffer)(
         function(event) event$app$session$change_mode("r")
     )
 
@@ -41,12 +41,14 @@ local({
             text <- .py::py_copy(session$default_buffer$text)
             if (nzchar(text) > 0) {
                 tryCatch({
-                        result <- withVisible(eval(parse(text = text), env=env))
-                        if (result$visible) {
-                            print(result$value)
-                        }
-                    },
-                    error=function(e) {cat("error\n")}
+                    result <- withVisible(eval(parse(text = text), env = env))
+                    if (result$visible) {
+                        print(result$value)
+                    }
+                },
+                error = function(e) {
+                    cat("error\n")
+                }
                 )
             }
         },

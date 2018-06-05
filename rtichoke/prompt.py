@@ -94,6 +94,7 @@ class RtichokeMode(Mode):
             native,
             on_done=None,
             activator=None,
+            return_result=None,
             insert_new_line=False,
             **kwargs):
 
@@ -104,11 +105,15 @@ class RtichokeMode(Mode):
             assert on_done is not None
         self.on_done = on_done
         self.activator = activator
+        self.return_result = return_result
         self.insert_new_line = insert_new_line
         super(RtichokeMode, self).__init__(name, **kwargs)
 
 
 def intialize_modes(session):
+    from ctypes import c_int
+    from rapi.interface import rexec_p, rstring_p
+    from rapi.internals import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
     from .shell import run_command
 
     def browse_activator(session):
@@ -128,6 +133,20 @@ def intialize_modes(session):
         text = session.default_buffer.text
         run_command(text)
 
+    def prase_text_complete(text):
+        status = c_int()
+        s = Rf_protect(rstring_p(text))
+        try:
+            orig_stderr = sys.stderr
+            sys.stderr = None
+            rexec_p(R_ParseVector, s, -1, status, R_NilValue)
+        except Exception:
+            return True
+        finally:
+            sys.stderr = orig_stderr
+            Rf_unprotect(1)
+        return status.value != 2
+
     session.register_mode(
         "r",
         native=True,
@@ -140,7 +159,7 @@ def intialize_modes(session):
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
         key_bindings=create_keybindings(),
-        prompt_key_bindings=create_r_keybindings()
+        prompt_key_bindings=create_r_keybindings(prase_text_complete)
     )
     session.register_mode(
         "shell",
@@ -165,7 +184,7 @@ def intialize_modes(session):
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        prompt_key_bindings=create_r_keybindings(),
+        prompt_key_bindings=create_r_keybindings(prase_text_complete),
         switchable_from=False,
         switchable_to=False
     )
@@ -192,7 +211,8 @@ def session_initialize(session):
 
     if roption("rtichoke.register_reticulate_prompt", True):
         def reticulate_prompt(*args):
-            rcall(("base", "source"),
+            rcall(
+                ("base", "source"),
                 os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"))
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)

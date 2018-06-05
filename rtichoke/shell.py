@@ -17,7 +17,6 @@ def run_command(command):
             cmd_list = shlex.split(command)
     except Exception as e:
         print(e)
-        sys.stdout.write("\n")
         return
 
     if cmd_list[0] == "cd":
@@ -42,10 +41,9 @@ def run_command(command):
                 os.chdir(path)
 
             sys.stdout.write(os.getcwd())
-            sys.stdout.write("\n\n")
+            sys.stdout.write("\n")
         except Exception as e:
             print(e)
-            sys.stdout.write("\n")
             return
 
     else:
@@ -56,4 +54,3 @@ def run_command(command):
             p = subprocess.Popen([shell, "-c", command], stdin=sys.stdin, stdout=sys.stdout)
 
         p.wait()
-        sys.stdout.write("\n")
