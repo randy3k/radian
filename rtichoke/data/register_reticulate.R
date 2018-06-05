@@ -4,7 +4,7 @@ rtichoke <- reticulate::import("rtichoke")
 prompt_toolkit <- reticulate::import("prompt_toolkit")
 pygments <- reticulate::import("pygments")
 operator <- reticulate::import("operator")
-builtins <- reticulate::import("builtins")
+builtins <- reticulate::import_builtins()
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
