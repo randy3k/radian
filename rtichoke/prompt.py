@@ -264,6 +264,9 @@ def session_initialize(session):
     if rcopy(reval("rc.settings('ipck')")) is None:
         reval("rc.settings(ipck = TRUE)")
 
+    # backup the updated settings
+    session._backup_settings()
+
 
 def create_rtichoke_prompt_session(options, history_file):
 
