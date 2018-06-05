@@ -3,14 +3,9 @@
 rtichoke <- .py::import("rtichoke")
 prompt_toolkit <- .py::import("prompt_toolkit")
 pygments <- .py::import("pygments")
-.py::import("pygments.lexers.python")
 operator <- .py::import("operator")
 sys <- .py::import("sys")
-if( as.integer(substr(.py::py_copy(sys$version), 1, 1)) >= 3) {
-    builtins <- .py::import("builtins")
-} else {
-    builtins <- .py::import("__builtin__")
-}
+builtins <- .py::import_builtins()
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
