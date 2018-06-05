@@ -1,16 +1,22 @@
 # register reticulate prompt
 
-rtichoke <- reticulate::import("rtichoke")
-prompt_toolkit <- reticulate::import("prompt_toolkit")
-pygments <- reticulate::import("pygments")
-operator <- reticulate::import("operator")
-builtins <- reticulate::import_builtins()
+rtichoke <- .py::import("rtichoke")
+prompt_toolkit <- .py::import("prompt_toolkit")
+pygments <- .py::import("pygments")
+.py::import("pygments.lexers.python")
+operator <- .py::import("operator")
+sys <- .py::import("sys")
+if( as.integer(substr(.py::py_copy(sys$version), 1, 1)) >= 3) {
+    builtins <- .py::import("builtins")
+} else {
+    builtins <- .py::import("__builtin__")
+}
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 
-`|.prompt_toolkit.filters.base.Filter` <- function(x, y) reticulate::py_call(operator$or_, x, y)
-`&.prompt_toolkit.filters.base.Filter` <- function(x, y) reticulate::py_call(operator$and_, x, y)
+`|.PyObject` <- function(x, y) .py::py_call(operator$or_, x, y)
+`&.PyObject` <- function(x, y) .py::py_call(operator$and_, x, y)
 
 emacs_insert_mode <- prompt_toolkit$filters$emacs_insert_mode
 vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
@@ -54,6 +60,8 @@ handle_code <- function(code) {
 leading_spaces <- function(x) regmatches(x, regexpr("^\\s*", x))
 
 handle_multiline_code <- function(code) {
+    # import builtins from reticulate rather than .py because we need globals and locals
+    builtins <- reticulate::import_builtins(convert = FALSE)
     locals <- reticulate::py_run_string("locals()")
     globals <- reticulate::py_run_string("globals()")
     lines <- gsub("\r", "", strsplit(code, "\n")[[1]])
@@ -86,7 +94,7 @@ app <- rtichoke$get_app()
 app$session$register_mode(
     "reticulate",
     native = FALSE,
-    on_done = function(session) handle_code(session$default_buffer$text),
+    on_done = function(session) handle_code(.py::py_copy(session$default_buffer$text)),
     return_result = function(result) !codeenv$evaluated,
     activator = function(session) reticulate:::py_repl_active(),
     message = function() app$session$prompt_text,
