@@ -82,7 +82,8 @@ def if_no_repeat(event):
     return not event.is_repeat
 
 
-def add_prompt_keybindings(kb, prase_text_complete):
+def create_prompt_keybindings(prase_text_complete):
+    kb = KeyBindings()
     handle = kb.add
 
     @Condition
@@ -205,18 +206,18 @@ def add_prompt_keybindings(kb, prase_text_complete):
         else:
             event.current_buffer.insert_text(data)
 
+    return kb
+
 
 # keybinds for both r mond and browse mode
 def create_r_keybindings(prase_text_complete):
-    kb = KeyBindings()
+    kb = create_prompt_keybindings(prase_text_complete)
     handle = kb.add
 
     # r mode
     @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & is_begin_of_buffer)
     def _(event):
         event.app.session.change_mode("shell")
-
-    add_prompt_keybindings(kb, prase_text_complete)
 
     return kb
 

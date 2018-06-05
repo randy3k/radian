@@ -26,37 +26,64 @@ local({
                 error = function(e) NULL
             )))
         } else {
-            return(!is.null(tryCatch(
-                builtins$compile(text, "<input>", "single"),
-                error = function(e) NULL
-            )))
+            if (xor(substr(text, 1, 1) == "?", substr(text, nchar(text), nchar(text)) == "?")) {
+                return(TRUE)
+            } else {
+                return(!is.null(tryCatch(
+                    builtins$compile(text, "<input>", "single"),
+                    error = function(e) NULL
+                )))
+            }
         }
     }
 
-    kb <- KeyBindings()
-    rtichoke$keybindings$add_prompt_keybindings(kb, prase_text_complete)
+    kb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
 
     codeenv <- new.env()
 
     handle_code <- function(code) {
-        # import builtins from reticulate rather than .py because we need globals and locals
-        builtins <- reticulate::import_builtins(convert = FALSE)
+        code <- trimws(code, which = "right")
         if (grepl("\n", code)) {
             # reticulate repl doesn't handle multiline code, we have to execuate it manually
+            handle_multiline_code(code)
             codeenv$evaluated <- TRUE
-            locals <- reticulate::py_run_string("locals()")
-            globals <- reticulate::py_run_string("globals()")
-            output <- tryCatch(
-                builtins$eval(builtins$compile(code, "<input>", "exec"), locals, globals),
-                error = function(e) e)
-            if (inherits(output, "error")) {
-                error <- reticulate::py_last_error()
-                message(paste(error$type, error$value, sep = ": "))
-            }
         } else {
             codeenv$evaluated <- FALSE
         }
         code
+    }
+
+    leading_spaces <- function(x) regmatches(x, regexpr("^\\s*", x))
+
+    handle_multiline_code <- function(code) {
+        # import builtins from reticulate rather than .py because we need globals and locals
+        builtins <- reticulate::import_builtins(convert = FALSE)
+        locals <- reticulate::py_run_string("locals()")
+        globals <- reticulate::py_run_string("globals()")
+        lines <- gsub("\r", "", strsplit(code, "\n")[[1]])
+
+        # try spliting the last line
+        firstline <- trimws(lines[[1]], which = "right")
+        lastline <- lines[[length(lines)]]
+        complied <- tryCatch(
+            builtins$compile(paste(lines[-length(lines)], collapse = "\n"), "<input>", "exec"),
+            error = function(e) e)
+        if ((!inherits(complied, "error")) &&
+                    (leading_spaces(firstline) == leading_spaces(lastline))) {
+            output <- tryCatch({
+                builtins$eval(complied, locals, globals)
+                builtins$eval(builtins$compile(lastline, "<input>", "single"), locals, globals)
+                },
+                error = function(e) e)
+        } else {
+            output <- tryCatch(
+                builtins$eval(builtins$compile(code, "<input>", "exec"), locals, globals),
+                error = function(e) e)
+        }
+        if (inherits(output, "error")) {
+            error <- reticulate::py_last_error()
+            message(paste(error$type, error$value, sep = ": "))
+        }
     }
 
     app <- rtichoke$get_app()
