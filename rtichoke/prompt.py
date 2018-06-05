@@ -213,7 +213,8 @@ def session_initialize(session):
         def reticulate_prompt(*args):
             rcall(
                 ("base", "source"),
-                os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"))
+                os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"),
+                local=True)
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
 
