@@ -55,6 +55,14 @@ kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_
 
 pkb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
 
+pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
+    function(event) {
+        buf <- event$current_buffer
+        buf$text <- "exit"
+        buf$validate_and_handle()
+    }
+)
+
 codeenv <- new.env()
 
 handle_code <- function(code) {
@@ -81,11 +89,12 @@ handle_multiline_code <- function(code) {
     # try spliting the last line
     firstline <- trimws(lines[[1]], which = "right")
     lastline <- lines[[length(lines)]]
+    indentation <- leading_spaces(lastline)
+
     complied <- tryCatch(
         builtins$compile(paste(lines[-length(lines)], collapse = "\n"), "<input>", "exec"),
         error = function(e) e)
-    if ((!inherits(complied, "error")) &&
-                (leading_spaces(firstline) == leading_spaces(lastline))) {
+    if (indentation == "" && !inherits(complied, "error")) {
         output <- tryCatch({
             builtins$eval(complied, locals, globals)
             builtins$eval(builtins$compile(lastline, "<input>", "single"), locals, globals)
