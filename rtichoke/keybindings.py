@@ -45,12 +45,12 @@ def following_text(pattern):
 
 
 @Condition
-def is_begin_of_buffer():
+def cursor_at_begin():
     return get_app().current_buffer.cursor_position == 0
 
 
 @Condition
-def is_end_of_buffer():
+def cursor_at_end():
     app = get_app()
     return app.current_buffer.cursor_position == len(app.current_buffer.text)
 
@@ -215,7 +215,7 @@ def create_r_keybindings(prase_text_complete):
     handle = kb.add
 
     # r mode
-    @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & is_begin_of_buffer)
+    @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & cursor_at_begin)
     def _(event):
         event.app.session.change_mode("shell")
 
@@ -229,7 +229,7 @@ def create_shell_keybindings():
     # shell mode
     @handle(
         'backspace',
-        filter=insert_mode & default_focussed & is_begin_of_buffer,
+        filter=insert_mode & default_focussed & cursor_at_begin,
         save_before=if_no_repeat)
     def _(event):
         event.app.session.change_mode("r")

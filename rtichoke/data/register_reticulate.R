@@ -1,6 +1,7 @@
 # register reticulate prompt
 
 rtichoke <- .py::import("rtichoke")
+rapi <- .py::import("rapi")
 prompt_toolkit <- .py::import("prompt_toolkit")
 pygments <- .py::import("pygments")
 operator <- .py::import("operator")
@@ -8,6 +9,7 @@ sys <- .py::import("sys")
 builtins <- .py::import_builtins()
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
+Condition <- prompt_toolkit$filters$Condition
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 
 `|.PyObject` <- function(x, y) .py::py_call(operator$or_, x, y)
@@ -17,6 +19,11 @@ emacs_insert_mode <- prompt_toolkit$filters$emacs_insert_mode
 vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
 insert_mode <- vi_insert_mode | emacs_insert_mode
 default_focussed <- rtichoke$keybindings$default_focussed
+cursor_at_begin <- rtichoke$keybindings$cursor_at_begin
+text_is_empty <- Condition(function() {
+    app <- prompt_toolkit$application$current$get_app()
+    !nzchar(trimws(.py::py_copy(app$current_buffer$text)))
+})
 
 prase_text_complete <- function(text) {
     if (grepl("\n", text)) {
@@ -36,7 +43,16 @@ prase_text_complete <- function(text) {
     }
 }
 
-kb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
+kb <- KeyBindings()
+kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
+    function(event) {
+        buf <- event$current_buffer
+        buf$text <- "reticulate::repl_python()"
+        buf$validate_and_handle()
+    }
+)
+
+pkb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
 
 codeenv <- new.env()
 
@@ -96,5 +112,6 @@ app$session$register_mode(
     multiline = TRUE,
     insert_new_line = TRUE,
     lexer = PygmentsLexer(pygments$lexers$python$PythonLexer),
-    prompt_key_bindings = kb
+    key_bindings = kb,
+    prompt_key_bindings = pkb
 )
