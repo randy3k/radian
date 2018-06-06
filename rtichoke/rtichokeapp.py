@@ -80,6 +80,7 @@ def get_prompt(session):
                     check_user_interrupt()
                 elif session.insert_new_line and session.current_mode.insert_new_line:
                     session.app.output.write("\n")
+                    interrupted[0] = False
                     text = None
             elif not current_mode.native:
                 result = current_mode.on_done(session)
