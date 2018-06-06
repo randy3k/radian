@@ -7,9 +7,9 @@
 _rtichoke_ is an improved console for the R program with multiline editing and rich syntax highlight and more ...
 
 
-Under the hood, _rtichoke_ is built on top of the python library `prompt-toolkit`. One would consider _rtichoke_ as a [ipython](https://github.com/ipython/ipython) clone for R, though the keybindings of _rtichoke_ are closely resembling those of [julia](https://julialang.org).
+Under the hood, _rtichoke_ is built on top of the python library `prompt-toolkit`. One would consider _rtichoke_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its layout and keybinds are actually more similar to those of [julia](https://julialang.org).
 
-Any feedbacks will be welcome. However, users should use it at their own risks.
+_rtichoke_ is still under active developement, users should use it at their own risks.
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
