@@ -147,8 +147,9 @@ def intialize_modes(session):
             Rf_unprotect(1)
         return status.value != 2
 
-    def has_reticulate_installed():
-        return "reticulate" in rcopy(reval("rownames(installed.packages())"))
+    def enable_reticulate_prompt():
+        return "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
+                roption("rtichoke.enable_reticulate_prompt", True)
 
     session.register_mode(
         "r",
@@ -162,7 +163,7 @@ def intialize_modes(session):
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
         key_bindings=create_keybindings(),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete, has_reticulate_installed)
+        prompt_key_bindings=create_r_keybindings(prase_text_complete, enable_reticulate_prompt)
     )
     session.register_mode(
         "shell",
@@ -187,7 +188,7 @@ def intialize_modes(session):
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete, has_reticulate_installed),
+        prompt_key_bindings=create_r_keybindings(prase_text_complete, enable_reticulate_prompt),
         switchable_from=False,
         switchable_to=False
     )
@@ -212,7 +213,7 @@ def session_initialize(session):
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
 
-    if roption("rtichoke.register_reticulate_prompt", True):
+    if roption("rtichoke.enable_reticulate_prompt", True):
         def reticulate_prompt(*args):
             rcall(
                 ("base", "source"),

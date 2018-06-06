@@ -93,7 +93,9 @@ options(
     rtichoke.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
 
     # supress the loading message for reticulate
-    rtichoke.suppress_reticulate_message = FALSE
+    rtichoke.suppress_reticulate_message = FALSE,
+    # enable reticulate prompt and trigger `~`
+    rtichoke.enable_reticulate_prompt = TRUE
 )
 ```
 
