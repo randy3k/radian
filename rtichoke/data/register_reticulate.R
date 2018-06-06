@@ -26,6 +26,8 @@ main_mode <- Condition(function() {
     .py::py_copy(app$session$current_mode_name) %in% c("r", "browse")
 })
 
+commit_text <- rtichoke$keybindings$commit_text
+
 prase_text_complete <- function(text) {
     if (grepl("\n", text)) {
         return(!is.null(tryCatch(
@@ -46,21 +48,13 @@ prase_text_complete <- function(text) {
 
 kb <- KeyBindings()
 kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty & main_mode)(
-    function(event) {
-        buf <- event$current_buffer
-        buf$text <- "reticulate::repl_python(quiet = TRUE)"
-        buf$validate_and_handle()
-    }
+    function(event) commit_text(event, "reticulate::repl_python(quiet = TRUE)", FALSE)
 )
 
 pkb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
 
 pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
-    function(event) {
-        buf <- event$current_buffer
-        buf$text <- "exit"
-        buf$validate_and_handle()
-    }
+    function(event) commit_text(event, "exit", FALSE)
 )
 
 codeenv <- new.env()

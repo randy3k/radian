@@ -82,6 +82,13 @@ def if_no_repeat(event):
     return not event.is_repeat
 
 
+def commit_text(event, text, add_history=True):
+    event.app.session.add_history = add_history
+    buf = event.current_buffer
+    buf.text = text
+    buf.validate_and_handle()
+
+
 def create_prompt_keybindings(prase_text_complete):
     kb = KeyBindings()
     handle = kb.add
@@ -223,9 +230,7 @@ def create_r_keybindings(prase_text_complete, enable_reticulate_prompt):
     @handle('~', filter=insert_mode & default_focussed & cursor_at_begin &
                         text_is_empty & Condition(enable_reticulate_prompt))
     def _(event):
-        buf = event.current_buffer
-        buf.text = "reticulate::repl_python()"
-        buf.validate_and_handle()
+        commit_text(event, "reticulate::repl_python()", False)
 
     return kb
 
