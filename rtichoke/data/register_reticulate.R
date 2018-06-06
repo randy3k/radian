@@ -28,20 +28,45 @@ main_mode <- Condition(function() {
 
 commit_text <- rtichoke$keybindings$commit_text
 
-prase_text_complete <- function(text) {
-    if (grepl("\n", text)) {
+
+tidy_code <- function(code) {
+    code <- gsub("\r", "", code)[[1]]
+    code <- trimws(code, which = "right")
+    lines <- unindent(strsplit(code, "\n")[[1]])
+    paste(lines, collapse = "\n")
+}
+
+leading_spaces <- function(x) regmatches(x, regexpr("^\\s*", x))
+
+unindent <- function(lines) {
+    unindented <- character(length(lines))
+    for (i in seq_along(lines)) {
+        line <- lines[i]
+        if (i == 1) {
+            indentation <- nchar(leading_spaces(line))
+        }
+        unindented[i] <- sub(paste0("^\\s{0,", indentation ,"}"), "", line)
+    }
+    unindented
+}
+
+prase_text_complete <- function(code) {
+    code <- tidy_code(code)
+    if (grepl("\n", code)) {
         return(!is.null(tryCatch(
-            builtins$compile(text, "<input>", "exec"),
+            builtins$compile(code, "<input>", "exec"),
             error = function(e) NULL
         )))
     } else {
-        if (xor(substr(text, 1, 1) == "?", substr(text, nchar(text), nchar(text)) == "?")) {
-            return(TRUE)
+        if (!nzchar(trimws(code))) {
+            TRUE
+        } else if (xor(substr(code, 1, 1) == "?", substr(code, nchar(code), nchar(code)) == "?")) {
+            TRUE
         } else {
-            return(!is.null(tryCatch(
-                builtins$compile(text, "<input>", "single"),
+            !is.null(tryCatch(
+                builtins$compile(code, "<input>", "single"),
                 error = function(e) NULL
-            )))
+            ))
         }
     }
 }
@@ -60,7 +85,7 @@ pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_
 codeenv <- new.env()
 
 handle_code <- function(code) {
-    code <- trimws(code, which = "right")
+    code <- tidy_code(code)
     if (grepl("\n", code)) {
         # reticulate repl doesn't handle multiline code, we have to execuate it manually
         handle_multiline_code(code)
@@ -71,14 +96,12 @@ handle_code <- function(code) {
     code
 }
 
-leading_spaces <- function(x) regmatches(x, regexpr("^\\s*", x))
-
 handle_multiline_code <- function(code) {
     # import builtins from reticulate rather than .py because we need globals and locals
     builtins <- reticulate::import_builtins(convert = FALSE)
     locals <- reticulate::py_run_string("locals()")
     globals <- reticulate::py_run_string("globals()")
-    lines <- gsub("\r", "", strsplit(code, "\n")[[1]])
+    lines <- strsplit(code, "\n")[[1]]
 
     # try spliting the last line
     firstline <- trimws(lines[[1]], which = "right")
