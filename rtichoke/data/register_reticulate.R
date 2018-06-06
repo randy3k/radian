@@ -20,9 +20,10 @@ vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
 insert_mode <- vi_insert_mode | emacs_insert_mode
 default_focussed <- rtichoke$keybindings$default_focussed
 cursor_at_begin <- rtichoke$keybindings$cursor_at_begin
-text_is_empty <- Condition(function() {
+text_is_empty <- rtichoke$keybindings$text_is_empty
+main_mode <- Condition(function() {
     app <- prompt_toolkit$application$current$get_app()
-    !nzchar(trimws(.py::py_copy(app$current_buffer$text)))
+    .py::py_copy(app$session$current_mode_name) %in% c("r", "browse")
 })
 
 prase_text_complete <- function(text) {
@@ -44,10 +45,10 @@ prase_text_complete <- function(text) {
 }
 
 kb <- KeyBindings()
-kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
+kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty & main_mode)(
     function(event) {
         buf <- event$current_buffer
-        buf$text <- "reticulate::repl_python()"
+        buf$text <- "reticulate::repl_python(quiet = TRUE)"
         buf$validate_and_handle()
     }
 )
