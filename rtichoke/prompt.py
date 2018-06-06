@@ -147,6 +147,9 @@ def intialize_modes(session):
             Rf_unprotect(1)
         return status.value != 2
 
+    def has_reticulate_installed():
+        return "reticulate" in rcopy(reval("rownames(installed.packages())"))
+
     session.register_mode(
         "r",
         native=True,
@@ -159,7 +162,7 @@ def intialize_modes(session):
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
         key_bindings=create_keybindings(),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete)
+        prompt_key_bindings=create_r_keybindings(prase_text_complete, has_reticulate_installed)
     )
     session.register_mode(
         "shell",
@@ -184,7 +187,7 @@ def intialize_modes(session):
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete),
+        prompt_key_bindings=create_r_keybindings(prase_text_complete, has_reticulate_installed),
         switchable_from=False,
         switchable_to=False
     )

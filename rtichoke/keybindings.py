@@ -18,12 +18,6 @@ def prompt_mode(*modes):
     return Condition(lambda: get_app().session.current_mode_name in modes)
 
 
-in_r_mode = prompt_mode("r")
-in_shell_mode = prompt_mode("shell")
-in_browse_mode = prompt_mode("browse")
-in_r_insert_mode = in_r_mode | in_browse_mode
-
-
 def preceding_text(pattern):
     m = re.compile(pattern)
 
@@ -53,6 +47,12 @@ def cursor_at_begin():
 def cursor_at_end():
     app = get_app()
     return app.current_buffer.cursor_position == len(app.current_buffer.text)
+
+
+@Condition
+def text_is_empty():
+    app = get_app()
+    return not app.current_buffer.text
 
 
 @Condition
@@ -210,14 +210,22 @@ def create_prompt_keybindings(prase_text_complete):
 
 
 # keybinds for both r mond and browse mode
-def create_r_keybindings(prase_text_complete):
+def create_r_keybindings(prase_text_complete, has_reticulate_installed):
     kb = create_prompt_keybindings(prase_text_complete)
     handle = kb.add
 
     # r mode
-    @handle(';', filter=insert_mode & default_focussed & in_r_insert_mode & cursor_at_begin)
+    @handle(';', filter=insert_mode & default_focussed & cursor_at_begin)
     def _(event):
         event.app.session.change_mode("shell")
+
+
+    @handle('~', filter=insert_mode & default_focussed & cursor_at_begin &
+                        text_is_empty & Condition(has_reticulate_installed))
+    def _(event):
+        buf = event.current_buffer
+        buf.text = "reticulate::repl_python()"
+        buf.validate_and_handle()
 
     return kb
 
