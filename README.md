@@ -60,7 +60,8 @@ _rtichoke_ can be customized via `options` in `.Rprofile` file. This file is usu
 
 ```r
 options(
-    # color scheme see [here](https://help.farbox.com/pygments.html) for a list of supported color schemes, default is `"native"`
+    # color scheme see [here](https://help.farbox.com/pygments.html) 
+    # for a list of supported color schemes, default is `"native"`
     rtichoke.color_scheme = "native",
 
     # either  `"emacs"` (default) or `"vi"`.
@@ -75,7 +76,8 @@ options(
 
     # pop up completion while typing
     rtichoke.complete_while_typing = TRUE,
-    # timeout in seconds to cancel completion if it takes too long, set it to 0 to disable it
+    # timeout in seconds to cancel completion if it takes too long
+    # set it to 0 to disable it
     rtichoke.complete_timeout = 0.05,
 
     # automatically adjust R buffer size based on terminal width
