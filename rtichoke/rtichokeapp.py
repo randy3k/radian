@@ -173,13 +173,9 @@ class RtichokeApplication(object):
         intialize_modes(session)
 
         ns = namespace.make_namespace("rtichoke", version=self.ver)
-        namespace.assign("machine", m, ns)
         namespace.assign("version", self.ver, ns)
-        namespace.assign("session", session, ns)
         namespace.namespace_export(ns, [
-            "machine",
-            "session",
-            "version",
+            "version"
         ])
         namespace.seal_namespace(ns)
 
