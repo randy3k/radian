@@ -1,11 +1,9 @@
 # register reticulate prompt
 
 rtichoke <- .py::import("rtichoke")
-rapi <- .py::import("rapi")
 prompt_toolkit <- .py::import("prompt_toolkit")
 pygments <- .py::import("pygments")
 operator <- .py::import("operator")
-sys <- .py::import("sys")
 builtins <- .py::import_builtins()
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
@@ -23,7 +21,7 @@ cursor_at_begin <- rtichoke$keybindings$cursor_at_begin
 text_is_empty <- rtichoke$keybindings$text_is_empty
 main_mode <- Condition(function() {
     app <- prompt_toolkit$application$current$get_app()
-    .py::py_copy(app$session$current_mode_name) %in% c("r", "browse")
+    app$session$current_mode_name %in% c("r", "browse")
 })
 
 commit_text <- rtichoke$keybindings$commit_text
@@ -132,7 +130,7 @@ app <- rtichoke$get_app()
 app$session$register_mode(
     "reticulate",
     native = FALSE,
-    on_done = function(session) handle_code(.py::py_copy(session$default_buffer$text)),
+    on_done = function(session) handle_code(session$default_buffer$text),
     return_result = function(result) !codeenv$evaluated,
     activator = function(session) reticulate:::py_repl_active(),
     message = function() app$session$prompt_text,
