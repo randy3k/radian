@@ -16,7 +16,8 @@ Any feedbacks will be welcome. However, users should use it at their own risks.
 
 ## Features
 
-- [x] shell mode (hit `;` to enter and `<backspace>` to leave)
+- [x] shell mode: hit `;` to enter and `<backspace>` to leave
+- [x] reticulate python repl mode: hit `~` to enter (_developement version only_)
 - [x] lightweight, no compilation is required
 - [x] multiline editing
 - [x] syntax highlight
