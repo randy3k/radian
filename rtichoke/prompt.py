@@ -20,7 +20,7 @@ from pygments.lexers.r import SLexer
 
 from rapi import rcall, rcopy, reval, rexec
 from rapi.interface import roption, setoption, process_events
-from rapi.namespace import set_hook, package_event
+from rapi.namespace import new_env, set_hook, package_event
 
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
@@ -148,8 +148,11 @@ def intialize_modes(session):
         return status.value != 2
 
     def enable_reticulate_prompt():
-        return "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
+        enable = "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
                 roption("rtichoke.enable_reticulate_prompt", True)
+        if enable:
+            setoption("rtichoke.suppress_reticulate_message", True)
+        return enable
 
     session.register_mode(
         "r",
@@ -209,7 +212,8 @@ def intialize_modes(session):
 def session_initialize(session):
     if not roption("rtichoke.suppress_reticulate_message", False):
         def reticulate_hook(*args):
-            rcall("packageStartupMessage", RETICULATE_MESSAGE)
+            if not roption("rtichoke.suppress_reticulate_message", False):
+                rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
 
@@ -218,7 +222,7 @@ def session_initialize(session):
             rcall(
                 ("base", "source"),
                 os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"),
-                local=True)
+                new_env())
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
 
