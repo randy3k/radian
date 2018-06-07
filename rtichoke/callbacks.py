@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 import sys
 import re
 import ctypes
-import locale
 
 
 if sys.platform == "win32":
@@ -52,7 +51,6 @@ if sys.platform == "win32":
         return text
 
     def utf8tosystem(text):
-        cp = locale.getpreferredencoding()
         s = ctypes.create_string_buffer(10)
         buf = b""
         for c in text:
@@ -60,7 +58,7 @@ if sys.platform == "win32":
             if n > 0:
                 buf += s[:n]
             else:
-                buf += c.encode(cp, "backslashreplace")
+                buf += "\\u{{{}}}".format(hex(ord(c))[2:]).encode("ascii")
         return buf
 
 else:
