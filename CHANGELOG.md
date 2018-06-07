@@ -8,3 +8,4 @@ Features:
 - reticulate mode
     - syntax highlight
     - multiline
+    - autocompletion

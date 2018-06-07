@@ -16,20 +16,19 @@ _rtichoke_ is still under active developement, users should use it at their own 
 
 ## Features
 
-- [x] shell mode: hit `;` to enter and `<backspace>` to leave
-- [x] reticulate python repl mode: hit `~` to enter (_developement version only_)
-- [x] lightweight, no compilation is required
-- [x] multiline editing
-- [x] syntax highlight
-- [x] auto completion
-- [x] better history search and navigation
-- [x] auto matching parens/quotes.
-- [x] brackated paste mode
-- [x] cross platform, runs on Windows, macOS and Linux
-- [x] emacs/vi editing mode
-- [x] custom color scheme
-- [x] automiatically adjust to terminal width
-- [x] read more than 4096 bytes per line
+- shell mode: hit `;` to enter and `<backspace>` to leave
+- reticulate python repl mode: hit `~` to enter (_developement version only_)
+- lightweight, no compilation is required
+- cross platform, runs on Windows, macOS and Linux
+- improved R prompt and reticulate python prompt
+    - multiline editing
+    - syntax highlight
+    - auto completion (reticulate autocompletion depends on `jedi`)
+- auto matching parens/quotes.
+- brackated paste mode
+- emacs/vi editing mode
+- automiatically adjust to terminal width
+- read more than 4096 bytes per line
 
 
 ## Installation
@@ -128,6 +127,14 @@ futher specify `LD_LIBRARY_PATH`,
 ```sh
 $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
 $ rtichoke
+```
+
+### reticulate prompt does not autocomplete
+
+Make sure that `jedi` is installed
+
+```
+pip install jedi
 ```
 
 ### Fail to load library

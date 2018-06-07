@@ -1,17 +1,65 @@
 # register reticulate prompt
 
-rtichoke <- .py::import("rtichoke")
-prompt_toolkit <- .py::import("prompt_toolkit")
-pygments <- .py::import("pygments")
-operator <- .py::import("operator")
-builtins <- .py::import_builtins()
+ns <- asNamespace(".py")
+import <- ns$import
+import_builtins <- ns$import_builtins
+py_call <- ns$py_call
+tuple <- ns$tuple
+dict <- ns$dict
+
+rtichoke <- import("rtichoke")
+prompt_toolkit <- import("prompt_toolkit")
+pygments <- import("pygments")
+operator <- import("operator")
+jedi <- tryCatch(import("jedi"), error = function(e) NULL)
+builtins <- import_builtins()
+
+len <- ns$py_copy("function", builtins$len)
+locals <- reticulate::py_run_string("locals()")
+globals <- reticulate::py_run_string("globals()")
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
 Condition <- prompt_toolkit$filters$Condition
+Completion <- prompt_toolkit$completion$Completion
+Completer <- prompt_toolkit$completion$Completer
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 
-`|.PyObject` <- function(x, y) .py::py_call(operator$or_, x, y)
-`&.PyObject` <- function(x, y) .py::py_call(operator$and_, x, y)
+PythonCompleter <- builtins$type(
+    builtins$str("PythonCompleter"),
+    tuple(Completer),
+    dict(
+        get_completions = function(self, document, complete_event) {
+            script <- NULL
+            word <- document$get_word_before_cursor()
+            if (complete_event$completion_requested || len(word) >= 3) {
+                script <- tryCatch({
+                    jedi$Interpreter(
+                        document$text,
+                        column=document$cursor_position_col,
+                        line=document$cursor_position_row + 1L,
+                        path="input-text",
+                        namespaces=list(locals, globals)
+                    )
+                }, error = function(e) NULL)
+            }
+
+            if (is.null(script)) {
+                list()
+            } else {
+                completions <- script$completions()
+                ret <- list()
+                for (i in seq_len(len(completions))) {
+                    c <- completions[i - 1L]
+                    ret[[i]] <- Completion(c$name_with_symbols, nchar(c$complete) - nchar(c$name_with_symbols))
+                }
+                ret
+            }
+        }
+    )
+)
+
+`|.PyObject` <- function(x, y) py_call(operator$or_, x, y)
+`&.PyObject` <- function(x, y) py_call(operator$and_, x, y)
 
 emacs_insert_mode <- prompt_toolkit$filters$emacs_insert_mode
 vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
@@ -25,7 +73,6 @@ main_mode <- Condition(function() {
 })
 
 commit_text <- rtichoke$keybindings$commit_text
-
 
 tidy_code <- function(code) {
     code <- gsub("\r", "", code)[[1]]
@@ -71,7 +118,9 @@ prase_text_complete <- function(code) {
 
 kb <- KeyBindings()
 kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty & main_mode)(
-    function(event) commit_text(event, "reticulate::repl_python(quiet = TRUE)", FALSE)
+    function(event) {
+        commit_text(event, "reticulate::repl_python(quiet = TRUE)", FALSE)
+    }
 )
 
 pkb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
@@ -95,10 +144,9 @@ handle_code <- function(code) {
 }
 
 handle_multiline_code <- function(code) {
-    # import builtins from reticulate rather than .py because we need globals and locals
-    builtins <- reticulate::import_builtins(convert = FALSE)
-    locals <- reticulate::py_run_string("locals()")
-    globals <- reticulate::py_run_string("globals()")
+    # we need reticulate::py_last_error, so we have to use builtins from reticulate
+    builtins <- reticulate::import_builtins()
+
     lines <- strsplit(code, "\n")[[1]]
 
     # try spliting the last line
@@ -138,5 +186,6 @@ app$session$register_mode(
     insert_new_line = TRUE,
     lexer = PygmentsLexer(pygments$lexers$python$PythonLexer),
     key_bindings = kb,
-    prompt_key_bindings = pkb
+    prompt_key_bindings = pkb,
+    completer = if (is.null(jedi)) NULL else PythonCompleter()
 )
