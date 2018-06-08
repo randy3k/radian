@@ -1,26 +1,21 @@
 from __future__ import unicode_literals
-import sys
 import os
-
-from . import callbacks
-
-import rapi
-from rapi import rcopy, rsym, rcall, namespace
-from rapi import Machine
+import sys
 import struct
 
-from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
+from rapi import rcopy, rsym, rcall, namespace
+from rapi import internals, Machine
 
 
 def interrupts_pending(pending=True):
     if sys.platform == "win32":
-        rapi.internals.UserBreak.value = int(pending)
+        internals.UserBreak.value = int(pending)
     else:
-        rapi.internals.R_interrupts_pending.value = int(pending)
+        internals.R_interrupts_pending.value = int(pending)
 
 
 def check_user_interrupt():
-    rapi.internals.R_CheckUserInterrupt()
+    internals.R_CheckUserInterrupt()
 
 
 def greeting():
@@ -133,6 +128,9 @@ class RtichokeApplication(object):
         os.environ["R_SHARE_DIR"] = os.path.join(self.r_home, "share")
 
     def run(self, options):
+        from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
+        from . import callbacks
+
         self.set_env_vars(options)
 
         args = ["rapi", "--quiet", "--no-restore-history"]
@@ -157,10 +155,11 @@ class RtichokeApplication(object):
         else:
             args.append("--no-restore-data")
 
-        session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
-        self.session = session
+        self.session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
+        session = self.session
 
-        m = Machine(set_default_callbacks=False, verbose=options.debug)
+        self.m = Machine(set_default_callbacks=False, verbose=options.debug)
+        m = self.m
         m.set_callback("R_ShowMessage", callbacks.show_message)
         m.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
         m.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
@@ -168,7 +167,6 @@ class RtichokeApplication(object):
         m.set_callback("R_PolledEvents", callbacks.polled_events)
         m.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
         m.start(arguments=args)
-        self.machine = m
 
         session_initialize(session)
         intialize_modes(session)

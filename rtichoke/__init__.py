@@ -7,8 +7,7 @@ def main():
     import optparse
     import os
     import sys
-    from rapi.utils import which_rhome, rversion2
-    from rtichoke import __version__
+    from rapi.utils import which_rhome, rversion
 
     parser = optparse.OptionParser("usage: rtichoke")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
@@ -30,7 +29,7 @@ def main():
     if options.version:
         if r_home:
             r_binary = os.path.normpath(os.path.join(r_home, "bin", "R"))
-            r_version = rversion2(r_home)
+            r_version = rversion(r_home)
         else:
             r_binary = "NA"
             r_version = "NA"
