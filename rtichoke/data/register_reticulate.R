@@ -4,6 +4,8 @@ ns <- asNamespace(".py")
 import <- ns$import
 import_builtins <- ns$import_builtins
 py_call <- ns$py_call
+py_eval <- ns$py_eval
+py_copy <- ns$py_copy
 tuple <- ns$tuple
 dict <- ns$dict
 
@@ -11,12 +13,13 @@ rtichoke <- import("rtichoke")
 prompt_toolkit <- import("prompt_toolkit")
 pygments <- import("pygments")
 operator <- import("operator")
+code <- import("code")
 jedi <- tryCatch(import("jedi"), error = function(e) NULL)
 builtins <- import_builtins()
-
-len <- ns$py_copy("function", builtins$len)
+len <- py_copy("function", builtins$len)
 locals <- reticulate::py_run_string("locals()")
 globals <- reticulate::py_run_string("globals()")
+compile_command <- code$compile_command
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
 Condition <- prompt_toolkit$filters$Condition
@@ -35,10 +38,10 @@ PythonCompleter <- builtins$type(
                 script <- tryCatch({
                     jedi$Interpreter(
                         document$text,
-                        column=document$cursor_position_col,
-                        line=document$cursor_position_row + 1L,
-                        path="input-text",
-                        namespaces=list(locals, globals)
+                        column = document$cursor_position_col,
+                        line = document$cursor_position_row + 1L,
+                        path = "input-text",
+                        namespaces = list(locals, globals)
                     )
                 }, error = function(e) NULL)
             }
@@ -50,7 +53,8 @@ PythonCompleter <- builtins$type(
                 ret <- list()
                 for (i in seq_len(len(completions))) {
                     c <- completions[i - 1L]
-                    ret[[i]] <- Completion(c$name_with_symbols, nchar(c$complete) - nchar(c$name_with_symbols))
+                    ret[[i]] <- Completion(
+                        c$name_with_symbols, nchar(c$complete) - nchar(c$name_with_symbols))
                 }
                 ret
             }
@@ -90,28 +94,32 @@ unindent <- function(lines) {
         if (i == 1) {
             indentation <- nchar(leading_spaces(line))
         }
-        unindented[i] <- sub(paste0("^\\s{0,", indentation ,"}"), "", line)
+        unindented[i] <- sub(paste0("^\\s{0,", indentation, "}"), "", line)
     }
     unindented
+}
+
+py_is_null <- function(x) {
+    py_copy(operator$is_(x, py_eval("None")))
 }
 
 prase_text_complete <- function(code) {
     code <- tidy_code(code)
     if (grepl("\n", code)) {
-        return(!is.null(tryCatch(
-            builtins$compile(code, "<input>", "exec"),
-            error = function(e) NULL
-        )))
+        return(tryCatch(
+            !py_is_null(compile_command(code, "<input>", "exec")),
+            error = function(e) TRUE
+        ))
     } else {
         if (!nzchar(trimws(code))) {
             TRUE
         } else if (xor(substr(code, 1, 1) == "?", substr(code, nchar(code), nchar(code)) == "?")) {
             TRUE
         } else {
-            !is.null(tryCatch(
-                builtins$compile(code, "<input>", "single"),
-                error = function(e) NULL
-            ))
+            tryCatch(
+                !py_is_null(compile_command(code, "<input>", "single")),
+                error = function(e) TRUE
+            )
         }
     }
 }
