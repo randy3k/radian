@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from setuptools import setup, find_packages
 
 
@@ -36,7 +37,15 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'rtichoke = rtichoke:main'
+            'rtichoke = rtichoke:rtichokeapp.main'
+        ]
+    },
+    extras_require={
+        "test": [
+            "pytest",
+            "pyte",
+            "pexpect",
+            "pywinpty" if sys.platform.startswith("win") else "ptyprocess"
         ]
     }
 )

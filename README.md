@@ -1,5 +1,7 @@
 # rtichoke: A 21 century R console
 
+[![CircleCI](https://circleci.com/gh/randy3k/rtichoke/tree/master.svg?style=shield)](https://circleci.com/gh/randy3k/rtichoke/tree/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/2ftxvwy66kxx8u9o/branch/master?svg=true)](https://ci.appveyor.com/project/randy3k/rtichoke/branch/master)
 [![](https://img.shields.io/pypi/v/rtichoke.svg)](https://pypi.org/project/rtichoke/)
 
 <img src="rtichoke.png"></img>

@@ -1,0 +1,133 @@
+version: 2
+
+jobs:
+  test-r-3.4.4-py2:
+    docker:
+      - image: rocker/r-ver:3.4.4
+    steps:
+      - run: |
+          apt-get update
+          apt-get install git curl python python-pip -y
+      - checkout
+      - run: pip install -e .[test]
+      - run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+          pytest
+  test-r-release-py2:
+    docker:
+      - image: rocker/r-ver
+    steps:
+      - run: |
+          apt-get update
+          apt-get install git curl python python-pip -y
+      - checkout
+      - run: pip install -e .[test]
+      - run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+          pytest
+  test-r-devel-py2:
+    docker:
+      - image: rocker/r-ver:devel
+    steps:
+      - run: |
+          apt-get update
+          apt-get install git curl python python-pip -y
+      - checkout
+      - run: pip install -e .[test]
+      - run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+          pytest
+  test-r-3.4.4-py3:
+    docker:
+      - image: rocker/r-ver:3.4.4
+    steps:
+      - run: |
+          apt-get update
+          apt-get install git curl python3 python3-pip -y
+      - checkout
+      - run: pip3 install -e .[test]
+      - run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+          pytest
+  test-r-release-py3:
+    docker:
+      - image: rocker/r-ver
+    steps:
+      - run: |
+          apt-get update
+          apt-get install git curl python3 python3-pip -y
+      - checkout
+      - run: pip3 install -e .[test]
+      - run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+          pytest
+  test-r-devel-py3:
+    docker:
+      - image: rocker/r-ver:devel
+    steps:
+      - run: |
+          apt-get update
+          apt-get install git curl python3 python3-pip -y
+      - checkout
+      - run: pip3 install -e .[test]
+      - run: |
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
+          pytest
+  deploy-to-pypi:
+    docker:
+      - image: circleci/python
+    steps:
+      - checkout
+      - run: sudo pip install twine
+      - run:
+          name: init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = randy3k" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run: |
+          python setup.py sdist
+          twine upload dist/*
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test-r-3.4.4-py2:
+          filters:
+            tags:
+              only: /^v.*/
+      - test-r-release-py2:
+          filters:
+            tags:
+              only: /^v.*/
+      - test-r-devel-py2:
+          filters:
+            tags:
+              only: /^v.*/
+      - test-r-3.4.4-py3:
+          filters:
+            tags:
+              only: /^v.*/
+      - test-r-release-py3:
+          filters:
+            tags:
+              only: /^v.*/
+      - test-r-devel-py3:
+          filters:
+            tags:
+              only: /^v.*/
+      - deploy-to-pypi:
+          requires:
+            - test-r-3.4.4-py2
+            - test-r-release-py2
+            - test-r-devel-py2
+            - test-r-3.4.4-py3
+            - test-r-release-py3
+            - test-r-devel-py3
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
