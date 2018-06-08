@@ -2,6 +2,7 @@ import sys
 import pyte
 import threading
 import time
+from contextlib import contextmanager
 
 if sys.platform.startswith("win"):
     import winpty
@@ -79,3 +80,15 @@ class ByteStream(pyte.ByteStream):
                     self.feed(data)
         t = threading.Thread(target=reader)
         t.start()
+
+
+@contextmanager
+def screen_process(cmd):
+    p = PtyProcess.spawn(cmd)
+    screen = Screen(p, 80, 24)
+    stream = ByteStream(screen)
+    stream.start_feeding()
+    try:
+        yield screen
+    finally:
+        p.terminate(force=True)
