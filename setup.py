@@ -37,7 +37,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'rtichoke = rtichoke:rtichokeapp.main'
+            'rtichoke = rtichoke:main'
         ]
     },
     extras_require={
