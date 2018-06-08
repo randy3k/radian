@@ -55,6 +55,17 @@ pip install -U git+https://github.com/randy3k/lineedit
 pip install -U git+https://github.com/randy3k/rtichoke
 ```
 
+## Alias on unix system
+
+You could alias `r` to _rtichoke_ by putting
+
+```bash
+alias r="rtichoke"
+```
+in `~/.bash_profile` such that `r` would open _rtichoke_ and `R` would still open the tranditional R console.
+(`R` is still useful, e.g, running `R CMD BUILD`.)
+
+
 ## Settings
 
 _rtichoke_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
@@ -102,19 +113,9 @@ options(
 )
 ```
 
-## Alias on unix system
-
-You could alias `r` to _rtichoke_ by putting
-
-```bash
-alias r="rtichoke"
-```
-in `~/.bash_profile` such that `r` would open _rtichoke_ and `R` would still open the tranditional R console.
-(`R` is still useful, e.g, running `R CMD BUILD`.)
-
 ## FAQ
 
-### R_HOME location
+#### How to specify R_HOME location
 
 If _rtichoke_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
 
@@ -131,7 +132,7 @@ $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
 $ rtichoke
 ```
 
-### reticulate prompt does not autocomplete
+#### `reticulate` prompt does not autocomplete
 
 Make sure that `jedi` is installed
 
@@ -139,21 +140,21 @@ Make sure that `jedi` is installed
 pip install jedi
 ```
 
-### Fail to load library
+#### Fail to load library
 
 Some packages may not be loaded properly with `rtichoke` but they work well with the bare R. The issue could be caused by several reasons, check
 [#38](https://github.com/randy3k/rtichoke/issues/38) and [#46](https://github.com/randy3k/rtichoke/issues/46). Open an issue if it still doesn't work.
 
-### History file
+#### how to use local history file
 
 _rtichoke_ maintains its own history file `.rtichoke_history` and doesn't use the `.Rhistory` file. A local `.rtichoke_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rtichoke_history` would be used. To override the default behavior, you could launch _rtichoke_ with the options: `rtichoke --local-history`, `rtichoke --global-history` or `rtichoke --no-history`.
 
 
-### Does it slow down my R program?
+#### Does it slow down my R program?
 
 _rtichoke_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
 
-### Nvim-R support
+#### Nvim-R support
 
 Put
 ```vim
@@ -166,7 +167,7 @@ let R_bracketed_paste = 1
 in your vim config. 
 
 
-### reticulate Error
+#### `reticulate` intialization error
 
 ```
 SystemError: initialization of _heapq did not return an extension module
@@ -179,7 +180,7 @@ devtools::install_github("rstudio/reticulate#279")
 ```
 
 
-### Readline Error
+#### Readline Error
 
 ```
 libreadline.so.6: undefined symbol: PC
@@ -192,7 +193,7 @@ conda install -c conda-forge readline=6.2
 conda upgrade -c conda-forge readline
 ```
 
-### setTimeLimit not working
+#### `setTimeLimit` not working
 
 _rtichoke_ utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
 global environment. A workaround is to put the code inside a block or a function,
@@ -203,6 +204,16 @@ global environment. A workaround is to put the code inside a block or a function
     while(1) {}
     setTimeLimit()
 }
+```
+
+#### Prompt not shown inside a docker container
+
+It maybe caused by the invalid terminal size, try running `stty size` in your terminal
+to see if it returns a correct size. You could change the values of it from the environmental variables
+`$COLUMNS` and `$LINES` when you log-in the docker container.
+
+```
+docker exec -it <container> bash -c "stty cols $COLUMNS rows $LINES && bash"
 ```
 
 
