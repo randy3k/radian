@@ -50,6 +50,18 @@ def main():
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
+    if sys.platform.startswith("linux") and "LD_LIBRARY_PATH" not in os.environ:
+        if "R_LD_LIBRARY_PATH" in os.environ:
+            R_LD_LIBRARY_PATH = "{}:{}".format(
+                os.path.join(r_home, "lib"),
+                os.environ["R_LD_LIBRARY_PATH"])
+        else:
+            R_LD_LIBRARY_PATH = os.path.join(r_home, "lib")
+
+        LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
+        os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
+        os.execv(sys.executable, [sys.executable, "-m", "rtichoke"] + sys.argv[1:])
+
     from .rtichokeapp import RtichokeApplication
     RtichokeApplication(r_home, ver=__version__).run(options)
 

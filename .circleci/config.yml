@@ -10,9 +10,7 @@ jobs:
           apt-get install git curl python python-pip -y
       - checkout
       - run: pip install -e .[test]
-      - run: |
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-          pytest
+      - run: pytest
   test-r-release-py2:
     docker:
       - image: rocker/r-ver
@@ -22,9 +20,7 @@ jobs:
           apt-get install git curl python python-pip -y
       - checkout
       - run: pip install -e .[test]
-      - run: |
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-          pytest
+      - run: pytest
   test-r-devel-py2:
     docker:
       - image: rocker/r-ver:devel
@@ -34,9 +30,7 @@ jobs:
           apt-get install git curl python python-pip -y
       - checkout
       - run: pip install -e .[test]
-      - run: |
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-          pytest
+      - run: pytest
   test-r-3.4.4-py3:
     docker:
       - image: rocker/r-ver:3.4.4
@@ -46,9 +40,7 @@ jobs:
           apt-get install git curl python3 python3-pip -y
       - checkout
       - run: pip3 install -e .[test]
-      - run: |
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-          pytest
+      - run: pytest
   test-r-release-py3:
     docker:
       - image: rocker/r-ver
@@ -58,9 +50,7 @@ jobs:
           apt-get install git curl python3 python3-pip -y
       - checkout
       - run: pip3 install -e .[test]
-      - run: |
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-          pytest
+      - run: pytest
   test-r-devel-py3:
     docker:
       - image: rocker/r-ver:devel
@@ -70,9 +60,7 @@ jobs:
           apt-get install git curl python3 python3-pip -y
       - checkout
       - run: pip3 install -e .[test]
-      - run: |
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-          pytest
+      - run: pytest
   deploy-to-pypi:
     docker:
       - image: circleci/python
