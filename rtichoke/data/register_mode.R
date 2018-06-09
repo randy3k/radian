@@ -33,7 +33,7 @@ pkb$add("backspace", filter = insert_mode & default_focussed & cursor_at_begin)(
 )
 
 app <- rtichoke$get_app()
-env <- new.env()
+env <- new.env(parent = emptyenv())
 app$session$register_mode(
     "env",
     native = FALSE,
