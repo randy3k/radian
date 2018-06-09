@@ -89,6 +89,6 @@ def screen_process(cmd):
     stream = ByteStream(screen)
     stream.start_feeding()
     try:
-        yield screen
+        yield screen, p
     finally:
         p.terminate(force=True)
