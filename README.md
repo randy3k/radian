@@ -73,8 +73,8 @@ _rtichoke_ can be customized via `options` in `.Rprofile` file. This file is usu
 ```r
 options(
     # color scheme see [here](https://help.farbox.com/pygments.html) 
-    # for a list of supported color schemes, default is `"native"`
-    rtichoke.color_scheme = "native",
+    # for a list of supported color schemes, default is `"monokai"`
+    rtichoke.color_scheme = "monokai",
 
     # either  `"emacs"` (default) or `"vi"`.
     rtichoke.editing_mode = "emacs",

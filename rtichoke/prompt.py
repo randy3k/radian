@@ -231,7 +231,7 @@ def session_initialize(session):
     else:
         session.app.editing_mode = EditingMode.EMACS
 
-    color_scheme = roption("rtichoke.color_scheme", "native")
+    color_scheme = roption("rtichoke.color_scheme", "monokai")
     session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
 
     session.auto_match = roption("rtichoke.auto_match", False)
