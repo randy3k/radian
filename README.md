@@ -19,13 +19,14 @@ _rtichoke_ is still under active developement, users should use it at their own 
 ## Features
 
 - shell mode: hit `;` to enter and `<backspace>` to leave
-- reticulate python repl mode: hit `~` to enter (_developement version only_)
+- reticulate python repl mode: hit `~` to enter
 - lightweight, no compilation is required
 - cross platform, runs on Windows, macOS and Linux
 - improved R prompt and reticulate python prompt
     - multiline editing
     - syntax highlight
     - auto completion (reticulate autocompletion depends on `jedi`)
+- unicode support
 - auto matching parens/quotes.
 - brackated paste mode
 - emacs/vi editing mode
