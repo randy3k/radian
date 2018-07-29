@@ -3,6 +3,8 @@
 [![CircleCI](https://circleci.com/gh/randy3k/rtichoke/tree/master.svg?style=shield)](https://circleci.com/gh/randy3k/rtichoke/tree/master)
 [![Build status](https://ci.appveyor.com/api/projects/status/2ftxvwy66kxx8u9o/branch/master?svg=true)](https://ci.appveyor.com/project/randy3k/rtichoke/branch/master)
 [![](https://img.shields.io/pypi/v/rtichoke.svg)](https://pypi.org/project/rtichoke/)
+<a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
+<a href="https://liberapay.com/randy3k/donate"><img src="http://img.shields.io/liberapay/receives/randy3k.svg?logo=liberapay"></a>
 
 <img src="rtichoke.png"></img>
 
