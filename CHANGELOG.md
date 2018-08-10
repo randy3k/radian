@@ -1,3 +1,8 @@
+# v0.2.2
+
+- bracketed paste check for empty data
+- bump minimum requirement of linedit
+
 # v0.2.1
 
 - change default color scheme to "native"
