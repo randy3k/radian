@@ -140,12 +140,12 @@ def create_prompt_keybindings(prase_text_complete):
         event.current_buffer.insert_text("{}")
         event.current_buffer.cursor_left()
 
-    @handle('"', filter=insert_mode & default_focussed & auto_match & following_text(r"[)}\]]|$"))
+    @handle('"', filter=insert_mode & default_focussed & auto_match & ~preceding_text(r".*[\"a-zA-Z0-9_]$") & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & auto_match & following_text(r"[)}\]]|$"))
+    @handle("'", filter=insert_mode & default_focussed & auto_match & ~preceding_text(r".*['a-zA-Z0-9_]$") & following_text(r"[)}\]]|$"))
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
