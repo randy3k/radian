@@ -33,7 +33,7 @@ setup(
     package_data={'rtichoke': ['data/*.R']},
     install_requires=[
         'rapi>=0.0.16',
-        'lineedit>=0.0.5'
+        'lineedit>=0.1.0'
     ],
     entry_points={
         'console_scripts': [
