@@ -204,9 +204,9 @@ def create_prompt_keybindings(prase_text_complete):
         data = data.replace('\r\n', '\n')
         data = data.replace('\r', '\n')
 
-        shouldeval = data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
+        should_eval = data and data[-1] == "\n" and len(event.current_buffer.document.text_after_cursor) == 0
         # todo: allow partial prase complete
-        if shouldeval and prase_text_complete(data):
+        if should_eval and prase_text_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
             event.current_buffer.validate_and_handle()
