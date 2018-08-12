@@ -1,3 +1,8 @@
+# v0.2.3
+
+- bump up rapi to 0.1.0
+
+
 # v0.2.2
 
 - bracketed paste check for empty data
