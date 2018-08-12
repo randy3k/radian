@@ -137,6 +137,10 @@ pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_
     function(event) commit_text(event, "exit", FALSE)
 )
 
+pkb$add("backspace", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
+    function(event) commit_text(event, "exit", FALSE)
+)
+
 codeenv <- new.env()
 
 handle_code <- function(code) {
