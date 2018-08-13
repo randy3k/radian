@@ -135,6 +135,10 @@ $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
 $ rtichoke
 ```
 
+If the shared library cannot be found, please make sure your R was installed with the shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed when R is complied from the source.
+
+
+
 #### `reticulate` prompt does not autocomplete
 
 Make sure that `jedi` is installed
