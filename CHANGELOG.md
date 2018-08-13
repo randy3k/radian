@@ -1,3 +1,9 @@
+# v0.2.4
+
+- add backspace to exit reticulte repl mode
+- do not pass `--restore-data` to R
+
+
 # v0.2.3
 
 - bump up rapi to 0.1.0
