@@ -150,9 +150,7 @@ class RtichokeApplication(object):
         if options.ask_save is not True:
             args.append("--no-save")
 
-        if options.restore_data:
-            args.append("--restore-data")
-        else:
+        if options.restore_data is not True:
             args.append("--no-restore-data")
 
         self.session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
