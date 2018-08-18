@@ -72,12 +72,6 @@ def has_complete_index():
     return cs and cs.complete_index is not None
 
 
-@Condition
-def is_multiline():
-    app = get_app()
-    return app.session.multiline
-
-
 def if_no_repeat(event):
     return not event.is_repeat
 
@@ -271,7 +265,7 @@ def create_keybindings():
         event.current_buffer.cancel_completion()
 
     # new line
-    @handle('escape', 'enter', filter=emacs_insert_mode & is_multiline)
+    @handle('escape', 'enter', filter=emacs_insert_mode)
     def _(event):
         if event.current_buffer.text:
             copy_margin = not in_paste_mode() and event.app.session.auto_indentation

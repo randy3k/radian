@@ -82,6 +82,11 @@ options(
     # either  `"emacs"` (default) or `"vi"`.
     rtichoke.editing_mode = "emacs",
 
+    # indent continuation lines
+    # turn this off if you want to copy code without the extra indentation;
+    # but it leads to less elegent layout
+    rtichoke.indent_lines = TRUE,
+
     # auto match brackets and quotes
     rtichoke.auto_match = FALSE,
 

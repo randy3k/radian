@@ -161,7 +161,7 @@ def intialize_modes(session):
         insert_new_line=True,
         history_share_with="browse",
         message=ANSI(session.default_prompt),
-        multiline=True,
+        multiline=session.indent_lines,
         complete_while_typing=session.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
@@ -174,7 +174,7 @@ def intialize_modes(session):
         on_done=shell_process_text,
         insert_new_line=True,
         message=ANSI(session.shell_prompt),
-        multiline=True,
+        multiline=session.indent_lines,
         complete_while_typing=session.complete_while_typing,
         lexer=None,
         completer=SmartPathCompleter(),
@@ -187,7 +187,7 @@ def intialize_modes(session):
         insert_new_line=True,
         history_share_with="r",
         message=lambda: ANSI(session.browse_prompt.format(session.browse_level)),
-        multiline=True,
+        multiline=session.indent_lines,
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
@@ -242,6 +242,7 @@ def session_initialize(session):
 
     session.history_search_no_duplicates = roption("rtichoke.history_search_no_duplicates", False)
     session.insert_new_line = roption("rtichoke.insert_new_line", True)
+    session.indent_lines = roption("rtichoke.indent_lines", True)
 
     prompt = roption("rtichoke.prompt", None)
     if not prompt:
