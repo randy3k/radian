@@ -1,3 +1,8 @@
+# v0.2.7
+
+- new option `indent_lines`
+- improveLD_LIBRARY_PATH and R_LD_LIBRARY_PATH detection
+
 # v0.2.4
 
 - add backspace to exit reticulte repl mode
