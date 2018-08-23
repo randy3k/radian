@@ -178,6 +178,7 @@ class RtichokeApplication(object):
         # namespace.seal_namespace(ns)
 
         # print welcome message
-        session.app.output.write(greeting())
+        if options.quiet is not True:
+            session.app.output.write(greeting())
 
         m.run_loop()

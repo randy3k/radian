@@ -11,6 +11,7 @@ def main():
 
     parser = optparse.OptionParser("usage: rtichoke")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
+    parser.add_option("--quiet", action="store_true", dest="quiet", help="Don't print startup message")
     parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
     parser.add_option("--no-site-file", action="store_true", dest="no_site_file", help="Don't read the site-wide Rprofile")
     parser.add_option("--no-init-file", action="store_true", dest="no_init_file", help="Don't read the user R profile")
