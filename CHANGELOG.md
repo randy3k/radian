@@ -1,3 +1,7 @@
+v 0.2.8
+
+- bump minimum requirement of rapi and lineedit
+
 # v0.2.7
 
 - new option `indent_lines`
