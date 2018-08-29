@@ -299,7 +299,10 @@ def create_rtichoke_prompt_session(options, history_file):
             while True:
                 if context.input_is_ready():
                     break
-                rexec(process_events)
+                try:
+                    process_events()
+                except Exception:
+                    pass
 
                 output_width = session.app.output.get_size().columns
                 if output_width and terminal_width[0] != output_width:
