@@ -18,7 +18,7 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.styles import get_style_by_name
 from pygments.lexers.r import SLexer
 
-from rapi import rcall, rcopy, reval, rexec
+from rapi import rcall, rcopy, reval
 from rapi.interface import roption, setoption, process_events
 from rapi.namespace import new_env, set_hook, package_event
 
