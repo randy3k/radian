@@ -65,7 +65,11 @@ def main():
             else:
                 LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
             os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
-            os.execv(sys.argv[0], sys.argv)
+            main = sys.argv[0]
+            if main.endswith("rtichoke"):
+                os.execv(sys.argv[0], sys.argv)
+            else:
+                os.execv(sys.executable, [sys.executable, "-m", "rtichoke"] + sys.argv[1:])
 
     from .rtichokeapp import RtichokeApplication
     RtichokeApplication(r_home, ver=__version__).run(options)
