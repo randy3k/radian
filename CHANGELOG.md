@@ -1,4 +1,8 @@
-# v0.2.8
+# v0.2.10
+
+- enable suspension via ctrl+z
+
+# v0.2.9
 
 - bump minimum requirement of rapi to v0.1.2 to fix #64
 
