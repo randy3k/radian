@@ -1,3 +1,7 @@
+# v0.2.11
+
+- bug fix for execv on linux
+
 # v0.2.10
 
 - enable suspension via ctrl+z
