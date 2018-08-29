@@ -32,7 +32,7 @@ setup(
     packages=find_packages('.'),
     package_data={'rtichoke': ['data/*.R']},
     install_requires=[
-        'rapi>=0.1.1',
+        'rapi>=0.1.2',
         'lineedit>=0.1.1'
     ],
     entry_points={

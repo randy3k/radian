@@ -1,4 +1,8 @@
-v 0.2.8
+# v0.2.8
+
+- bump minimum requirement of rapi to v0.1.2 to fix #64
+
+# v0.2.8
 
 - bump minimum requirement of rapi and lineedit
 
