@@ -316,6 +316,7 @@ def create_rtichoke_prompt_session(options, history_file):
         color_depth=ColorDepth.default(term=os.environ.get("TERM")),
         history=history,
         enable_history_search=True,
+        enable_suspend=True,
         tempfile_suffix=".R",
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,
         output=output,
