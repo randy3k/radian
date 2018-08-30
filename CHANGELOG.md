@@ -1,3 +1,7 @@
+# v0.2.12
+
+- fix backspace
+
 # v0.2.11
 
 - bug fix for execv on linux
