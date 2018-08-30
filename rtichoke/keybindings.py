@@ -183,7 +183,9 @@ def create_prompt_keybindings(prase_text_complete):
     @handle('backspace', filter=insert_mode & default_focussed & preceding_text(r"^\s+$"))
     def _(event):
         tab_size = event.app.session.tab_size
-        event.current_buffer.delete_before_cursor(tab_size)
+        buf = event.current_buffer
+        leading_spaces = len(buf.document.text_before_cursor)
+        buf.delete_before_cursor(min(tab_size, leading_spaces))
 
     @handle('tab', filter=insert_mode & default_focussed & preceding_text(r"^\s*$"))
     def _(event):
