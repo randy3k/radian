@@ -169,7 +169,7 @@ class RtichokeApplication(object):
         session_initialize(session)
         intialize_modes(session)
 
-        namespace.register_py_namespace()
+        # namespace.register_py_namespace()
         # ns = namespace.make_namespace("rtichoke", version=self.ver)
         # namespace.assign("version", self.ver, ns)
         # namespace.namespace_export(ns, [
