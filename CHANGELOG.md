@@ -1,3 +1,8 @@
+# v0.2.14
+
+- fix typo completion_timeout
+- .py namespace is deprecated, use .pythonapi global var
+
 # v0.2.12
 
 - fix backspace
