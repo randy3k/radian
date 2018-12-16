@@ -1,9 +1,6 @@
 # register a custom prompt which evaluates R expressions in an sandbox environment
 
-ns <- asNamespace(".py")
-import <- ns$import
-py_call <- ns$py_call
-py_copy <- ns$py_copy
+attach(.GlobalEnv$.pythonapi)
 
 rtichoke <- import("rtichoke")
 prompt_toolkit <- import("prompt_toolkit")
