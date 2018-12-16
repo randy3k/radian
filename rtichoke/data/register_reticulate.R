@@ -1,13 +1,6 @@
 # register reticulate prompt
 
-ns <- asNamespace(".py")
-import <- ns$import
-import_builtins <- ns$import_builtins
-py_call <- ns$py_call
-py_eval <- ns$py_eval
-py_copy <- ns$py_copy
-tuple <- ns$tuple
-dict <- ns$dict
+attach(.GlobalEnv$.pythonapi)
 
 rtichoke <- import("rtichoke")
 prompt_toolkit <- import("prompt_toolkit")
