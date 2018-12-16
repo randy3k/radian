@@ -1,6 +1,15 @@
 # register reticulate prompt
 
-attach(.GlobalEnv$.pythonapi)
+pythonapi <- .GlobalEnv$.pythonapi
+import <- pythonapi$import
+import_builtins <- pythonapi$import_builtins
+py_call <- pythonapi$py_call
+py_eval <- pythonapi$py_eval
+py_copy <- pythonapi$py_copy
+tuple <- pythonapi$tuple
+dict <- pythonapi$dict
+`$.PyObject` <- pythonapi$`$.PyObject`
+
 
 rtichoke <- import("rtichoke")
 prompt_toolkit <- import("prompt_toolkit")
