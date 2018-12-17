@@ -1,3 +1,7 @@
+# v0.2.15
+
+ - use rchitect
+
 # v0.2.14
 
 - fix typo completion_timeout

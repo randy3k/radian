@@ -18,9 +18,9 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.styles import get_style_by_name
 from pygments.lexers.r import SLexer
 
-from rapi import rcall, rcopy, reval
-from rapi.interface import roption, setoption, process_events
-from rapi.namespace import new_env, set_hook, package_event
+from rchitect import rcall, rcopy, reval
+from rchitect.interface import roption, setoption, process_events
+from rchitect.namespace import new_env, set_hook, package_event
 
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
@@ -112,8 +112,8 @@ class RtichokeMode(Mode):
 
 def intialize_modes(session):
     from ctypes import c_int
-    from rapi.interface import rexec_p, rstring_p
-    from rapi.internals import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
+    from rchitect.interface import rexec_p, rstring_p
+    from rchitect.internals import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
     from .shell import run_command
 
     def browse_activator(session):

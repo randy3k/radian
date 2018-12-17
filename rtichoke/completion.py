@@ -5,7 +5,7 @@ import sys
 import shlex
 import re
 
-from rapi.interface import rcall, reval, rcopy, rstring, rint
+from rchitect.interface import rcall, reval, rcopy, rstring, rint
 
 from six import text_type
 

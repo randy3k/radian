@@ -1,14 +1,14 @@
 # register reticulate prompt
 
-pythonapi <- .GlobalEnv$.pythonapi
-import <- pythonapi$import
-import_builtins <- pythonapi$import_builtins
-py_call <- pythonapi$py_call
-py_eval <- pythonapi$py_eval
-py_copy <- pythonapi$py_copy
-tuple <- pythonapi$tuple
-dict <- pythonapi$dict
-`$.PyObject` <- pythonapi$`$.PyObject`
+rchitect <- getOption("rchitect_environment")
+import <- rchitect$import
+import_builtins <- rchitect$import_builtins
+py_call <- rchitect$py_call
+py_eval <- rchitect$py_eval
+py_copy <- rchitect$py_copy
+tuple <- rchitect$tuple
+dict <- rchitect$dict
+`$.PyObject` <- rchitect$`$.PyObject`
 
 
 rtichoke <- import("rtichoke")

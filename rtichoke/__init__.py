@@ -7,7 +7,7 @@ def main():
     import optparse
     import os
     import sys
-    from rapi.utils import which_rhome, rversion
+    from rchitect.utils import which_rhome, rversion
 
     parser = optparse.OptionParser("usage: rtichoke")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")

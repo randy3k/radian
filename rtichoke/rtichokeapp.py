@@ -3,8 +3,8 @@ import os
 import sys
 import struct
 
-from rapi import rcopy, rsym, rcall, namespace
-from rapi import internals, Machine
+from rchitect import rcopy, rsym, rcall, namespace
+from rchitect import internals, Machine
 
 
 def interrupts_pending(pending=True):
@@ -133,7 +133,7 @@ class RtichokeApplication(object):
 
         self.set_env_vars(options)
 
-        args = ["rapi", "--quiet", "--no-restore-history"]
+        args = ["rchitect", "--quiet", "--no-restore-history"]
 
         if sys.platform != "win32":
             args.append("--no-readline")
