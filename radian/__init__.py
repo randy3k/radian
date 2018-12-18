@@ -1,4 +1,4 @@
-__version__ = '0.2.14'
+__version__ = '0.3.0'
 
 __all__ = ["get_app", "main"]
 
@@ -9,7 +9,7 @@ def main():
     import sys
     from rchitect.utils import which_rhome, rversion
 
-    parser = optparse.OptionParser("usage: rtichoke")
+    parser = optparse.OptionParser("usage: radian")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
     parser.add_option("--quiet", action="store_true", dest="quiet", help="Don't print startup message")
     parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
@@ -34,7 +34,7 @@ def main():
         else:
             r_binary = "NA"
             r_version = "NA"
-        print("rtichoke version: {}".format(__version__))
+        print("radian version: {}".format(__version__))
         print("r executable: {}".format(r_binary))
         print("r version: {}".format(r_version))
         print("python executable: {}".format(sys.executable))
@@ -44,8 +44,8 @@ def main():
             sys.version_info.micro))
         return
 
-    os.environ["RTICHOKE_VERSION"] = __version__
-    os.environ["RTICHOKE_COMMAND_ARGS"] = " ".join(
+    os.environ["RADIAN_VERSION"] = __version__
+    os.environ["RADIAN_COMMAND_ARGS"] = " ".join(
         ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v])
 
     if not r_home:
@@ -65,15 +65,15 @@ def main():
             else:
                 LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
             os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
-            if sys.argv[0].endswith("rtichoke"):
+            if sys.argv[0].endswith("radian"):
                 os.execv(sys.argv[0], sys.argv)
             else:
-                os.execv(sys.executable, [sys.executable, "-m", "rtichoke"] + sys.argv[1:])
+                os.execv(sys.executable, [sys.executable, "-m", "radian"] + sys.argv[1:])
 
-    from .rtichokeapp import RtichokeApplication
-    RtichokeApplication(r_home, ver=__version__).run(options)
+    from .radianapp import RadianApplication
+    RadianApplication(r_home, ver=__version__).run(options)
 
 
 def get_app():
-    from .rtichokeapp import RtichokeApplication
-    return RtichokeApplication.instance
+    from .radianapp import RadianApplication
+    return RadianApplication.instance

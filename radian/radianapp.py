@@ -59,7 +59,7 @@ def get_prompt(session):
                     return None
                 else:
                     print("unexpected error was caught.")
-                    print("please report to https://github.com/randy3k/rtichoke for such error.")
+                    print("please report to https://github.com/randy3k/radian for such error.")
                     print(e)
                     import traceback
                     traceback.print_exc()
@@ -90,15 +90,15 @@ def get_prompt(session):
     return _
 
 
-class RtichokeApplication(object):
+class RadianApplication(object):
     instance = None
     r_home = None
 
     def __init__(self, r_home, ver):
-        RtichokeApplication.instance = self
+        RadianApplication.instance = self
         self.r_home = r_home
         self.ver = ver
-        super(RtichokeApplication, self).__init__()
+        super(RadianApplication, self).__init__()
 
     def set_env_vars(self, options):
         if options.vanilla:
@@ -118,8 +118,8 @@ class RtichokeApplication(object):
             os.environ["R_PROFILE_USER"] = ""
 
         if options.local_history:
-            if not os.path.exists(".rtichoke_history"):
-                open(".rtichoke_history", 'w+').close()
+            if not os.path.exists(".radian_history"):
+                open(".radian_history", 'w+').close()
 
         os.environ["RETICULATE_PYTHON"] = sys.executable
 
@@ -128,7 +128,7 @@ class RtichokeApplication(object):
         os.environ["R_SHARE_DIR"] = os.path.join(self.r_home, "share")
 
     def run(self, options):
-        from .prompt import create_rtichoke_prompt_session, intialize_modes, session_initialize
+        from .prompt import create_radian_prompt_session, intialize_modes, session_initialize
         from . import callbacks
 
         self.set_env_vars(options)
@@ -153,7 +153,7 @@ class RtichokeApplication(object):
         if options.restore_data is not True:
             args.append("--no-restore-data")
 
-        self.session = create_rtichoke_prompt_session(options, history_file=".rtichoke_history")
+        self.session = create_radian_prompt_session(options, history_file=".radian_history")
         session = self.session
 
         self.m = Machine(set_default_callbacks=False, verbose=options.debug)
@@ -170,7 +170,7 @@ class RtichokeApplication(object):
         intialize_modes(session)
 
         # namespace.register_py_namespace()
-        # ns = namespace.make_namespace("rtichoke", version=self.ver)
+        # ns = namespace.make_namespace("radian", version=self.ver)
         # namespace.assign("version", self.ver, ns)
         # namespace.namespace_export(ns, [
         #     "version"

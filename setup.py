@@ -22,22 +22,22 @@ def get_version(package):
 
 
 setup(
-    name='rtichoke',
+    name='radian',
     author='Randy Lai',
-    version=get_version("rtichoke"),
-    url='https://github.com/randy3k/rtichoke',
-    description='An R console built on top of prompt_toolkit',
+    version=get_version("radian"),
+    url='https://github.com/randy3k/radian',
+    description='A 21 century R console',
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     packages=find_packages('.'),
-    package_data={'rtichoke': ['data/*.R']},
+    package_data={'radian': ['data/*.R']},
     install_requires=[
         'rchitect>=0.2.0',
         'lineedit>=0.1.1'
     ],
     entry_points={
         'console_scripts': [
-            'rtichoke = rtichoke:main'
+            'radian = radian:main'
         ]
     },
     extras_require={

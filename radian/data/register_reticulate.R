@@ -11,7 +11,7 @@ dict <- rchitect$dict
 `$.PyObject` <- rchitect$`$.PyObject`
 
 
-rtichoke <- import("rtichoke")
+radian <- import("radian")
 prompt_toolkit <- import("prompt_toolkit")
 pygments <- import("pygments")
 operator <- import("operator")
@@ -70,15 +70,15 @@ PythonCompleter <- builtins$type(
 emacs_insert_mode <- prompt_toolkit$filters$emacs_insert_mode
 vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
 insert_mode <- vi_insert_mode | emacs_insert_mode
-default_focussed <- rtichoke$keybindings$default_focussed
-cursor_at_begin <- rtichoke$keybindings$cursor_at_begin
-text_is_empty <- rtichoke$keybindings$text_is_empty
+default_focussed <- radian$keybindings$default_focussed
+cursor_at_begin <- radian$keybindings$cursor_at_begin
+text_is_empty <- radian$keybindings$text_is_empty
 main_mode <- Condition(function() {
     app <- prompt_toolkit$application$current$get_app()
     app$session$current_mode_name %in% c("r", "browse")
 })
 
-commit_text <- rtichoke$keybindings$commit_text
+commit_text <- radian$keybindings$commit_text
 
 tidy_code <- function(code) {
     code <- gsub("\r", "", code)[[1]]
@@ -133,7 +133,7 @@ kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_
     }
 )
 
-pkb <- rtichoke$keybindings$create_prompt_keybindings(prase_text_complete)
+pkb <- radian$keybindings$create_prompt_keybindings(prase_text_complete)
 
 pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
     function(event) commit_text(event, "exit", FALSE)
@@ -188,7 +188,7 @@ handle_multiline_code <- function(code) {
     }
 }
 
-app <- rtichoke$get_app()
+app <- radian$get_app()
 app$session$register_mode(
     "reticulate",
     native = FALSE,
