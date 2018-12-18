@@ -9,10 +9,8 @@
 
 <img src="radian.png"></img>
 
-_radian_ is an alternative console for the R program with multiline editing and rich syntax highlight.
+_radian_ (previously known as _rtichoke_) is an alternative console for the R program with multiline editing and rich syntax highlight.
 One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its design is more aligned to [julia](https://julialang.org).
-
-Previously, _radian_ was called _rtichoke_. I hope the rebranding will make it more prevalent.
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
@@ -143,14 +141,6 @@ If the shared library cannot be found, please make sure your R was installed wit
 
 
 
-#### `reticulate` prompt does not autocomplete
-
-Make sure that `jedi` is installed
-
-```
-pip install jedi
-```
-
 #### Fail to load library
 
 Some packages may not be loaded properly with `radian` but they work well with the bare R. The issue could be caused by several reasons, check
@@ -178,13 +168,19 @@ let R_bracketed_paste = 1
 in your vim config. 
 
 
-#### `reticulate` intialization error
+#### `reticulate` errors
+
+Make sure that `jedi` is installed for reticulate prompt completions.
+
+```sh
+pip install jedi
+```
+
+If you see the following error, you would need to install a [patched](https://github.com/rstudio/reticulate/pull/279) version of reticulate
 
 ```
 SystemError: initialization of _heapq did not return an extension module
 ```
-
-You would need to install [this](https://github.com/rstudio/reticulate/pull/279) particular version of reticulate for now.
 
 ```r
 devtools::install_github("rstudio/reticulate#279")
