@@ -1,7 +1,7 @@
 # radian: A 21 century R console
 
-[![CircleCI](https://circleci.com/gh/randy3k/rtichoke/tree/radian.svg?style=shield)](https://circleci.com/gh/randy3k/rtichoke/tree/radian)
-[![Build status](https://ci.appveyor.com/api/projects/status/2ftxvwy66kxx8u9o/branch/radian?svg=true)](https://ci.appveyor.com/project/randy3k/rtichoke/branch/radian)
+[![CircleCI](https://circleci.com/gh/randy3k/radian/tree/master.svg?style=shield)](https://circleci.com/gh/randy3k/radian/tree/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/3i4826t9lclr4vqd/branch/master?svg=true)](https://ci.appveyor.com/project/randy3k/radian/branch/master)
 [![](https://img.shields.io/pypi/v/radian.svg)](https://pypi.org/project/radian/)
 <a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
 <a href="https://liberapay.com/randy3k/donate"><img src="http://img.shields.io/liberapay/receives/randy3k.svg?logo=liberapay"></a>
