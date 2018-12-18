@@ -20,4 +20,4 @@ def test_startup():
     with screen_process(radian_command + ["--version"]) as (screen, process):
         assert_startswith(lambda: screen.display[0], "radian version: ")
         import radian
-        assert screen.display[0][18:].strip() == radian.__version__
+        assert screen.display[0][16:].strip() == radian.__version__
