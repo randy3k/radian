@@ -1,5 +1,5 @@
 __pycache__
 *.pyc
 dist/
-rtichoke.egg-info/
+radian.egg-info/
 .pytest_cache/

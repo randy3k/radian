@@ -1,19 +1,18 @@
-# rtichoke: A 21 century R console
+# radian: A 21 century R console
 
-[![CircleCI](https://circleci.com/gh/randy3k/rtichoke/tree/master.svg?style=shield)](https://circleci.com/gh/randy3k/rtichoke/tree/master)
-[![Build status](https://ci.appveyor.com/api/projects/status/2ftxvwy66kxx8u9o/branch/master?svg=true)](https://ci.appveyor.com/project/randy3k/rtichoke/branch/master)
-[![](https://img.shields.io/pypi/v/rtichoke.svg)](https://pypi.org/project/rtichoke/)
+[![CircleCI](https://circleci.com/gh/randy3k/rtichoke/tree/radian.svg?style=shield)](https://circleci.com/gh/randy3k/rtichoke/tree/radian)
+[![Build status](https://ci.appveyor.com/api/projects/status/2ftxvwy66kxx8u9o/branch/radian?svg=true)](https://ci.appveyor.com/project/randy3k/rtichoke/branch/radian)
+[![](https://img.shields.io/pypi/v/radian.svg)](https://pypi.org/project/radian/)
 <a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
 <a href="https://liberapay.com/randy3k/donate"><img src="http://img.shields.io/liberapay/receives/randy3k.svg?logo=liberapay"></a>
 
-<img src="rtichoke.png"></img>
 
-_rtichoke_ is an improved console for the R program with multiline editing and rich syntax highlight and more ...
+_radian_ is an improved console for the R program with multiline editing and rich syntax highlight and more ...
 
 
-Under the hood, _rtichoke_ is built on top of the python library `prompt-toolkit`. One would consider _rtichoke_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its layout and keybinds are actually more similar to those of [julia](https://julialang.org).
+Under the hood, _radian_ is built on top of the python library `prompt-toolkit`. One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its layout and keybinds are actually more similar to those of [julia](https://julialang.org).
 
-_rtichoke_ is still under active developement, users should use it at their own risks.
+_radian_ is still under active developement, users should use it at their own risks.
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
@@ -40,84 +39,84 @@ _rtichoke_ is still under active developement, users should use it at their own 
 
 Requirements:
 
-- An installation of R (version 3.4.0 or above) is required to use _rtichoke_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
-- `python` is also required to install _rtichoke_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended.
+- An installation of R (version 3.4.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
+- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended.
 - `pip` is optional but it makes the installation a bit easier.
 
 ```sh
 # install released version
-pip install -U rtichoke
-# to run rtichoke
-rtichoke
+pip install -U radian
+# to run radian
+radian
 ```
 
 ```sh
 # or the development version
 pip install -U git+https://github.com/randy3k/rchitect
 pip install -U git+https://github.com/randy3k/lineedit
-pip install -U git+https://github.com/randy3k/rtichoke
+pip install -U git+https://github.com/randy3k/radian
 ```
 
 ## Alias on unix system
 
-You could alias `r` to _rtichoke_ by putting
+You could alias `r` to _radian_ by putting
 
 ```bash
-alias r="rtichoke"
+alias r="radian"
 ```
-in `~/.bash_profile` such that `r` would open _rtichoke_ and `R` would still open the tranditional R console.
+in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open the tranditional R console.
 (`R` is still useful, e.g, running `R CMD BUILD`.)
 
 
 ## Settings
 
-_rtichoke_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
+_radian_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
 
 ```r
 options(
     # see https://help.farbox.com/pygments.html
     # for a list of supported color schemes, default scheme is "native"
-    rtichoke.color_scheme = "native",
+    radian.color_scheme = "native",
 
     # either  `"emacs"` (default) or `"vi"`.
-    rtichoke.editing_mode = "emacs",
+    radian.editing_mode = "emacs",
 
     # indent continuation lines
     # turn this off if you want to copy code without the extra indentation;
     # but it leads to less elegent layout
-    rtichoke.indent_lines = TRUE,
+    radian.indent_lines = TRUE,
 
     # auto match brackets and quotes
-    rtichoke.auto_match = FALSE,
+    radian.auto_match = FALSE,
 
     # auto indentation for new line and curly braces
-    rtichoke.auto_indentation = TRUE,
-    rtichoke.tab_size = 4,
+    radian.auto_indentation = TRUE,
+    radian.tab_size = 4,
 
     # pop up completion while typing
-    rtichoke.complete_while_typing = TRUE,
+    radian.complete_while_typing = TRUE,
     # timeout in seconds to cancel completion if it takes too long
     # set it to 0 to disable it
-    rtichoke.completion_timeout = 0.05,
+    radian.completion_timeout = 0.05,
 
     # automatically adjust R buffer size based on terminal width
-    rtichoke.auto_width = TRUE,
+    radian.auto_width = TRUE,
 
     # insert new line between prompts
-    rtichoke.insert_new_line = TRUE,
+    radian.insert_new_line = TRUE,
 
     # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
-    rtichoke.history_search_no_duplicates = FALSE,
+    radian.history_search_no_duplicates = FALSE,
 
     # custom prompt for different modes
-    rtichoke.prompt = "\033[0;34mr$>\033[0m ",
-    rtichoke.shell_prompt = "\033[0;31m#!>\033[0m ",
-    rtichoke.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
+    radian.prompt = "\033[0;34mr$>\033[0m ",
+    radian.shell_prompt = "\033[0;31m#!>\033[0m ",
+    radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
 
     # supress the loading message for reticulate
-    rtichoke.suppress_reticulate_message = FALSE,
+    radian.suppress_reticulate_message = FALSE,
     # enable reticulate prompt and trigger `~`
-    rtichoke.enable_reticulate_prompt = TRUE
+    radian.enable_reticulate_prompt = TRUE
 )
 ```
 
@@ -125,19 +124,19 @@ options(
 
 #### How to specify R_HOME location
 
-If _rtichoke_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
+If _radian_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
 
 On Linux/macOS, you could also export the environment variable `R_HOME`. For example,
 ```sh
 $ export R_HOME=/usr/local/lib/R
-$ rtichoke
+$ radian
 ```
 Note that it should be the path to `R_HOME`, not the path to the R binary. The
 folder should contain a file called `COPYING`. In some cases, you may need to
 futher specify `LD_LIBRARY_PATH`,
 ```sh
 $ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-$ rtichoke
+$ radian
 ```
 
 If the shared library cannot be found, please make sure your R was installed with the shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed when R is complied from the source.
@@ -154,23 +153,23 @@ pip install jedi
 
 #### Fail to load library
 
-Some packages may not be loaded properly with `rtichoke` but they work well with the bare R. The issue could be caused by several reasons, check
-[#38](https://github.com/randy3k/rtichoke/issues/38) and [#46](https://github.com/randy3k/rtichoke/issues/46). Open an issue if it still doesn't work.
+Some packages may not be loaded properly with `radian` but they work well with the bare R. The issue could be caused by several reasons, check
+[#38](https://github.com/randy3k/radian/issues/38) and [#46](https://github.com/randy3k/radian/issues/46). Open an issue if it still doesn't work.
 
 #### how to use local history file
 
-_rtichoke_ maintains its own history file `.rtichoke_history` and doesn't use the `.Rhistory` file. A local `.rtichoke_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.rtichoke_history` would be used. To override the default behavior, you could launch _rtichoke_ with the options: `rtichoke --local-history`, `rtichoke --global-history` or `rtichoke --no-history`.
+_radian_ maintains its own history file `.radian_history` and doesn't use the `.Rhistory` file. A local `.radian_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.radian_history` would be used. To override the default behavior, you could launch _radian_ with the options: `radian --local-history`, `radian --global-history` or `radian --no-history`.
 
 
 #### Does it slow down my R program?
 
-_rtichoke_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
+_radian_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
 
 #### Nvim-R support
 
 Put
 ```vim
-let R_app = "rtichoke"
+let R_app = "radian"
 let R_cmd = "R"
 let R_hl_term = 0
 let R_args = []  " if you had set any
@@ -207,7 +206,7 @@ conda upgrade -c conda-forge readline
 
 #### `setTimeLimit` not working
 
-_rtichoke_ utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
+_radian_ utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
 global environment. A workaround is to put the code inside a block or a function,
 
 ```r
@@ -231,8 +230,6 @@ docker exec -it <container> bash -c "stty cols $COLUMNS rows $LINES && bash"
 
 ## Credits
 
-_rtichoke_ wouldn't be possible witout the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
-
-The name _rtichoke_ was suggested by [thefringthing](https://www.reddit.com/r/rstats/comments/7zibhj/any_suggestions_of_a_new_name_of_rice/).
+_radian_ wouldn't be possible witout the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
 
 <div>Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>

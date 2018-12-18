@@ -34,11 +34,11 @@ BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 
 RETICULATE_MESSAGE = """
 The host python environment is {}
-and `rtichoke` is forcing `reticulate` to use this version of python.
+and `radian` is forcing `reticulate` to use this version of python.
 Any python packages needed, e.g., `tensorflow` and `keras`,
 have to be available to the current python environment.
 
-File an issue at https://github.com/randy3k/rtichoke if you encounter any
+File an issue at https://github.com/randy3k/radian if you encounter any
 difficulties in loading `reticulate`.
 """.format(sys.executable).strip()
 
@@ -87,7 +87,7 @@ if not is_windows():
                     raise
 
 
-class RtichokeMode(Mode):
+class RadianMode(Mode):
     def __init__(
             self,
             name,
@@ -107,7 +107,7 @@ class RtichokeMode(Mode):
         self.activator = activator
         self.return_result = return_result
         self.insert_new_line = insert_new_line
-        super(RtichokeMode, self).__init__(name, **kwargs)
+        super(RadianMode, self).__init__(name, **kwargs)
 
 
 def intialize_modes(session):
@@ -149,9 +149,9 @@ def intialize_modes(session):
 
     def enable_reticulate_prompt():
         enable = "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
-                roption("rtichoke.enable_reticulate_prompt", True)
+                roption("radian.enable_reticulate_prompt", True)
         if enable:
-            setoption("rtichoke.suppress_reticulate_message", True)
+            setoption("radian.suppress_reticulate_message", True)
         return enable
 
     session.register_mode(
@@ -210,14 +210,14 @@ def intialize_modes(session):
 
 
 def session_initialize(session):
-    if not roption("rtichoke.suppress_reticulate_message", False):
+    if not roption("radian.suppress_reticulate_message", False):
         def reticulate_hook(*args):
-            if not roption("rtichoke.suppress_reticulate_message", False):
+            if not roption("radian.suppress_reticulate_message", False):
                 rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
 
-    if roption("rtichoke.enable_reticulate_prompt", True):
+    if roption("radian.enable_reticulate_prompt", True):
         def reticulate_prompt(*args):
             rcall(
                 ("base", "source"),
@@ -226,25 +226,25 @@ def session_initialize(session):
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
 
-    if roption("rtichoke.editing_mode", "emacs") in ["vim", "vi"]:
+    if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
         session.app.editing_mode = EditingMode.VI
     else:
         session.app.editing_mode = EditingMode.EMACS
 
-    color_scheme = roption("rtichoke.color_scheme", "native")
+    color_scheme = roption("radian.color_scheme", "native")
     session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
 
-    session.auto_match = roption("rtichoke.auto_match", False)
-    session.auto_indentation = roption("rtichoke.auto_indentation", True)
-    session.tab_size = int(roption("rtichoke.tab_size", 4))
-    session.complete_while_typing = roption("rtichoke.complete_while_typing", True)
-    session.completion_timeout = roption("rtichoke.completion_timeout", 0.05)
+    session.auto_match = roption("radian.auto_match", False)
+    session.auto_indentation = roption("radian.auto_indentation", True)
+    session.tab_size = int(roption("radian.tab_size", 4))
+    session.complete_while_typing = roption("radian.complete_while_typing", True)
+    session.completion_timeout = roption("radian.completion_timeout", 0.05)
 
-    session.history_search_no_duplicates = roption("rtichoke.history_search_no_duplicates", False)
-    session.insert_new_line = roption("rtichoke.insert_new_line", True)
-    session.indent_lines = roption("rtichoke.indent_lines", True)
+    session.history_search_no_duplicates = roption("radian.history_search_no_duplicates", False)
+    session.insert_new_line = roption("radian.insert_new_line", True)
+    session.indent_lines = roption("radian.indent_lines", True)
 
-    prompt = roption("rtichoke.prompt", None)
+    prompt = roption("radian.prompt", None)
     if not prompt:
         sys_prompt = roption("prompt")
         if sys_prompt == "> ":
@@ -255,14 +255,14 @@ def session_initialize(session):
     session.default_prompt = prompt
     setoption("prompt", prompt)
 
-    shell_prompt = roption("rtichoke.shell_prompt", SHELL_PROMPT)
+    shell_prompt = roption("radian.shell_prompt", SHELL_PROMPT)
     session.shell_prompt = shell_prompt
 
-    browse_prompt = roption("rtichoke.browse_prompt", BROWSE_PROMPT)
+    browse_prompt = roption("radian.browse_prompt", BROWSE_PROMPT)
     session.browse_prompt = browse_prompt
 
     set_width_on_resize = roption("setWidthOnResize", True)
-    session.auto_width = roption("rtichoke.auto_width", set_width_on_resize)
+    session.auto_width = roption("radian.auto_width", set_width_on_resize)
     output_width = session.app.output.get_size().columns
     if output_width and session.auto_width:
         setoption("width", output_width)
@@ -278,7 +278,7 @@ def session_initialize(session):
     session._backup_settings()
 
 
-def create_rtichoke_prompt_session(options, history_file):
+def create_radian_prompt_session(options, history_file):
 
     if options.no_history:
         history = ModalInMemoryHistory()
@@ -321,7 +321,7 @@ def create_rtichoke_prompt_session(options, history_file):
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,
         output=output,
         inputhook=get_inputhook(),
-        mode_class=RtichokeMode
+        mode_class=RadianMode
     )
 
     return session

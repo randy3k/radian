@@ -1,4 +1,4 @@
 if __name__ == "__main__":
-    from rtichoke import main
+    from radian import main
 
     main()

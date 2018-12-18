@@ -5,7 +5,7 @@ import <- rchitect$import
 py_call <- rchitect$py_call
 py_copy <- rchitect$py_copy
 
-rtichoke <- import("rtichoke")
+radian <- import("radian")
 prompt_toolkit <- import("prompt_toolkit")
 pygments <- import("pygments")
 operator <- import("operator")
@@ -19,8 +19,8 @@ KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 emacs_insert_mode <- prompt_toolkit$filters$emacs_insert_mode
 vi_insert_mode <- prompt_toolkit$filters$vi_insert_mode
 insert_mode <- vi_insert_mode | emacs_insert_mode
-cursor_at_begin <- rtichoke$keybindings$cursor_at_begin
-default_focussed <- rtichoke$keybindings$default_focussed
+cursor_at_begin <- radian$keybindings$cursor_at_begin
+default_focussed <- radian$keybindings$default_focussed
 
 kb <- KeyBindings()
 kb$add("#", filter = insert_mode & default_focussed & cursor_at_begin)(
@@ -32,7 +32,7 @@ pkb$add("backspace", filter = insert_mode & default_focussed & cursor_at_begin)(
     function(event) event$app$session$change_mode("r")
 )
 
-app <- rtichoke$get_app()
+app <- radian$get_app()
 env <- new.env(parent = emptyenv())
 app$session$register_mode(
     "env",

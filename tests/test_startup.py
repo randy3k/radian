@@ -4,9 +4,9 @@ from helpers import assert_equal, assert_startswith, screen_process
 
 
 def test_startup():
-    rtichoke_command = [sys.executable, "-m", "rtichoke"]
+    radian_command = [sys.executable, "-m", "radian"]
 
-    with screen_process(rtichoke_command) as (screen, process):
+    with screen_process(radian_command) as (screen, process):
         assert_startswith(lambda: screen.display[0], "R ")
         assert_equal(lambda: (screen.cursor.x, screen.cursor.y), (4, 3))
         assert_startswith(lambda: screen.display[3], "r$>")
@@ -17,7 +17,7 @@ def test_startup():
         assert_startswith(lambda: screen.display[7], "r$>")
         assert_equal(lambda: (screen.cursor.x, screen.cursor.y), (4, 7))
 
-    with screen_process(rtichoke_command + ["--version"]) as (screen, process):
-        assert_startswith(lambda: screen.display[0], "rtichoke version: ")
-        import rtichoke
-        assert screen.display[0][18:].strip() == rtichoke.__version__
+    with screen_process(radian_command + ["--version"]) as (screen, process):
+        assert_startswith(lambda: screen.display[0], "radian version: ")
+        import radian
+        assert screen.display[0][18:].strip() == radian.__version__

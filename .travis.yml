@@ -6,7 +6,7 @@ python:
 install:
   - pip install .
 script:
-  - rtichoke --version
+  - radian --version
 
 notifications:
   email:
