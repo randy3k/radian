@@ -7,12 +7,10 @@
 <a href="https://liberapay.com/randy3k/donate"><img src="http://img.shields.io/liberapay/receives/randy3k.svg?logo=liberapay"></a>
 
 
-_radian_ is an improved console for the R program with multiline editing and rich syntax highlight and more ...
+_radian_ is an alternative console for the R program with multiline editing and rich syntax highlight.
+One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its layout and keybinds are actually more aligned to those of [julia](https://julialang.org).
 
-
-Under the hood, _radian_ is built on top of the python library `prompt-toolkit`. One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its layout and keybinds are actually more similar to those of [julia](https://julialang.org).
-
-_radian_ is still under active developement, users should use it at their own risks.
+Previously, _radian_ was called _rtichoke_. I hope the rebranding will make _radian_ more prevalent.
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
