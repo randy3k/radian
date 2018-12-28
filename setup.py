@@ -32,7 +32,7 @@ setup(
     packages=find_packages('.'),
     package_data={'radian': ['data/*.R']},
     install_requires=[
-        'rchitect>=0.2.0',
+        'rchitect>=0.2.2',
         'lineedit>=0.1.1'
     ],
     entry_points={
