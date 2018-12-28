@@ -169,14 +169,6 @@ class RadianApplication(object):
         session_initialize(session)
         intialize_modes(session)
 
-        # namespace.register_py_namespace()
-        # ns = namespace.make_namespace("radian", version=self.ver)
-        # namespace.assign("version", self.ver, ns)
-        # namespace.namespace_export(ns, [
-        #     "version"
-        # ])
-        # namespace.seal_namespace(ns)
-
         # print welcome message
         if options.quiet is not True:
             session.app.output.write(greeting())
