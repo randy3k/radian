@@ -3,8 +3,8 @@ import os
 import sys
 import struct
 
-from rchitect import rcopy, rsym, rcall, namespace
-from rchitect import internals, Machine
+from rchitect import rcopy, rsym, rcall
+from rchitect import internals, RSession
 
 
 def interrupts_pending(pending=True):
@@ -156,15 +156,15 @@ class RadianApplication(object):
         self.session = create_radian_prompt_session(options, history_file=".radian_history")
         session = self.session
 
-        self.m = Machine(set_default_callbacks=False, verbose=options.debug)
-        m = self.m
-        m.set_callback("R_ShowMessage", callbacks.show_message)
-        m.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
-        m.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
-        m.set_callback("R_Busy", callbacks.busy)
-        m.set_callback("R_PolledEvents", callbacks.polled_events)
-        m.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
-        m.start(arguments=args)
+        self.rs = RSession(set_default_callbacks=False, verbose=options.debug)
+        rs = self.rs
+        rs.set_callback("R_ShowMessage", callbacks.show_message)
+        rs.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
+        rs.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
+        rs.set_callback("R_Busy", callbacks.busy)
+        rs.set_callback("R_PolledEvents", callbacks.polled_events)
+        rs.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
+        rs.start(arguments=args)
 
         session_initialize(session)
         intialize_modes(session)
@@ -181,4 +181,4 @@ class RadianApplication(object):
         if options.quiet is not True:
             session.app.output.write(greeting())
 
-        m.run_loop()
+        rs.run_loop()

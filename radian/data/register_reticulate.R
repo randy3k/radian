@@ -9,6 +9,7 @@ py_copy <- rchitect$py_copy
 tuple <- rchitect$tuple
 dict <- rchitect$dict
 `$.PyObject` <- rchitect$`$.PyObject`
+`[.PyObject` <- rchitect$`[.PyObject`
 
 
 radian <- import("radian")
