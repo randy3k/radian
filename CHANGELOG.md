@@ -1,3 +1,7 @@
+# v0.3.1
+
+ - fix reticulate repl completion error
+
 # v0.3.0
 
  - reband as radian
