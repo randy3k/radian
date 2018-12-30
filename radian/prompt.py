@@ -113,7 +113,7 @@ class RadianMode(Mode):
 def intialize_modes(session):
     from ctypes import c_int
     from rchitect.interface import rexec_p, rstring_p
-    from rchitect.internals import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
+    from rchitect.api import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
     from .shell import run_command
 
     def browse_activator(session):

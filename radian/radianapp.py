@@ -4,18 +4,18 @@ import sys
 import struct
 
 from rchitect import rcopy, rsym, rcall
-from rchitect import internals, RSession
+from rchitect import api, RSession
 
 
 def interrupts_pending(pending=True):
     if sys.platform == "win32":
-        internals.UserBreak.value = int(pending)
+        api.UserBreak.value = int(pending)
     else:
-        internals.R_interrupts_pending.value = int(pending)
+        api.R_interrupts_pending.value = int(pending)
 
 
 def check_user_interrupt():
-    internals.R_CheckUserInterrupt()
+    api.R_CheckUserInterrupt()
 
 
 def greeting():
