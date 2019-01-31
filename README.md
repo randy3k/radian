@@ -170,22 +170,19 @@ in your vim config.
 
 #### `reticulate` errors
 
-Make sure that `jedi` is installed for reticulate prompt completions.
 
-```sh
-pip install jedi
-```
 
-If you see the following error, you would need to install a [patched](https://github.com/rstudio/reticulate/pull/279) version of reticulate
-
-```
-SystemError: initialization of _heapq did not return an extension module
-```
+If you see the an error related to initialization, you would probably need to install a [patched](https://github.com/rstudio/reticulate/pull/279) version of reticulate
 
 ```r
 devtools::install_github("rstudio/reticulate#279")
 ```
 
+To enable reticulate prompt completions, make sure that `jedi` is installed.
+
+```sh
+pip install jedi
+```
 
 #### Readline Error
 
