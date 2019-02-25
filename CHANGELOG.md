@@ -1,3 +1,7 @@
+# v0.3.2
+
+  - get R_SHARE_DIR etc from R if they don't exist
+
 # v0.3.1
 
  - fix reticulate repl completion error
