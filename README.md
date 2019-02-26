@@ -69,6 +69,7 @@ in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open 
 ## Settings
 
 _radian_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
+*Do not copy the whole configuration, just specify what you need in `.Rprofile`*
 
 ```r
 options(
