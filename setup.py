@@ -21,6 +21,14 @@ def get_version(package):
     return re.search("__version__ = ['\"]([^'\"]+)['\"]", init_py).group(1)
 
 
+tests_deps = [
+    "pytest",
+    "pyte>=0.8.0",
+    "pexpect",
+    "pywinpty" if sys.platform.startswith("win") else "ptyprocess"
+]
+
+
 setup(
     name='radian',
     author='Randy Lai',
@@ -42,13 +50,8 @@ setup(
         ]
     },
     extras_require={
-        "test": [
-            "pytest",
-            "pyte>=0.8.0",
-            "pexpect",
-            "pywinpty" if sys.platform.startswith("win") else "ptyprocess"
-        ]
+        "test": tests_deps
     },
     setup_requires=["pytest-runner"],
-    tests_require=["pytest"]
+    tests_require=tests_deps
 )
