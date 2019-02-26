@@ -3,3 +3,4 @@ __pycache__
 dist/
 radian.egg-info/
 .pytest_cache/
+.eggs/
