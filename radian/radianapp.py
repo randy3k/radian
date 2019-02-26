@@ -73,6 +73,7 @@ def get_prompt(session):
             if interrupted[0]:
                 if current_mode.native:
                     interrupts_pending(True)
+                    # FIXME: this causes longjmp, python stack won't be cleared
                     check_user_interrupt()
                 elif session.insert_new_line and session.current_mode.insert_new_line:
                     session.app.output.write("\n")
