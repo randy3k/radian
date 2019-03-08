@@ -144,7 +144,7 @@ If the shared library cannot be found, please make sure your R was installed wit
 
 #### Fail to load library
 
-Some packages may not be loaded properly with `radian` but they work well with the bare R. The issue could be caused by several reasons, check
+Some packages may not be loaded properly with _radian_ but they work well with the bare R. The issue could be caused by several reasons, check
 [#38](https://github.com/randy3k/radian/issues/38) and [#46](https://github.com/randy3k/radian/issues/46). Open an issue if it still doesn't work.
 
 #### how to use local history file
@@ -213,6 +213,9 @@ to see if it returns a correct size. You could change the values of it from the 
 docker exec -it <container> bash -c "stty cols $COLUMNS rows $LINES && bash"
 ```
 
+## Why called _radian_?
+
+_radian_ is powered by (π)thon.
 
 ## Credits
 
