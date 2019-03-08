@@ -20,8 +20,6 @@ code <- import("code")
 jedi <- tryCatch(import("jedi"), error = function(e) NULL)
 builtins <- import_builtins()
 len <- py_copy("function", builtins$len)
-locals <- reticulate::py_run_string("locals()")
-globals <- reticulate::py_run_string("globals()")
 compile_command <- code$compile_command
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
@@ -36,6 +34,8 @@ PythonCompleter <- builtins$type(
     dict(
         get_completions = function(self, document, complete_event) {
             script <- NULL
+            locals <- reticulate::py_run_string("locals()")
+            globals <- reticulate::py_run_string("globals()")
             word <- document$get_word_before_cursor()
             if (complete_event$completion_requested || len(word) >= 3) {
                 script <- tryCatch({

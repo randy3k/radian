@@ -169,15 +169,7 @@ let R_bracketed_paste = 1
 in your vim config. 
 
 
-#### `reticulate` errors
-
-
-
-If you see the an error related to initialization, you would probably need to install a [patched](https://github.com/rstudio/reticulate/pull/279) version of reticulate
-
-```r
-devtools::install_github("rstudio/reticulate#279")
-```
+#### `reticulate` Auto Completions
 
 To enable reticulate prompt completions, make sure that `jedi` is installed.
 
