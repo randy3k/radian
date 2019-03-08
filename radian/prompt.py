@@ -210,12 +210,21 @@ def intialize_modes(session):
 
 
 def session_initialize(session):
-    if not roption("radian.suppress_reticulate_message", False):
+    if not sys.platform.startswith("win"):
         def reticulate_hook(*args):
+            rcall(
+                ("base", "source"),
+                os.path.join(os.path.dirname(__file__), "data", "patching_reticulate.R"),
+                new_env())
+
+        set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
+
+    if not roption("radian.suppress_reticulate_message", False):
+        def reticulate_message_hook(*args):
             if not roption("radian.suppress_reticulate_message", False):
                 rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
-        set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
+        set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
     if roption("radian.enable_reticulate_prompt", True):
         def reticulate_prompt(*args):
