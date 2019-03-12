@@ -1,3 +1,7 @@
+# v0.3.4
+
+  - fix R_SHARE_DIR issues
+
 # v0.3.3
 
   - patch reticulate
