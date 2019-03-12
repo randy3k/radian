@@ -136,7 +136,7 @@ class RadianApplication(object):
                     "cat(paste(R.home('doc'), R.home('include'), R.home('share'), sep=':'))"
                     ])
                 doc_dir, include_dir, share_dir = paths.decode().split(":")
-            except (FileNotFoundError, subprocess.CalledProcessError):
+            except Exception:
                 pass
 
         os.environ["R_DOC_DIR"] = doc_dir
