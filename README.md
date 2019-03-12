@@ -183,11 +183,10 @@ pip install jedi
 libreadline.so.6: undefined symbol: PC
 ```
 
-If you are using conda and encounter this error, it is likely because the `readline` from conda is bugged. Install it again via `conda-forge`.
-```python
-conda install -c conda-forge readline=6.2
-# or
-conda upgrade -c conda-forge readline
+It may occurr if python and R use different two versions of `libreadline`. You could try preloading the system `libreadline.so` first.
+
+```
+env LD_PRELOAD=/lib64/libreadline.so.6 radian
 ```
 
 #### `setTimeLimit` not working
