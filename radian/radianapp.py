@@ -132,7 +132,7 @@ class RadianApplication(object):
                 and os.path.isdir(share_dir)):
             try:
                 paths = subprocess.check_output([
-                    os.path.join(self.r_home, "R"), "--slave", "-e",
+                    os.path.join(self.r_home, "bin", "R"), "--slave", "-e",
                     "cat(paste(R.home('doc'), R.home('include'), R.home('share'), sep=':'))"
                     ])
                 doc_dir, include_dir, share_dir = paths.decode().split(":")
