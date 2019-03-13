@@ -1,4 +1,4 @@
-__version__ = '0.3.4.9000'
+__version__ = '0.3.4'
 
 __all__ = ["get_app", "main"]
 
