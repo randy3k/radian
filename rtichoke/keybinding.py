@@ -219,6 +219,12 @@ def create_keybindings():
         tab_size = event.app.tab_size
         event.current_buffer.insert_text(" " * tab_size)
 
+    # quick ' <- '
+    @handle('-', '-', filter=insert_mode & default_focussed)
+    def _(event):
+        event.current_buffer.insert_text(" <- ")
+        event.current_buffer.cursor_right()
+
     # bracketed paste
     @handle(Keys.BracketedPaste, filter=default_focussed & prompt_mode("r", "browse"))
     def _(event):
