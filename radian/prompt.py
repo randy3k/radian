@@ -8,22 +8,22 @@ import errno
 
 from lineedit import Mode, ModalPromptSession, ModalInMemoryHistory, ModalFileHistory
 from prompt_toolkit.application.current import get_app
-from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.output import ColorDepth
-from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 
-from pygments.styles import get_style_by_name
 from pygments.lexers.r import SLexer
 
+from rchitect._libR import ffi, lib
 from rchitect import rcall, rcopy, reval
-from rchitect.interface import roption, setoption, process_events
+from rchitect.interface import rstring_p, setoption, process_events
 # from rchitect.namespace import new_env, set_hook, package_event
 
+from .shell import run_command
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
+from .vt100 import CustomVt100Input, CustomVt100Output
 
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
@@ -41,50 +41,6 @@ have to be available to the current python environment.
 File an issue at https://github.com/randy3k/radian if you encounter any
 difficulties in loading `reticulate`.
 """.format(sys.executable).strip()
-
-
-if not is_windows():
-    from prompt_toolkit.input.vt100 import Vt100Input
-    from prompt_toolkit.output.vt100 import Vt100_Output
-
-    class CustomVt100Input(Vt100Input):
-        @property
-        def responds_to_cpr(self):
-            return False
-
-    class CustomVt100Output(Vt100_Output):
-
-        def flush(self):
-            # it is needed when the stdout was redirected
-            # see https://github.com/Non-Contradiction/JuliaCall/issues/39
-            try:
-                if self._buffer:
-                    data = ''.join(self._buffer)
-                    if self.write_binary:
-                        if hasattr(self.stdout, 'buffer'):
-                            out = self.stdout.buffer  # Py3.
-                        else:
-                            out = self.stdout
-                        out.write(data.encode(self.stdout.encoding or 'utf-8', 'replace'))
-                    else:
-                        self.stdout.write(data)
-                    self._buffer = []
-            except IOError as e:
-                if e.args and e.args[0] == errno.EINTR:
-                    pass
-                elif e.args and e.args[0] == 0:
-                    pass
-                else:
-                    raise
-            try:
-                self.stdout.flush()
-            except IOError as e:
-                if e.args and e.args[0] == errno.EAGAIN:
-                    app = get_app()
-                    app.renderer.render(app, app.layout)
-                    pass
-                else:
-                    raise
 
 
 class RadianMode(Mode):
@@ -110,12 +66,7 @@ class RadianMode(Mode):
         super(RadianMode, self).__init__(name, **kwargs)
 
 
-def intialize_modes(session):
-    from rchitect.interface import rstring_p
-    from rchitect._libR import ffi, lib
-
-    from .shell import run_command
-
+def register_modes(session):
     def browse_activator(session):
         message = session.prompt_text
         if BROWSE_PATTERN.match(message):
@@ -203,84 +154,6 @@ def intialize_modes(session):
         switchable_from=False,
         switchable_to=False
     )
-
-
-def session_initialize(session):
-    # if not sys.platform.startswith("win"):
-    #     def reticulate_hook(*args):
-    #         rcall(
-    #             ("base", "source"),
-    #             os.path.join(os.path.dirname(__file__), "data", "patching_reticulate.R"),
-    #             new_env())
-
-    #     set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
-
-    # if not roption("radian.suppress_reticulate_message", False):
-    #     def reticulate_message_hook(*args):
-    #         if not roption("radian.suppress_reticulate_message", False):
-    #             rcall("packageStartupMessage", RETICULATE_MESSAGE)
-
-    #     set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
-
-    # if roption("radian.enable_reticulate_prompt", True):
-    #     def reticulate_prompt(*args):
-    #         rcall(
-    #             ("base", "source"),
-    #             os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"),
-    #             new_env())
-
-    #     set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
-
-    if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
-        session.app.editing_mode = EditingMode.VI
-    else:
-        session.app.editing_mode = EditingMode.EMACS
-
-    color_scheme = roption("radian.color_scheme", "native")
-    session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
-
-    session.auto_match = roption("radian.auto_match", False)
-    session.auto_indentation = roption("radian.auto_indentation", True)
-    session.tab_size = int(roption("radian.tab_size", 4))
-    session.complete_while_typing = roption("radian.complete_while_typing", True)
-    session.completion_timeout = roption("radian.completion_timeout", 0.05)
-
-    session.history_search_no_duplicates = roption("radian.history_search_no_duplicates", False)
-    session.insert_new_line = roption("radian.insert_new_line", True)
-    session.indent_lines = roption("radian.indent_lines", True)
-
-    prompt = roption("radian.prompt", None)
-    if not prompt:
-        sys_prompt = roption("prompt")
-        if sys_prompt == "> ":
-            prompt = PROMPT
-        else:
-            prompt = sys_prompt
-
-    session.default_prompt = prompt
-    setoption("prompt", prompt)
-
-    shell_prompt = roption("radian.shell_prompt", SHELL_PROMPT)
-    session.shell_prompt = shell_prompt
-
-    browse_prompt = roption("radian.browse_prompt", BROWSE_PROMPT)
-    session.browse_prompt = browse_prompt
-
-    set_width_on_resize = roption("setWidthOnResize", True)
-    session.auto_width = roption("radian.auto_width", set_width_on_resize)
-    output_width = session.app.output.get_size().columns
-    if output_width and session.auto_width:
-        setoption("width", output_width)
-
-    # necessary on windows
-    setoption("menu.graphics", False)
-
-    # enables completion of installed package names
-    if rcopy(reval("rc.settings('ipck')")) is None:
-        reval("rc.settings(ipck = TRUE)")
-
-    # backup the updated settings
-    session._backup_settings()
 
 
 def create_radian_prompt_session(options, history_file):
