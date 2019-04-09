@@ -1,95 +1,7 @@
 from __future__ import unicode_literals
 import os
 import sys
-import struct
 import subprocess
-
-from rchitect import rcopy, rsym, rcall
-from rchitect import api, RSession
-
-
-def interrupts_pending(pending=True):
-    if sys.platform == "win32":
-        api.UserBreak.value = int(pending)
-    else:
-        api.R_interrupts_pending.value = int(pending)
-
-
-def check_user_interrupt():
-    api.R_CheckUserInterrupt()
-
-
-def greeting():
-    info = rcopy(rcall(rsym("R.Version")))
-    return "{} -- \"{}\"\nPlatform: {} ({}-bit)\n".format(
-        info["version.string"], info["nickname"], info["platform"], 8 * struct.calcsize("P"))
-
-
-def get_prompt(session):
-    interrupted = [False]
-
-    def _(message, add_history=1):
-        session.prompt_text = message
-
-        activated = False
-        for name in reversed(session.modes):
-            mode = session.modes[name]
-            if mode.activator and mode.activator(session):
-                session.activate_mode(name)
-                activated = True
-                break
-        if not activated:
-            session.activate_mode("unknown")
-
-        current_mode = session.current_mode
-
-        if interrupted[0]:
-            interrupted[0] = False
-        elif session.insert_new_line and current_mode.insert_new_line:
-            session.app.output.write("\n")
-
-        text = None
-
-        while text is None:
-            try:
-                text = session.prompt(add_history=add_history)
-
-            except Exception as e:
-                if isinstance(e, EOFError):
-                    # todo: confirmation in "r" mode
-                    return None
-                else:
-                    print("unexpected error was caught.")
-                    print("please report to https://github.com/randy3k/radian for such error.")
-                    print(e)
-                    import traceback
-                    traceback.print_exc()
-                    sys.exit(1)
-            except KeyboardInterrupt:
-                interrupted[0] = True
-
-            current_mode = session.current_mode
-
-            if interrupted[0]:
-                if current_mode.native:
-                    interrupts_pending(True)
-                    # FIXME: this causes longjmp, python stack won't be cleared
-                    check_user_interrupt()
-                elif session.insert_new_line and session.current_mode.insert_new_line:
-                    session.app.output.write("\n")
-                    interrupted[0] = False
-                    text = None
-            elif not current_mode.native:
-                result = current_mode.on_done(session)
-                if current_mode.return_result and current_mode.return_result(result):
-                    return result
-                if session.insert_new_line and current_mode.insert_new_line:
-                    session.app.output.write("\n")
-                text = None
-
-        return text
-
-    return _
 
 
 class RadianApplication(object):
@@ -145,7 +57,8 @@ class RadianApplication(object):
 
     def run(self, options):
         from .prompt import create_radian_prompt_session, intialize_modes, session_initialize
-        from . import callbacks
+        from .read_console import create_read_console
+        import rchitect
 
         self.set_env_vars(options)
 
@@ -172,21 +85,14 @@ class RadianApplication(object):
         self.session = create_radian_prompt_session(options, history_file=".radian_history")
         session = self.session
 
-        self.rs = RSession(set_default_callbacks=False, verbose=options.debug)
-        rs = self.rs
-        rs.set_callback("R_ShowMessage", callbacks.show_message)
-        rs.set_callback("R_ReadConsole", callbacks.create_read_console(get_prompt(session)))
-        rs.set_callback("R_WriteConsoleEx", callbacks.write_console_ex)
-        rs.set_callback("R_Busy", callbacks.busy)
-        rs.set_callback("R_PolledEvents", callbacks.polled_events)
-        rs.set_callback("R_YesNoCancel", callbacks.ask_yes_no_cancel)
-        rs.start(arguments=args)
+        rchitect.setup.def_callback(name="read_console")(create_read_console(session))
+        rchitect.init(args=args)
 
         session_initialize(session)
         intialize_modes(session)
 
         # print welcome message
         if options.quiet is not True:
-            session.app.output.write(greeting())
+            session.app.output.write(rchitect.interface.greeting())
 
-        rs.run_loop()
+        rchitect.loop()

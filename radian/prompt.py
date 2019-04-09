@@ -20,7 +20,7 @@ from pygments.lexers.r import SLexer
 
 from rchitect import rcall, rcopy, reval
 from rchitect.interface import roption, setoption, process_events
-from rchitect.namespace import new_env, set_hook, package_event
+# from rchitect.namespace import new_env, set_hook, package_event
 
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
@@ -111,9 +111,9 @@ class RadianMode(Mode):
 
 
 def intialize_modes(session):
-    from ctypes import c_int
-    from rchitect.interface import rexec_p, rstring_p
-    from rchitect.api import Rf_protect, Rf_unprotect, R_ParseVector, R_NilValue
+    from rchitect.interface import rstring_p
+    from rchitect._libR import ffi, lib
+
     from .shell import run_command
 
     def browse_activator(session):
@@ -134,18 +134,14 @@ def intialize_modes(session):
         run_command(text)
 
     def prase_text_complete(text):
-        status = c_int()
-        s = Rf_protect(rstring_p(text))
-        try:
-            orig_stderr = sys.stderr
-            sys.stderr = None
-            rexec_p(R_ParseVector, s, -1, status, R_NilValue)
-        except Exception:
-            return True
-        finally:
-            sys.stderr = orig_stderr
-            Rf_unprotect(1)
-        return status.value != 2
+        status = ffi.new("ParseStatus[1]")
+        s = lib.Rf_protect(rstring_p(text))
+        orig_stderr = sys.stderr
+        sys.stderr = None
+        lib.R_ParseVector(s, -1, status, lib.R_NilValue)
+        sys.stderr = orig_stderr
+        lib.Rf_unprotect(1)
+        return status[0] != 2
 
     def enable_reticulate_prompt():
         enable = "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
@@ -210,30 +206,30 @@ def intialize_modes(session):
 
 
 def session_initialize(session):
-    if not sys.platform.startswith("win"):
-        def reticulate_hook(*args):
-            rcall(
-                ("base", "source"),
-                os.path.join(os.path.dirname(__file__), "data", "patching_reticulate.R"),
-                new_env())
+    # if not sys.platform.startswith("win"):
+    #     def reticulate_hook(*args):
+    #         rcall(
+    #             ("base", "source"),
+    #             os.path.join(os.path.dirname(__file__), "data", "patching_reticulate.R"),
+    #             new_env())
 
-        set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
+    #     set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
 
-    if not roption("radian.suppress_reticulate_message", False):
-        def reticulate_message_hook(*args):
-            if not roption("radian.suppress_reticulate_message", False):
-                rcall("packageStartupMessage", RETICULATE_MESSAGE)
+    # if not roption("radian.suppress_reticulate_message", False):
+    #     def reticulate_message_hook(*args):
+    #         if not roption("radian.suppress_reticulate_message", False):
+    #             rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
-        set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
+    #     set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
-    if roption("radian.enable_reticulate_prompt", True):
-        def reticulate_prompt(*args):
-            rcall(
-                ("base", "source"),
-                os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"),
-                new_env())
+    # if roption("radian.enable_reticulate_prompt", True):
+    #     def reticulate_prompt(*args):
+    #         rcall(
+    #             ("base", "source"),
+    #             os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"),
+    #             new_env())
 
-        set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
+    #     set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
 
     if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
         session.app.editing_mode = EditingMode.VI

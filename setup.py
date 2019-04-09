@@ -40,7 +40,7 @@ setup(
     packages=find_packages('.'),
     package_data={'radian': ['data/*.R']},
     install_requires=[
-        'rchitect>=0.2.3,<0.3.0',
+        'rchitect>=0.5.0.dev0',
         'lineedit>=0.1.1,<0.2.0',
         'six>=1.9.0'
     ],

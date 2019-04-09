@@ -1,4 +1,4 @@
-__version__ = '0.3.4'
+__version__ = '0.4.0.dev0'
 
 __all__ = ["get_app", "main"]
 
@@ -7,7 +7,7 @@ def main():
     import optparse
     import os
     import sys
-    from rchitect.utils import which_rhome, rversion
+    from rchitect.utils import Rhome, rversion
 
     parser = optparse.OptionParser("usage: radian")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="get version")
@@ -25,7 +25,7 @@ def main():
 
     options, args = parser.parse_args()
 
-    r_home = which_rhome()
+    r_home = Rhome()
 
     if options.version:
         if r_home:
