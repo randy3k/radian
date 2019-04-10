@@ -1,4 +1,6 @@
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.utils import is_windows
+import errno
 
 if not is_windows():
     from prompt_toolkit.input.vt100 import Vt100Input

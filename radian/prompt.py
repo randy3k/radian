@@ -4,10 +4,8 @@ import os
 import re
 import sys
 import time
-import errno
 
 from lineedit import Mode, ModalPromptSession, ModalInMemoryHistory, ModalFileHistory
-from prompt_toolkit.application.current import get_app
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.output import ColorDepth
@@ -16,8 +14,8 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.lexers.r import SLexer
 
 from rchitect._libR import ffi, lib
-from rchitect import rcall, rcopy, reval
-from rchitect.interface import rstring_p, setoption, process_events
+from rchitect import rcopy, reval
+from rchitect.interface import rstring_p, roption, setoption, process_events
 # from rchitect.namespace import new_env, set_hook, package_event
 
 from .shell import run_command
