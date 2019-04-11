@@ -19,7 +19,7 @@ Completer <- prompt_toolkit$completion$Completer
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 
 PythonCompleter <- builtins$type(
-    builtins$str("PythonCompleter"),
+    py_call(builtins$str, "PythonCompleter"),
     tuple(Completer),
     dict(
         get_completions = function(self, document, complete_event) {
