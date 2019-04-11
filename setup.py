@@ -38,7 +38,7 @@ setup(
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     packages=find_packages('.'),
-    package_data={'radian': ['data/*.R']},
+    package_data={'radian': ['R/*.R']},
     install_requires=[
         'rchitect>=0.5.0.dev0',
         'lineedit>=0.1.1,<0.2.0',

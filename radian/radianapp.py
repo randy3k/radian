@@ -3,6 +3,16 @@ import os
 import sys
 import subprocess
 
+RETICULATE_MESSAGE = """
+The host python environment is {}
+and `radian` is forcing `reticulate` to use this version of python.
+Any python packages needed, e.g., `tensorflow` and `keras`,
+have to be available to the current python environment.
+
+File an issue at https://github.com/randy3k/radian if you encounter any
+difficulties in loading `reticulate`.
+""".format(sys.executable).strip()
+
 
 class RadianApplication(object):
     instance = None
@@ -34,8 +44,6 @@ class RadianApplication(object):
         if options.local_history:
             if not os.path.exists(".radian_history"):
                 open(".radian_history", 'w+').close()
-
-        os.environ["RETICULATE_PYTHON"] = sys.executable
 
         doc_dir = os.path.join(self.r_home, "doc")
         include_dir = os.path.join(self.r_home, "include")
@@ -98,38 +106,29 @@ class RadianApplication(object):
         rchitect.loop()
 
     def session_initialize(self, session):
-        from rchitect import rcopy, reval
-        from rchitect.interface import roption, setoption
+        from rchitect import rcall, rcopy, reval
+        from rchitect.interface import roption, setoption, set_hook, package_event
         from prompt_toolkit.enums import EditingMode
         from prompt_toolkit.styles import style_from_pygments_cls
         from pygments.styles import get_style_by_name
 
         from .prompt import PROMPT, BROWSE_PROMPT, SHELL_PROMPT
 
-        # if not sys.platform.startswith("win"):
-        #     def reticulate_hook(*args):
-        #         rcall(
-        #             ("base", "source"),
-        #             os.path.join(os.path.dirname(__file__), "data", "patching_reticulate.R"),
-        #             new_env())
+        if not roption("radian.suppress_reticulate_message", False):
+            def reticulate_message_hook(*args):
+                if not roption("radian.suppress_reticulate_message", False):
+                    rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
-        #     set_hook(package_event("reticulate", "onLoad"), reticulate_hook)
+            set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
-        # if not roption("radian.suppress_reticulate_message", False):
-        #     def reticulate_message_hook(*args):
-        #         if not roption("radian.suppress_reticulate_message", False):
-        #             rcall("packageStartupMessage", RETICULATE_MESSAGE)
+        if roption("radian.enable_reticulate_prompt", True):
+            def reticulate_prompt(*args):
+                rcall(
+                    ("base", "source"),
+                    os.path.join(os.path.dirname(__file__), "R", "reticulate_prompt.R"),
+                    rcall("new.env"))
 
-        #     set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
-
-        # if roption("radian.enable_reticulate_prompt", True):
-        #     def reticulate_prompt(*args):
-        #         rcall(
-        #             ("base", "source"),
-        #             os.path.join(os.path.dirname(__file__), "data", "register_reticulate.R"),
-        #             new_env())
-
-        #     set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
+            set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
 
         if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
             session.app.editing_mode = EditingMode.VI

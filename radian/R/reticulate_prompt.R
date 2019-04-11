@@ -1,16 +1,6 @@
 # register reticulate prompt
 
-rchitect <- getOption("rchitect_environment")
-import <- rchitect$import
-import_builtins <- rchitect$import_builtins
-py_call <- rchitect$py_call
-py_eval <- rchitect$py_eval
-py_copy <- rchitect$py_copy
-tuple <- rchitect$tuple
-dict <- rchitect$dict
-`$.PyObject` <- rchitect$`$.PyObject`
-`[.PyObject` <- rchitect$`[.PyObject`
-
+getOption("rchitect_py_tools")$register()
 
 radian <- import("radian")
 prompt_toolkit <- import("prompt_toolkit")
@@ -19,7 +9,7 @@ operator <- import("operator")
 code <- import("code")
 jedi <- tryCatch(import("jedi"), error = function(e) NULL)
 builtins <- import_builtins()
-len <- py_copy("function", builtins$len)
+len <- builtins$len
 compile_command <- code$compile_command
 
 PygmentsLexer <- prompt_toolkit$lexers$PygmentsLexer
@@ -55,9 +45,9 @@ PythonCompleter <- builtins$type(
                 completions <- script$completions()
                 ret <- list()
                 for (i in seq_len(len(completions))) {
-                    c <- completions[i - 1L]
-                    ret[[i]] <- Completion(
-                        c$name_with_symbols, nchar(c$complete) - nchar(c$name_with_symbols))
+                    c <- completions[[i]]
+                    ret <- append(ret, Completion(
+                        c$name_with_symbols, nchar(c$complete) - nchar(c$name_with_symbols)))
                 }
                 ret
             }
@@ -103,7 +93,7 @@ unindent <- function(lines) {
 }
 
 py_is_null <- function(x) {
-    py_copy(operator$is_(x, py_eval("None")))
+    operator$is_(x, py_eval("None"))
 }
 
 prase_text_complete <- function(code) {
@@ -161,13 +151,15 @@ handle_code <- function(code) {
 handle_multiline_code <- function(code) {
     # we need reticulate::py_last_error, so we have to use builtins from reticulate
     builtins <- reticulate::import_builtins()
-
     lines <- strsplit(code, "\n")[[1]]
 
     # try spliting the last line
     firstline <- trimws(lines[[1]], which = "right")
     lastline <- lines[[length(lines)]]
     indentation <- leading_spaces(lastline)
+
+    locals <- reticulate::py_run_string("locals()")
+    globals <- reticulate::py_run_string("globals()")
 
     complied <- tryCatch(
         builtins$compile(paste(lines[-length(lines)], collapse = "\n"), "<input>", "exec"),

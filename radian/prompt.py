@@ -13,7 +13,7 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 
 from pygments.lexers.r import SLexer
 
-from rchitect._libR import ffi, lib
+from rchitect._cffi import ffi, lib
 from rchitect import rcopy, reval
 from rchitect.interface import rstring_p, roption, setoption, process_events
 # from rchitect.namespace import new_env, set_hook, package_event
@@ -28,17 +28,6 @@ PROMPT = "\x1b[34mr$>\x1b[0m "
 SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
-
-
-RETICULATE_MESSAGE = """
-The host python environment is {}
-and `radian` is forcing `reticulate` to use this version of python.
-Any python packages needed, e.g., `tensorflow` and `keras`,
-have to be available to the current python environment.
-
-File an issue at https://github.com/randy3k/radian if you encounter any
-difficulties in loading `reticulate`.
-""".format(sys.executable).strip()
 
 
 class RadianMode(Mode):
@@ -94,7 +83,7 @@ def register_modes(session):
 
     def enable_reticulate_prompt():
         enable = "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
-                roption("radian.enable_reticulate_prompt", True)
+                 roption("radian.enable_reticulate_prompt", True)
         if enable:
             setoption("radian.suppress_reticulate_message", True)
         return enable
