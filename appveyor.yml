@@ -36,7 +36,7 @@ install:
   - "%CMD_IN_ENV% python -m pip install --upgrade setuptools pip"
   - "%CMD_IN_ENV% pip install -e .[test]"
 test_script:
-  - "%CMD_IN_ENV% pytest"
+  - "%CMD_IN_ENV% pytest -s"
 
 # on_finish:
 # # uncomment to enable RDP to Appveyor

@@ -10,7 +10,7 @@ jobs:
           apt-get install git curl python python-pip -y
       - checkout
       - run: pip install -e .[test]
-      - run: pytest
+      - run: pytest -s
   test-r-release-py2:
     docker:
       - image: rocker/r-ver
@@ -20,7 +20,7 @@ jobs:
           apt-get install git curl python python-pip -y
       - checkout
       - run: pip install -e .[test]
-      - run: pytest
+      - run: pytest -s
   test-r-devel-py2:
     docker:
       - image: rocker/r-ver:devel
@@ -30,7 +30,7 @@ jobs:
           apt-get install git curl python python-pip -y
       - checkout
       - run: pip install -e .[test]
-      - run: pytest
+      - run: pytest -s
   test-r-3.4.4-py3:
     docker:
       - image: rocker/r-ver:3.4.4
@@ -40,7 +40,7 @@ jobs:
           apt-get install git curl python3 python3-pip -y
       - checkout
       - run: pip3 install -e .[test]
-      - run: pytest
+      - run: pytest -s
   test-r-release-py3:
     docker:
       - image: rocker/r-ver
@@ -50,7 +50,7 @@ jobs:
           apt-get install git curl python3 python3-pip -y
       - checkout
       - run: pip3 install -e .[test]
-      - run: pytest
+      - run: pytest -s
   test-r-devel-py3:
     docker:
       - image: rocker/r-ver:devel
@@ -60,7 +60,7 @@ jobs:
           apt-get install git curl python3 python3-pip -y
       - checkout
       - run: pip3 install -e .[test]
-      - run: pytest
+      - run: pytest -s
   deploy-to-pypi:
     docker:
       - image: circleci/python
