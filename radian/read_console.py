@@ -1,5 +1,6 @@
 import sys
 
+
 def create_read_console(session):
     interrupted = [False]
 

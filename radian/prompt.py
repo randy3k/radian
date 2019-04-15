@@ -16,10 +16,10 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.lexers.r import SLexer
 from pygments.styles import get_style_by_name
 
-from rchitect._cffi import ffi, lib
 from rchitect import rcopy, reval
-from rchitect.interface import rstring_p, roption, setoption, process_events
+from rchitect.interface import roption, setoption, process_events
 
+from .rutils import prase_text_complete, package_is_installed
 from .shell import run_command
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
@@ -73,20 +73,10 @@ def register_modes(session):
         text = session.default_buffer.text
         run_command(text)
 
-    def prase_text_complete(text):
-        status = ffi.new("ParseStatus[1]")
-        s = lib.Rf_protect(rstring_p(text))
-        orig_stderr = sys.stderr
-        sys.stderr = None
-        lib.R_ParseVector(s, -1, status, lib.R_NilValue)
-        sys.stderr = orig_stderr
-        lib.Rf_unprotect(1)
-        return status[0] != 2
-
     # TODO: move to reticulate_prompt.R
     def enable_reticulate_prompt():
-        enable = "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
-                 roption("radian.enable_reticulate_prompt", True)
+        enable = package_is_installed("reticulate") \
+            and roption("radian.enable_reticulate_prompt", True)
         if enable:
             setoption("radian.suppress_reticulate_message", True)
         return enable
