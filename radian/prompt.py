@@ -6,17 +6,19 @@ import sys
 import time
 
 from lineedit import Mode, ModalPromptSession, ModalInMemoryHistory, ModalFileHistory
+from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.output import ColorDepth
+from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 
 from pygments.lexers.r import SLexer
+from pygments.styles import get_style_by_name
 
 from rchitect._cffi import ffi, lib
 from rchitect import rcopy, reval
 from rchitect.interface import rstring_p, roption, setoption, process_events
-# from rchitect.namespace import new_env, set_hook, package_event
 
 from .shell import run_command
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
@@ -81,6 +83,7 @@ def register_modes(session):
         lib.Rf_unprotect(1)
         return status[0] != 2
 
+    # TODO: move to reticulate_prompt.R
     def enable_reticulate_prompt():
         enable = "reticulate" in rcopy(reval("rownames(installed.packages())")) and \
                  roption("radian.enable_reticulate_prompt", True)
@@ -143,8 +146,62 @@ def register_modes(session):
     )
 
 
-def create_radian_prompt_session(options, history_file):
+def session_initialize(session):
+    if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
+        session.app.editing_mode = EditingMode.VI
+    else:
+        session.app.editing_mode = EditingMode.EMACS
 
+    color_scheme = roption("radian.color_scheme", "native")
+    session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
+
+    session.auto_match = roption("radian.auto_match", False)
+    session.auto_indentation = roption("radian.auto_indentation", True)
+    session.tab_size = int(roption("radian.tab_size", 4))
+    session.complete_while_typing = roption("radian.complete_while_typing", True)
+    session.completion_timeout = roption("radian.completion_timeout", 0.05)
+
+    session.history_search_no_duplicates = roption("radian.history_search_no_duplicates", False)
+    session.insert_new_line = roption("radian.insert_new_line", True)
+    session.indent_lines = roption("radian.indent_lines", True)
+
+    prompt = roption("radian.prompt", None)
+    if not prompt:
+        sys_prompt = roption("prompt")
+        if sys_prompt == "> ":
+            prompt = PROMPT
+        else:
+            prompt = sys_prompt
+
+    session.default_prompt = prompt
+    setoption("prompt", prompt)
+
+    shell_prompt = roption("radian.shell_prompt", SHELL_PROMPT)
+    session.shell_prompt = shell_prompt
+
+    browse_prompt = roption("radian.browse_prompt", BROWSE_PROMPT)
+    session.browse_prompt = browse_prompt
+
+    set_width_on_resize = roption("setWidthOnResize", True)
+    session.auto_width = roption("radian.auto_width", set_width_on_resize)
+    output_width = session.app.output.get_size().columns
+    if output_width and session.auto_width:
+        setoption("width", output_width)
+
+    # necessary on windows
+    setoption("menu.graphics", False)
+
+    # enables completion of installed package names
+    if rcopy(reval("rc.settings('ipck')")) is None:
+        reval("rc.settings(ipck = TRUE)")
+
+    # backup the updated settings
+    session._backup_settings()
+
+
+def create_radian_prompt_session(options):
+
+    history_file = ".radian_history"
     if options.no_history:
         history = ModalInMemoryHistory()
     elif not options.global_history and os.path.exists(history_file):
@@ -188,5 +245,8 @@ def create_radian_prompt_session(options, history_file):
         inputhook=get_inputhook(),
         mode_class=RadianMode
     )
+
+    session_initialize(session)
+    register_modes(session)
 
     return session

@@ -3,16 +3,6 @@ import os
 import sys
 import subprocess
 
-RETICULATE_MESSAGE = """
-The host python environment is {}
-and `radian` is forcing `reticulate` to use this version of python.
-Any python packages needed, e.g., `tensorflow` and `keras`,
-have to be available to the current python environment.
-
-File an issue at https://github.com/randy3k/radian if you encounter any
-difficulties in loading `reticulate`.
-""".format(sys.executable).strip()
-
 
 class RadianApplication(object):
     instance = None
@@ -63,7 +53,7 @@ class RadianApplication(object):
         os.environ["R_SHARE_DIR"] = share_dir
 
     def run(self, options):
-        from .prompt import create_radian_prompt_session, register_modes
+        from .prompt import create_radian_prompt_session
         from .read_console import create_read_console
         import rchitect
 
@@ -89,94 +79,17 @@ class RadianApplication(object):
         if options.restore_data is not True:
             args.append("--no-restore-data")
 
-        self.session = create_radian_prompt_session(options, history_file=".radian_history")
-        session = self.session
-
-        rchitect.setup.def_callback(name="read_console")(create_read_console(session))
         rchitect.init(args=args)
 
-        # TODO: refactor session_initialize and register_modes
-        self.session_initialize(session)
-        register_modes(session)
+        self.session = create_radian_prompt_session(options)
+
+        rchitect.def_callback(name="read_console")(create_read_console(self.session))
 
         # print welcome message
         if options.quiet is not True:
-            session.app.output.write(rchitect.interface.greeting())
+            self.session.app.output.write(rchitect.interface.greeting())
+
+        from . import reticulate
+        reticulate.hooks()
 
         rchitect.loop()
-
-    def session_initialize(self, session):
-        from rchitect import rcall, rcopy, reval
-        from rchitect.interface import roption, setoption, set_hook, package_event
-        from prompt_toolkit.enums import EditingMode
-        from prompt_toolkit.styles import style_from_pygments_cls
-        from pygments.styles import get_style_by_name
-
-        from .prompt import PROMPT, BROWSE_PROMPT, SHELL_PROMPT
-
-        if not roption("radian.suppress_reticulate_message", False):
-            def reticulate_message_hook(*args):
-                if not roption("radian.suppress_reticulate_message", False):
-                    rcall("packageStartupMessage", RETICULATE_MESSAGE)
-
-            set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
-
-        if roption("radian.enable_reticulate_prompt", True):
-            def reticulate_prompt(*args):
-                rcall(
-                    ("base", "source"),
-                    os.path.join(os.path.dirname(__file__), "R", "reticulate_prompt.R"),
-                    rcall("new.env"))
-
-            set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
-
-        if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
-            session.app.editing_mode = EditingMode.VI
-        else:
-            session.app.editing_mode = EditingMode.EMACS
-
-        color_scheme = roption("radian.color_scheme", "native")
-        session.style = style_from_pygments_cls(get_style_by_name(color_scheme))
-
-        session.auto_match = roption("radian.auto_match", False)
-        session.auto_indentation = roption("radian.auto_indentation", True)
-        session.tab_size = int(roption("radian.tab_size", 4))
-        session.complete_while_typing = roption("radian.complete_while_typing", True)
-        session.completion_timeout = roption("radian.completion_timeout", 0.05)
-
-        session.history_search_no_duplicates = roption("radian.history_search_no_duplicates", False)
-        session.insert_new_line = roption("radian.insert_new_line", True)
-        session.indent_lines = roption("radian.indent_lines", True)
-
-        prompt = roption("radian.prompt", None)
-        if not prompt:
-            sys_prompt = roption("prompt")
-            if sys_prompt == "> ":
-                prompt = PROMPT
-            else:
-                prompt = sys_prompt
-
-        session.default_prompt = prompt
-        setoption("prompt", prompt)
-
-        shell_prompt = roption("radian.shell_prompt", SHELL_PROMPT)
-        session.shell_prompt = shell_prompt
-
-        browse_prompt = roption("radian.browse_prompt", BROWSE_PROMPT)
-        session.browse_prompt = browse_prompt
-
-        set_width_on_resize = roption("setWidthOnResize", True)
-        session.auto_width = roption("radian.auto_width", set_width_on_resize)
-        output_width = session.app.output.get_size().columns
-        if output_width and session.auto_width:
-            setoption("width", output_width)
-
-        # necessary on windows
-        setoption("menu.graphics", False)
-
-        # enables completion of installed package names
-        if rcopy(reval("rc.settings('ipck')")) is None:
-            reval("rc.settings(ipck = TRUE)")
-
-        # backup the updated settings
-        session._backup_settings()

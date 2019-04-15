@@ -12,6 +12,20 @@ from six import text_type
 
 LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
+CompleteCode = """
+local(suppressWarnings({{tryCatch(
+    {{
+        if ({settimelimit}) base::setTimeLimit({timeout})
+        utils:::.completeToken()
+        if ({settimelimit}) base::setTimeLimit()
+    }},
+    error = function(e) {{
+        if ({settimelimit}) base::setTimeLimit()
+        assign("comps", NULL, env = utils:::.CompletionEnv)
+    }}
+)}}))
+"""
+
 
 class RCompleter(Completer):
     initialized = False
@@ -36,22 +50,10 @@ class RCompleter(Completer):
             orig_stderr = sys.stderr
             sys.stderr = None
             try:
-                reval("""
-                    local(suppressWarnings({{tryCatch(
-                        {{
-                            if ({settimelimit}) base::setTimeLimit({timeout})
-                            utils:::.completeToken()
-                            if ({settimelimit}) base::setTimeLimit()
-                        }},
-                        error = function(e) {{
-                            if ({settimelimit}) base::setTimeLimit()
-                            assign("comps", NULL, env = utils:::.CompletionEnv)
-                        }}
-                    )}}))
-                    """.format(
-                        settimelimit="TRUE" if not completion_requested and self.timeout > 0 else "FALSE",
-                        timeout=str(self.timeout)))
-            except Exception as e:
+                reval(CompleteCode.format(
+                    settimelimit="TRUE" if not completion_requested and self.timeout > 0 else "FALSE",
+                    timeout=str(self.timeout)))
+            except Exception:
                 return
             finally:
                 sys.stderr = orig_stderr
