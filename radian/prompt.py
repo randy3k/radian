@@ -19,7 +19,7 @@ from pygments.styles import get_style_by_name
 from rchitect import rcopy, reval
 from rchitect.interface import roption, setoption, process_events
 
-from .rutils import prase_text_complete, package_is_installed
+from .rutils import prase_text_complete
 from .shell import run_command
 from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
 from .completion import RCompleter, SmartPathCompleter
@@ -73,14 +73,6 @@ def register_modes(session):
         text = session.default_buffer.text
         run_command(text)
 
-    # TODO: move to reticulate_prompt.R
-    def enable_reticulate_prompt():
-        enable = package_is_installed("reticulate") \
-            and roption("radian.enable_reticulate_prompt", True)
-        if enable:
-            setoption("radian.suppress_reticulate_message", True)
-        return enable
-
     session.register_mode(
         "r",
         native=True,
@@ -93,7 +85,7 @@ def register_modes(session):
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
         key_bindings=create_keybindings(),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete, enable_reticulate_prompt)
+        prompt_key_bindings=create_r_keybindings(prase_text_complete)
     )
     session.register_mode(
         "shell",
@@ -118,7 +110,7 @@ def register_modes(session):
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete, enable_reticulate_prompt),
+        prompt_key_bindings=create_r_keybindings(prase_text_complete),
         switchable_from=False,
         switchable_to=False
     )

@@ -2,7 +2,10 @@ import os
 import sys
 
 from rchitect import rcall
-from rchitect.interface import roption, set_hook, package_event
+from rchitect.interface import roption, setoption, set_hook, package_event
+
+from .rutils import package_is_installed
+
 
 RETICULATE_MESSAGE = """
 The host python environment is {}
@@ -31,3 +34,16 @@ def hooks():
                 rcall("new.env"))
 
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
+
+    if package_is_installed("reticulate") and roption("radian.enable_reticulate_prompt", True):
+        from .keybindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty, \
+            commit_text
+        from . import get_app
+
+        session = get_app().session
+        kb = session.modes["r"].prompt_key_bindings
+
+        @kb.add('~', filter=insert_mode & default_focussed & cursor_at_begin & text_is_empty)
+        def _(event):
+            setoption("radian.suppress_reticulate_message", True)
+            commit_text(event, "reticulate::repl_python()", False)

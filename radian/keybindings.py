@@ -213,7 +213,7 @@ def create_prompt_keybindings(prase_text_complete):
 
 
 # keybinds for both r mond and browse mode
-def create_r_keybindings(prase_text_complete, enable_reticulate_prompt):
+def create_r_keybindings(prase_text_complete):
     kb = create_prompt_keybindings(prase_text_complete)
     handle = kb.add
 
@@ -221,12 +221,6 @@ def create_r_keybindings(prase_text_complete, enable_reticulate_prompt):
     @handle(';', filter=insert_mode & default_focussed & cursor_at_begin)
     def _(event):
         event.app.session.change_mode("shell")
-
-
-    @handle('~', filter=insert_mode & default_focussed & cursor_at_begin &
-                        text_is_empty & Condition(enable_reticulate_prompt))
-    def _(event):
-        commit_text(event, "reticulate::repl_python()", False)
 
     return kb
 
