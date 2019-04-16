@@ -47,3 +47,5 @@ def hooks():
         def _(event):
             setoption("radian.suppress_reticulate_message", True)
             commit_text(event, "reticulate::repl_python()", False)
+            # remove itself
+            kb.remove(_)
