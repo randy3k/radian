@@ -37,6 +37,7 @@ class RCompleter(Completer):
     def get_completions(self, document, complete_event):
         token = ""
         text = document.current_line_before_cursor
+        text_after = document.text_after_cursor
 
         completions = []
         rcall(reval("utils:::.assignLinebuffer"), rstring(text))
@@ -44,7 +45,6 @@ class RCompleter(Completer):
         token = rcopy(text_type, rcall(reval("utils:::.guessTokenFromLine")))
         completion_requested = complete_event.completion_requested
         completions = []
-        library_prefix = LIBRARY_PATTERN.match(text)
 
         if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
             orig_stderr = sys.stderr
@@ -66,8 +66,10 @@ class RCompleter(Completer):
             if c.startswith(token):
                 yield Completion(c, -len(token))
 
+        library_prefix = LIBRARY_PATTERN.match(text)
         if token and not library_prefix:
             if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
+                instring = text_after.startswith("'") or text_after.startswith('"')
                 packages = rcopy(list, reval("""
                     tryCatch(
                         base::rownames(utils::installed.packages()),
@@ -76,7 +78,7 @@ class RCompleter(Completer):
                     """))
                 for p in packages:
                     if p.startswith(token):
-                        comp = p + "::"
+                        comp = p if instring else p + "::"
                         if comp not in completions:
                             yield Completion(comp, -len(token))
 
