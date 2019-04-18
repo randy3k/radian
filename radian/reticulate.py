@@ -20,24 +20,12 @@ difficulties in loading `reticulate`.
 
 def hooks():
     if not roption("radian.suppress_reticulate_message", False):
-        def reticulate_message_hook(*args):
-            if not roption("radian.suppress_reticulate_message", False):
-                rcall("packageStartupMessage", RETICULATE_MESSAGE)
-
         set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
-    if roption("radian.enable_reticulate_prompt", True):
-        def reticulate_prompt(*args):
-            rcall(
-                ("base", "source"),
-                os.path.join(os.path.dirname(__file__), "R", "reticulate_prompt.R"),
-                rcall("new.env"))
-
-        set_hook(package_event("reticulate", "onLoad"), reticulate_prompt)
-
     if package_is_installed("reticulate") and roption("radian.enable_reticulate_prompt", True):
-        from .keybindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty, \
-            commit_text
+        set_hook(package_event("reticulate", "onLoad"), reticulate_prompt_hook)
+        from .keybindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty
+        from .keybindings import commit_text
         from . import get_app
 
         session = get_app().session
@@ -49,3 +37,15 @@ def hooks():
             commit_text(event, "reticulate::repl_python()", False)
             # remove itself
             kb.remove(_)
+
+
+def reticulate_message_hook(*args):
+    if not roption("radian.suppress_reticulate_message", False):
+        rcall("packageStartupMessage", RETICULATE_MESSAGE)
+
+
+def reticulate_prompt_hook(*args):
+    rcall(
+        ("base", "source"),
+        os.path.join(os.path.dirname(__file__), "R", "reticulate_prompt.R"),
+        rcall("new.env"))
