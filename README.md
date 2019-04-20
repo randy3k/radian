@@ -128,22 +128,9 @@ On Linux/macOS, you could also export the environment variable `R_HOME`. For exa
 $ export R_HOME=/usr/local/lib/R
 $ radian
 ```
-Note that it should be the path to `R_HOME`, not the path to the R binary. The
-folder should contain a file called `COPYING`. In some cases, you may need to
-futher specify `LD_LIBRARY_PATH`,
-```sh
-$ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:`R RHOME`/lib"
-$ radian
-```
 
 If the shared library cannot be found, please make sure your R was installed with the shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed when R is complied from the source.
 
-
-
-#### Fail to load library
-
-Some packages may not be loaded properly with _radian_ but they work well with the bare R. The issue could be caused by several reasons, check
-[#38](https://github.com/randy3k/radian/issues/38) and [#46](https://github.com/randy3k/radian/issues/46). Open an issue if it still doesn't work.
 
 #### how to use local history file
 
