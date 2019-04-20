@@ -18,24 +18,40 @@ def prompt_mode(*modes):
     return Condition(lambda: get_app().session.current_mode_name in modes)
 
 
+_preceding_text_cache = {}
+_following_text_cache = {}
+
+
 def preceding_text(pattern):
+    try:
+        return _preceding_text_cache[pattern]
+    except KeyError:
+        pass
     m = re.compile(pattern)
 
     def _preceding_text():
         app = get_app()
         return bool(m.match(app.current_buffer.document.current_line_before_cursor))
 
-    return Condition(_preceding_text)
+    condition = Condition(_preceding_text)
+    _preceding_text_cache[pattern] = condition
+    return condition
 
 
 def following_text(pattern):
+    try:
+        return _following_text_cache[pattern]
+    except KeyError:
+        pass
     m = re.compile(pattern)
 
     def _following_text():
         app = get_app()
         return bool(m.match(app.current_buffer.document.current_line_after_cursor))
 
-    return Condition(_following_text)
+    condition = Condition(_following_text)
+    _following_text_cache[pattern] = condition
+    return condition
 
 
 @Condition
