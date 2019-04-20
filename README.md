@@ -72,51 +72,49 @@ _radian_ can be customized via `options` in `.Rprofile` file. This file is usual
 *Do not copy the whole configuration, just specify what you need in `.Rprofile`*
 
 ```r
-options(
-    # see https://help.farbox.com/pygments.html
-    # for a list of supported color schemes, default scheme is "native"
-    radian.color_scheme = "native",
+# see https://help.farbox.com/pygments.html
+# for a list of supported color schemes, default scheme is "native"
+options(radian.color_scheme = "native")
 
-    # either  `"emacs"` (default) or `"vi"`.
-    radian.editing_mode = "emacs",
+# either  `"emacs"` (default) or `"vi"`.
+options(radian.editing_mode = "emacs")
 
-    # indent continuation lines
-    # turn this off if you want to copy code without the extra indentation;
-    # but it leads to less elegent layout
-    radian.indent_lines = TRUE,
+# indent continuation lines
+# turn this off if you want to copy code without the extra indentation;
+# but it leads to less elegent layout
+options(radian.indent_lines = TRUE)
 
-    # auto match brackets and quotes
-    radian.auto_match = FALSE,
+# auto match brackets and quotes
+options(radian.auto_match = FALSE)
 
-    # auto indentation for new line and curly braces
-    radian.auto_indentation = TRUE,
-    radian.tab_size = 4,
+# auto indentation for new line and curly braces
+options(radian.auto_indentation = TRUE)
+options(radian.tab_size = 4)
 
-    # pop up completion while typing
-    radian.complete_while_typing = TRUE,
-    # timeout in seconds to cancel completion if it takes too long
-    # set it to 0 to disable it
-    radian.completion_timeout = 0.05,
+# pop up completion while typing
+options(radian.complete_while_typing = TRUE)
+# timeout in seconds to cancel completion if it takes too long
+# set it to 0 to disable it
+options(radian.completion_timeout = 0.05)
 
-    # automatically adjust R buffer size based on terminal width
-    radian.auto_width = TRUE,
+# automatically adjust R buffer size based on terminal width
+options(radian.auto_width = TRUE)
 
-    # insert new line between prompts
-    radian.insert_new_line = TRUE,
+# insert new line between prompts
+options(radian.insert_new_line = TRUE)
 
-    # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
-    radian.history_search_no_duplicates = FALSE,
+# when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
+options(radian.history_search_no_duplicates = FALSE)
 
-    # custom prompt for different modes
-    radian.prompt = "\033[0;34mr$>\033[0m ",
-    radian.shell_prompt = "\033[0;31m#!>\033[0m ",
-    radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ",
+# custom prompt for different modes
+options(radian.prompt = "\033[0;34mr$>\033[0m ")
+options(radian.shell_prompt = "\033[0;31m#!>\033[0m ")
+options(radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ")
 
-    # supress the loading message for reticulate
-    radian.suppress_reticulate_message = FALSE,
-    # enable reticulate prompt and trigger `~`
-    radian.enable_reticulate_prompt = TRUE
-)
+# supress the loading message for reticulate
+options(radian.suppress_reticulate_message = FALSE)
+# enable reticulate prompt and trigger `~`
+options(radian.enable_reticulate_prompt = TRUE)
 ```
 
 ## FAQ
