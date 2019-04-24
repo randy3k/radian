@@ -123,13 +123,13 @@ options(radian.enable_reticulate_prompt = TRUE)
 
 If _radian_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
 
-On Linux/macOS, you could also export the environment variable `R_HOME`. For example,
+In Linux/macOS, you could also export the environment variable `R_HOME`. For example,
 ```sh
 $ export R_HOME=/usr/local/lib/R
 $ radian
 ```
 
-If the shared library cannot be found, please make sure your R was installed with the shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed when R is complied from the source.
+Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed to install R from the source.
 
 
 #### how to use local history file
