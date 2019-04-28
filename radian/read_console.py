@@ -50,7 +50,7 @@ def create_read_console(session):
 
             if not current_mode.native:
                 result = current_mode.on_done(session)
-                if current_mode.return_result and current_mode.return_result(result):
+                if result is not None:
                     return result
                 if session.insert_new_line and current_mode.insert_new_line:
                     session.app.output.write("\n")

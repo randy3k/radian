@@ -1,3 +1,4 @@
+import os
 import sys
 from rchitect import rcopy, rcall, reval
 from rchitect._cffi import ffi, lib
@@ -21,3 +22,10 @@ def package_is_loaded(pkg):
 
 def package_is_installed(pkg):
     return pkg in rcopy(reval("rownames(installed.packages())"))
+
+
+def execute_key_bindings_script(*args):
+    rcall(
+        ("base", "source"),
+        os.path.join(os.path.dirname(__file__), "R", "key_bindings.R"),
+        rcall("new.env"))

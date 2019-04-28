@@ -85,11 +85,14 @@ class RadianApplication(object):
 
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
 
-        # print welcome message
-        if options.quiet is not True:
-            self.session.app.output.write(rchitect.interface.greeting())
+        from . import rutils
+        rutils.execute_key_bindings_script()
 
         from . import reticulate
         reticulate.hooks()
+
+        # print welcome message
+        if options.quiet is not True:
+            self.session.app.output.write(rchitect.interface.greeting())
 
         rchitect.loop()

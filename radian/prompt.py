@@ -21,7 +21,7 @@ from rchitect.interface import roption, setoption, process_events
 
 from .rutils import prase_text_complete
 from .shell import run_command
-from .keybindings import create_r_keybindings, create_shell_keybindings, create_keybindings
+from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
 from .completion import RCompleter, SmartPathCompleter
 from .vt100 import CustomVt100Input, CustomVt100Output
 
@@ -39,7 +39,6 @@ class RadianMode(Mode):
             native,
             on_done=None,
             activator=None,
-            return_result=None,
             insert_new_line=False,
             **kwargs):
 
@@ -50,7 +49,6 @@ class RadianMode(Mode):
             assert on_done is not None
         self.on_done = on_done
         self.activator = activator
-        self.return_result = return_result
         self.insert_new_line = insert_new_line
         super(RadianMode, self).__init__(name, **kwargs)
 
@@ -84,8 +82,8 @@ def register_modes(session):
         complete_while_typing=session.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        key_bindings=create_keybindings(),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete)
+        key_bindings=create_key_bindings(),
+        prompt_key_bindings=create_r_key_bindings(prase_text_complete)
     )
     session.register_mode(
         "shell",
@@ -97,7 +95,7 @@ def register_modes(session):
         complete_while_typing=session.complete_while_typing,
         lexer=None,
         completer=SmartPathCompleter(),
-        prompt_key_bindings=create_shell_keybindings()
+        prompt_key_bindings=create_shell_key_bindings()
     )
     session.register_mode(
         "browse",
@@ -110,7 +108,7 @@ def register_modes(session):
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=session.completion_timeout),
-        prompt_key_bindings=create_r_keybindings(prase_text_complete),
+        prompt_key_bindings=create_r_key_bindings(prase_text_complete),
         switchable_from=False,
         switchable_to=False
     )
@@ -128,7 +126,7 @@ def register_modes(session):
     )
 
 
-def session_initialize(session):
+def load_settings(session):
     if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
         session.app.editing_mode = EditingMode.VI
     else:
@@ -228,7 +226,7 @@ def create_radian_prompt_session(options):
         mode_class=RadianMode
     )
 
-    session_initialize(session)
+    load_settings(session)
     register_modes(session)
 
     return session

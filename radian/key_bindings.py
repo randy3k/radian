@@ -13,9 +13,17 @@ from prompt_toolkit.enums import DEFAULT_BUFFER
 default_focussed = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 
+_prompt_mode_cache = {}
 
-def prompt_mode(*modes):
-    return Condition(lambda: get_app().session.current_mode_name in modes)
+
+def prompt_mode(mode):
+    try:
+        return _prompt_mode_cache[mode]
+    except KeyError:
+        pass
+    condition = Condition(lambda: get_app().session.current_mode_name == mode)
+    _prompt_mode_cache[mode] = condition
+    return condition
 
 
 _preceding_text_cache = {}
@@ -99,7 +107,7 @@ def commit_text(event, text, add_history=True):
     buf.validate_and_handle()
 
 
-def create_prompt_keybindings(prase_text_complete):
+def create_prompt_key_bindings(prase_text_complete):
     kb = KeyBindings()
     handle = kb.add
 
@@ -229,8 +237,8 @@ def create_prompt_keybindings(prase_text_complete):
 
 
 # keybinds for both r mond and browse mode
-def create_r_keybindings(prase_text_complete):
-    kb = create_prompt_keybindings(prase_text_complete)
+def create_r_key_bindings(prase_text_complete):
+    kb = create_prompt_key_bindings(prase_text_complete)
     handle = kb.add
 
     # r mode
@@ -241,7 +249,7 @@ def create_r_keybindings(prase_text_complete):
     return kb
 
 
-def create_shell_keybindings():
+def create_shell_key_bindings():
     kb = KeyBindings()
     handle = kb.add
 
@@ -261,7 +269,7 @@ def create_shell_keybindings():
     return kb
 
 
-def create_keybindings():
+def create_key_bindings():
     kb = KeyBindings()
     handle = kb.add
 
@@ -284,3 +292,12 @@ def create_keybindings():
             event.current_buffer.newline(copy_margin=copy_margin)
 
     return kb
+
+
+def map_key(key, value, mode="r", filter_str=""):
+    import radian
+    app = radian.get_app()
+    kb = app.session.modes[mode].prompt_key_bindings
+    @kb.add(*key, filter=insert_mode & default_focussed)
+    def _(event):
+        event.current_buffer.insert_text(value)
