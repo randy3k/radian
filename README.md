@@ -17,10 +17,9 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
 
 ## Features
 
+- cross platform, runs on Windows, macOS and Linux
 - shell mode: hit `;` to enter and `<backspace>` to leave
 - reticulate python repl mode: hit `~` to enter
-- lightweight, no compilation is required
-- cross platform, runs on Windows, macOS and Linux
 - improved R prompt and reticulate python prompt
     - multiline editing
     - syntax highlight
