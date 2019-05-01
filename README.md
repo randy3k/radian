@@ -50,8 +50,6 @@ radian
 
 ```sh
 # or the development version
-pip install -U git+https://github.com/randy3k/rchitect
-pip install -U git+https://github.com/randy3k/lineedit
 pip install -U git+https://github.com/randy3k/radian
 ```
 
