@@ -1,3 +1,7 @@
+# v0.4.0
+
+  - update rchitect to v0.3.0
+
 # v0.3.4
 
   - fix R_SHARE_DIR issues
