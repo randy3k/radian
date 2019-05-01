@@ -298,6 +298,6 @@ def map_key(key, value, mode="r", filter_str=""):
     import radian
     app = radian.get_app()
     kb = app.session.modes[mode].prompt_key_bindings
-    @kb.add(*key, filter=insert_mode & default_focussed)
+    @kb.add(*key, filter=insert_mode & default_focussed, eager=True)
     def _(event):
         event.current_buffer.insert_text(value)
