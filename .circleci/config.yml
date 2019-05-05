@@ -17,9 +17,31 @@ commands:
       - run:
           name: Install Miniconda
           command: |
-            curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
+            if [ $(uname) == "Darwin" ]; then
+              curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda.sh
+            else
+              curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
+            fi
             bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
             $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>>
+  install-r:
+    parameters:
+      r:
+        type: string
+        default: "latest"
+    steps:
+      - run:
+          name: Install R
+          command: |
+            if [ "<<parameters.r>>" == "devel" ]; then
+              R_DEVEL_FILE=$(curl -sL http://mac.r-project.org/ | sed -nE 's|.*href="?(.*/R-[^/]*\.pkg)"?>.*|\1|p' | tail -n1)
+              URL="http://mac.r-project.org/$R_DEVEL_FILE"
+            else
+              URL="https://cran.r-project.org/bin/macosx/el-capitan/base/R-<<parameters.r>>.pkg"
+            fi
+            echo downloading "$URL"
+            curl -L "$URL" -o R.pkg
+            sudo installer -pkg R.pkg -target /
   install-r-packages:
     parameters:
       packages:
@@ -28,6 +50,16 @@ commands:
       - run:
           name: Install R packages
           command: R --slave -e "install.packages('<<parameters.packages>>', repo = 'https://cloud.r-project.org')"
+  test:
+    steps:
+      - run:
+          name: Install and test
+          command: |
+            source $HOME/miniconda/bin/activate myenv
+            python -m pip install -e .[test]
+            pytest -s --cov=radian
+            python -m pip install codecov
+            codecov
 
 executors:
   rocker:
@@ -39,7 +71,7 @@ executors:
       - image: rocker/tidyverse:<< parameters.tag >>
 
 jobs:
-  test:
+  linux-test:
     parameters:
       r:
         type: string
@@ -55,14 +87,24 @@ jobs:
           python: <<parameters.python>>
       - install-r-packages:
           packages: "reticulate"
-      - run:
-          name: Install and test
-          command: |
-            source $HOME/miniconda/bin/activate myenv
-            python -m pip install -e .[test]
-            pytest -s --cov=radian
-            python -m pip install codecov
-            codecov
+      - test
+  osx-test:
+    parameters:
+      r:
+        type: string
+      python:
+        type: string
+    macos:
+      xcode: "10.0.0"
+    steps:
+      - checkout
+      - install-r:
+          r: <<parameters.r>>
+      - install-conda:
+          python: <<parameters.python>>
+      - install-r-packages:
+          packages: "reticulate"
+      - test
   upload-tarball:
     docker:
       - image: circleci/python
@@ -77,80 +119,112 @@ workflows:
   version: 2
   build:
     jobs:
-      - test:
-          name: rlatest-py27
+      - linux-test:
+          name: linux-rlatest-py27
           r: latest
           python: "2.7"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: rlatest-py34
+      - linux-test:
+          name: linux-rlatest-py34
           r: latest
           python: "3.4"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: rlatest-py35
+      - linux-test:
+          name: linux-rlatest-py35
           r: latest
           python: "3.5"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: rlatest-py36
+      - linux-test:
+          name: linux-rlatest-py36
           r: latest
           python: "3.6"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: rlatest-py37
+      - linux-test:
+          name: linux-rlatest-py37
           r: latest
           python: "3.7"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: rdevel-py27
+      - linux-test:
+          name: linux-rdevel-py27
           r: devel
           python: "2.7"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: rdevel-py37
+      - linux-test:
+          name: linux-rdevel-py37
           r: devel
           python: "3.7"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: r35-py27
+      - linux-test:
+          name: linux-r35-py27
           r: "3.5"
           python: "2.7"
           filters:
             tags:
               only: /^v.*/
-      - test:
-          name: r35-py37
+      - linux-test:
+          name: linux-r35-py37
           r: "3.5"
+          python: "3.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - osx-test:
+          name: osx-rlatest-py27
+          r: "latest"
+          python: "2.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - osx-test:
+          name: osx-rlatest-py37
+          r: "latest"
+          python: "3.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - osx-test:
+          name: osx-rdevel-py27
+          r: "devel"
+          python: "2.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - osx-test:
+          name: osx-rdevel-py37
+          r: "devel"
           python: "3.7"
           filters:
             tags:
               only: /^v.*/
       - upload-tarball:
           requires:
-            - rlatest-py27
-            - rlatest-py34
-            - rlatest-py35
-            - rlatest-py36
-            - rlatest-py37
-            - rdevel-py27
-            - rdevel-py37
-            - r35-py27
-            - r35-py37
+            - linux-rlatest-py27
+            - linux-rlatest-py34
+            - linux-rlatest-py35
+            - linux-rlatest-py36
+            - linux-rlatest-py37
+            - linux-rdevel-py27
+            - linux-rdevel-py37
+            - linux-r35-py27
+            - linux-r35-py37
+            - osx-rlatest-py27
+            - osx-rlatest-py37
+            - osx-rdevel-py27
+            - osx-rdevel-py37
           filters:
             branches:
               ignore: /.*/
