@@ -1,119 +1,156 @@
-version: 2
+version: 2.1
+
+commands:
+  install-deps:
+    steps:
+      - run:
+          name: Install apt-get dependencies
+          command: |
+            apt-get update
+            apt-get install git ssh curl bzip2 libffi6 libffi-dev -y
+  install-conda:
+    parameters:
+      python:
+        type: string
+        default: "3.6"
+    steps:
+      - run:
+          name: Install Miniconda
+          command: |
+            curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
+            bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
+            $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>>
+  install-r-packages:
+    parameters:
+      packages:
+        type: string
+    steps:
+      - run:
+          name: Install R packages
+          command: R --slave -e "install.packages('<<parameters.packages>>', repo = 'https://cloud.r-project.org')"
+
+executors:
+  rocker:
+    parameters:
+      tag:
+        type: string
+        default: latest
+    docker:
+      - image: rocker/tidyverse:<< parameters.tag >>
 
 jobs:
-  test-r-3.4.4-py2:
-    docker:
-      - image: rocker/r-ver:3.4.4
+  test:
+    parameters:
+      r:
+        type: string
+      python:
+        type: string
+    executor:
+      name: rocker
+      tag: <<parameters.r>>
     steps:
-      - run: |
-          apt-get update
-          apt-get install git curl python python-pip -y
+      - install-deps
       - checkout
-      - run: pip install -e .[test]
-      - run: pytest -s
-  test-r-release-py2:
-    docker:
-      - image: rocker/r-ver
-    steps:
-      - run: |
-          apt-get update
-          apt-get install git curl python python-pip -y
-      - checkout
-      - run: pip install -e .[test]
-      - run: pytest -s
-  test-r-devel-py2:
-    docker:
-      - image: rocker/r-ver:devel
-    steps:
-      - run: |
-          apt-get update
-          apt-get install git curl python python-pip -y
-      - checkout
-      - run: pip install -e .[test]
-      - run: pytest -s
-  test-r-3.4.4-py3:
-    docker:
-      - image: rocker/r-ver:3.4.4
-    steps:
-      - run: |
-          apt-get update
-          apt-get install git curl python3 python3-pip -y
-      - checkout
-      - run: pip3 install -e .[test]
-      - run: pytest -s
-  test-r-release-py3:
-    docker:
-      - image: rocker/r-ver
-    steps:
-      - run: |
-          apt-get update
-          apt-get install git curl python3 python3-pip -y
-      - checkout
-      - run: pip3 install -e .[test]
-      - run: pytest -s
-  test-r-devel-py3:
-    docker:
-      - image: rocker/r-ver:devel
-    steps:
-      - run: |
-          apt-get update
-          apt-get install git curl python3 python3-pip -y
-      - checkout
-      - run: pip3 install -e .[test]
-      - run: pytest -s
-  deploy-to-pypi:
+      - install-conda:
+          python: <<parameters.python>>
+      - install-r-packages:
+          packages: "reticulate"
+      - run:
+          name: Install and test
+          command: |
+            source $HOME/miniconda/bin/activate myenv
+            python -m pip install -e .[test]
+            pytest -s --cov=radian
+            python -m pip install codecov
+            codecov
+  upload-tarball:
     docker:
       - image: circleci/python
     steps:
       - checkout
-      - run: sudo pip install twine
-      - run:
-          name: init .pypirc
-          command: |
-            echo -e "[pypi]" >> ~/.pypirc
-            echo -e "username = randy3k" >> ~/.pypirc
-            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run: sudo python -m pip install twine
       - run: |
           python setup.py sdist
           twine upload dist/*
-
 
 workflows:
   version: 2
   build:
     jobs:
-      - test-r-3.4.4-py2:
+      - test:
+          name: rlatest-py27
+          r: latest
+          python: "2.7"
           filters:
             tags:
               only: /^v.*/
-      - test-r-release-py2:
+      - test:
+          name: rlatest-py34
+          r: latest
+          python: "3.4"
           filters:
             tags:
               only: /^v.*/
-      - test-r-devel-py2:
+      - test:
+          name: rlatest-py35
+          r: latest
+          python: "3.5"
           filters:
             tags:
               only: /^v.*/
-      - test-r-3.4.4-py3:
+      - test:
+          name: rlatest-py36
+          r: latest
+          python: "3.6"
           filters:
             tags:
               only: /^v.*/
-      - test-r-release-py3:
+      - test:
+          name: rlatest-py37
+          r: latest
+          python: "3.7"
           filters:
             tags:
               only: /^v.*/
-      - test-r-devel-py3:
+      - test:
+          name: rdevel-py27
+          r: devel
+          python: "2.7"
           filters:
             tags:
               only: /^v.*/
-      - deploy-to-pypi:
+      - test:
+          name: rdevel-py37
+          r: devel
+          python: "3.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - test:
+          name: r35-py27
+          r: "3.5"
+          python: "2.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - test:
+          name: r35-py37
+          r: "3.5"
+          python: "3.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - upload-tarball:
           requires:
-            - test-r-3.4.4-py2
-            - test-r-release-py2
-            - test-r-devel-py2
-            - test-r-3.4.4-py3
-            - test-r-release-py3
-            - test-r-devel-py3
+            - rlatest-py27
+            - rlatest-py34
+            - rlatest-py35
+            - rlatest-py36
+            - rlatest-py37
+            - rdevel-py27
+            - rdevel-py37
+            - r35-py27
+            - r35-py37
           filters:
             branches:
               ignore: /.*/

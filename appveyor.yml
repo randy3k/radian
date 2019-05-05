@@ -1,47 +1,45 @@
-build: false
-
 environment:
+  USE_RTOOLS: true
   matrix:
-   - PYTHON: "C:\\Python27-x64"
-     PYTHON_VERSION: "2.7.x"
-     PYTHON_ARCH: "64"
-     R_VERSION: "release"
+    - PYTHON: "C:\\Python27-x64"
+      R_VERSION: "3.5.3"
 
-   - PYTHON: "C:\\Python36-x64"
-     PYTHON_VERSION: "3.6.x"
-     PYTHON_ARCH: "64"
-     R_VERSION: "release"
+    - PYTHON: "C:\\Python37-x64"
+      R_VERSION: "3.5.3"
 
-   - PYTHON: "C:\\Python27-x64"
-     PYTHON_VERSION: "2.7.x"
-     PYTHON_ARCH: "64"
-     R_VERSION: "devel"
+    - PYTHON: "C:\\Python27-x64"
+      R_VERSION: "release"
 
-   - PYTHON: "C:\\Python36-x64"
-     PYTHON_VERSION: "3.6.x"
-     PYTHON_ARCH: "64"
-     R_VERSION: "devel"
+    - PYTHON: "C:\\Python37-x64"
+      R_VERSION: "release"
 
-matrix:
-  allow_failures:
-    - R_VERSION: "devel"
+    - PYTHON: "C:\\Python27-x64"
+      R_VERSION: "devel"
+
+    - PYTHON: "C:\\Python37-x64"
+      R_VERSION: "devel"
+
+# matrix:
+#   allow_failures:
+#     - R_VERSION: "devel"
 
 init:
-  - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+  - ECHO %PYTHON%
   # https://github.com/rstudio/reticulate/blob/master/appveyor.yml
   - ps: |
         $ErrorActionPreference = "Stop"
         Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
         Import-Module '..\appveyor-tool.ps1'
-
 install:
   - ps: Bootstrap
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "%CMD_IN_ENV% python -m pip install --upgrade setuptools pip"
-  - "%CMD_IN_ENV% pip install -e .[test]"
-test_script:
-  - "%CMD_IN_ENV% pytest -s"
-
-# on_finish:
-# # uncomment to enable RDP to Appveyor
+  - R -e "install.packages('reticulate', repo = '"https://cloud.r-project.org"')"
+  - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+  - python -m pip install --upgrade setuptools pip
+  - python -m pip install -e .[test]
+build_script:
+  - pytest -s --cov=radian
+after_build:
+  - python -m pip install codecov
+  - codecov
+# on_failure:
 #   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
