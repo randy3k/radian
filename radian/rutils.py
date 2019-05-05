@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import os
 import sys
 from rchitect import rcopy, rcall, reval
