@@ -93,7 +93,6 @@ class RadianApplication(object):
         from . import reticulate
         reticulate.hooks()
 
-
         # print welcome message
         if options.quiet is not True:
             self.session.app.output.write(rchitect.interface.greeting())

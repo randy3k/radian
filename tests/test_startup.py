@@ -6,7 +6,6 @@ radian_command = [sys.executable, "-m", "radian", "--coverage"]
 
 
 def test_startup():
-
     with screen_process(radian_command) as (screen, process):
         assert_startswith(lambda: screen.display[0], "R ")
         assert_equal(lambda: (screen.cursor.x, screen.cursor.y), (4, 3))
