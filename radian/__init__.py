@@ -72,18 +72,6 @@ def main(cleanup=None):
                 os.execv(sys.executable, [sys.executable, "-m", "radian"] + sys.argv[1:])
 
     from .radianapp import RadianApplication
-
-    if options.coverage:
-        import coverage
-        cov = coverage.Coverage()
-        cov.start()
-
-        def cleanup(x):
-            cov.stop()
-            cov.save()
-    else:
-        cleanup = None
-
     RadianApplication(r_home, ver=__version__).run(options, cleanup)
 
 
