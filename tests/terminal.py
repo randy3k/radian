@@ -1,7 +1,6 @@
 import sys
 import pyte
 import threading
-import time
 from contextlib import contextmanager
 
 if sys.platform.startswith("win"):
@@ -9,28 +8,7 @@ if sys.platform.startswith("win"):
 else:
     import ptyprocess
 
-__all__ = ["assert_equal", "assert_startswith", "PtyProcess", "Screen", "ByteStream"]
-
-
-def assert_equal(x, y, timeout=5):
-    t = time.time()
-    f = x if callable(x) else lambda: x
-    g = y if callable(y) else lambda: y
-    while not f() == g():
-        if time.time() - t > timeout:
-            raise Exception("'{}' not equal to '{}'".format(f(), g()))
-        time.sleep(0.01)
-
-
-def assert_startswith(x, y, timeout=5):
-    t = time.time()
-    f = x if callable(x) else lambda: x
-    g = y if callable(y) else lambda: y
-    while not f().startswith(g()):
-        if time.time() - t > timeout:
-            raise Exception(
-                "expect '{}', but got '{}'".format(g(), f().strip()))
-        time.sleep(0.01)
+__all__ = ["PtyProcess", "Screen", "ByteStream", "Terminal", "open_terminal"]
 
 
 if sys.platform.startswith("win"):
@@ -82,13 +60,29 @@ class ByteStream(pyte.ByteStream):
         t.start()
 
 
+class Terminal(object):
+    def __init__(self, process, screen, stream):
+        self.process = process
+        self.screen = screen
+        self.stream = stream
+
+    def write(self, x):
+        self.process.write(x)
+
+    def sendintr(self):
+        self.process.sendintr()
+
+    def isalive(self):
+        return self.process.isalive()
+
+
 @contextmanager
-def screen_process(cmd):
-    p = PtyProcess.spawn(cmd)
-    screen = Screen(p, 80, 24)
+def open_terminal(cmd):
+    process = PtyProcess.spawn(cmd)
+    screen = Screen(process, 80, 24)
     stream = ByteStream(screen)
     stream.start_feeding()
     try:
-        yield screen, p
+        yield Terminal(process, screen, stream)
     finally:
-        p.terminate(force=True)
+        process.terminate(force=True)
