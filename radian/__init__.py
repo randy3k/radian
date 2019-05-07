@@ -3,7 +3,7 @@ __version__ = '0.4.0.dev0'
 __all__ = ["get_app", "main"]
 
 
-def main():
+def main(cleanup=None):
     import optparse
     import os
     import sys
@@ -22,6 +22,7 @@ def main():
     parser.add_option("--ask-save", action="store_true", dest="ask_save", help="Ask to save R data")
     parser.add_option("--restore-data", action="store_true", dest="restore_data", help="Restore previously saved objects")
     parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
+    parser.add_option("--coverage", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP)
 
     options, args = parser.parse_args()
 
@@ -71,7 +72,19 @@ def main():
                 os.execv(sys.executable, [sys.executable, "-m", "radian"] + sys.argv[1:])
 
     from .radianapp import RadianApplication
-    RadianApplication(r_home, ver=__version__).run(options)
+
+    if options.coverage:
+        import coverage
+        cov = coverage.Coverage()
+        cov.start()
+
+        def cleanup(x):
+            cov.stop()
+            cov.save()
+    else:
+        cleanup = None
+
+    RadianApplication(r_home, ver=__version__).run(options, cleanup)
 
 
 def get_app():

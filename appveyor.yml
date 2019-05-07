@@ -37,8 +37,8 @@ install:
   - python -m pip install --upgrade setuptools pip
   - python -m pip install -e .[test]
 build_script:
-  - pytest -s --cov=radian
-after_build:
+  - pytest -s
+  - coverage combine
   - python -m pip install codecov
   - codecov
 # on_failure:

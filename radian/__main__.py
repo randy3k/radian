@@ -1,4 +1,4 @@
-if __name__ == "__main__":
-    from radian import main
+from radian import main
 
+if __name__ == '__main__':
     main()

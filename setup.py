@@ -22,9 +22,8 @@ def get_version(package):
 
 
 tests_deps = [
+    "coverage",
     "pytest",
-    "pytest-mock",
-    "pytest-cov",
     "pyte>=0.8.0",
     "pexpect",
     "pywinpty" if sys.platform.startswith("win") else "ptyprocess"

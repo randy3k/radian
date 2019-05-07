@@ -52,7 +52,7 @@ class RadianApplication(object):
         os.environ["R_INCLUDE_DIR"] = include_dir
         os.environ["R_SHARE_DIR"] = share_dir
 
-    def run(self, options):
+    def run(self, options, cleanup=None):
         from .prompt import create_radian_prompt_session
         from .read_console import create_read_console
         import rchitect
@@ -87,9 +87,12 @@ class RadianApplication(object):
 
         from . import rutils
         rutils.execute_key_bindings_script()
+        if cleanup:
+            rutils.finalizer(cleanup)
 
         from . import reticulate
         reticulate.hooks()
+
 
         # print welcome message
         if options.quiet is not True:

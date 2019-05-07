@@ -57,7 +57,8 @@ commands:
           command: |
             source $HOME/miniconda/bin/activate myenv
             python -m pip install -e .[test]
-            pytest -s --cov=radian
+            pytest -s
+            coverage combine
             python -m pip install codecov
             codecov
 

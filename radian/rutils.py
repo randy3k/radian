@@ -30,3 +30,10 @@ def execute_key_bindings_script(*args):
         ("base", "source"),
         os.path.join(os.path.dirname(__file__), "R", "key_bindings.R"),
         rcall("new.env"))
+
+
+def finalizer(cleanup):
+    rcall(("base", "reg.finalizer"),
+          rcall(("base", "getOption"), "rchitect.py_tools"),
+          cleanup,
+          onexit=True)
