@@ -1,11 +1,6 @@
 from __future__ import unicode_literals
 import os
-import tempfile
-try:
-    from shlex import quote
-except ImportError:
-    from pipes import quote
-from .utils import assert_equal, assert_startswith, assert_contains
+from .utils import assert_equal, assert_startswith, assert_endswith
 
 
 def test_shell(radian_terminal):
@@ -18,10 +13,33 @@ def test_shell(radian_terminal):
     assert_startswith(lambda: screen.display[6], "#!>")
     radian_terminal.write(b"\b")
     assert_startswith(lambda: screen.display[6], "r$>")
+
+
+def test_cd(radian_terminal):
+    screen = radian_terminal.screen
+    assert_startswith(lambda: screen.display[3], "r$>")
     radian_terminal.write(b";")
-    tdir = tempfile.mkdtemp()
-    radian_terminal.write("cd {}\n".format(quote(tdir)).encode('utf-8'))
-    base = os.path.basename(tdir)
-    assert_contains(lambda: screen.display[7], os.sep + base)
+    d = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "radi"))
+    radian_terminal.write("cd {}".format(d).encode('utf-8'))
+    assert_endswith(lambda: screen.display[3].strip(), os.sep + "radi")
+    radian_terminal.write(b"\t")
+    assert_endswith(lambda: screen.display[3].strip(), os.sep + "radian")
+    radian_terminal.write(b"\n")
+    assert_endswith(lambda: screen.display[4].strip(), os.sep + "radian")
     radian_terminal.write(b"cd -\n")
-    assert_equal(lambda: screen.display[10].strip(), os.getcwd())
+    assert_equal(lambda: screen.display[7].strip(), os.getcwd())
+
+
+def test_cd2(radian_terminal):
+    screen = radian_terminal.screen
+    assert_startswith(lambda: screen.display[3], "r$>")
+    radian_terminal.write(b";")
+    d = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "radi"))
+    radian_terminal.write("cd \"{}".format(d).encode('utf-8'))
+    assert_endswith(lambda: screen.display[3].strip(), os.sep + "radi")
+    radian_terminal.write(b"\t")
+    assert_endswith(lambda: screen.display[3].strip(), os.sep + "radian")
+    radian_terminal.write(b"\"\n")
+    assert_endswith(lambda: screen.display[4].strip(), os.sep + "radian")
+    radian_terminal.write(b"cd -\n")
+    assert_equal(lambda: screen.display[7].strip(), os.getcwd())
