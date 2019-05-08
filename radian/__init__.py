@@ -75,6 +75,10 @@ def main():
     RadianApplication(r_home, ver=__version__).run(options)
 
 
+# cleanup to be injected by __main__.py
+main.cleanup = None
+
+
 def get_app():
     from .radianapp import RadianApplication
     return RadianApplication.instance
