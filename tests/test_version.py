@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import sys
 from .terminal import open_terminal
 from .utils import assert_startswith
