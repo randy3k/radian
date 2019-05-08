@@ -21,3 +21,7 @@ def assert_equal(x, y, timeout=5):
 
 def assert_startswith(x, y, timeout=5):
     assert_op(x, y, six.text_type.startswith, timeout)
+
+
+def assert_contains(x, y, timeout=5):
+    assert_op(x, y, operator.contains, timeout)

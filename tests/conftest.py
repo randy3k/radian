@@ -25,6 +25,7 @@ def radian_command(pytestconfig):
 def radian_terminal(radian_command):
     with open_terminal(radian_command) as terminal:
         yield terminal
+        terminal.sendintr()
         terminal.write(b"q()\n")
         start_time = time.time()
         while terminal.isalive():
