@@ -10,11 +10,7 @@ if __name__ == '__main__':
         def cleanup(x):
             cov.stop()
             cov.save()
-    else:
-        cleanup = None
 
-    try:
-        main(cleanup)
-    finally:
-        if cleanup:
-            cleanup(None)
+        main.cleanup = cleanup
+
+    main()

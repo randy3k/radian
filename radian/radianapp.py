@@ -87,8 +87,12 @@ class RadianApplication(object):
 
         from . import rutils
         rutils.execute_key_bindings_script()
-        if cleanup:
-            rutils.finalizer(cleanup)
+
+        from radian import main
+        try:
+            rutils.finalizer(main.cleanup)
+        except AttributeError:
+            pass
 
         from . import reticulate
         reticulate.hooks()

@@ -3,8 +3,11 @@ from .terminal import open_terminal
 from .utils import assert_startswith
 
 
-def test_version():
-    command = [sys.executable, "-m", "radian", "--version", "--coverage"]
+def test_version(pytestconfig):
+    if pytestconfig.getoption("coverage"):
+        command = [sys.executable, "-m", "coverage", "run", "-m", "radian", "--version"]
+    else:
+        command = [sys.executable, "-m", "radian", "--version"]
     with open_terminal(command) as terminal:
         assert_startswith(lambda: terminal.screen.display[0], "radian version: ")
         import radian

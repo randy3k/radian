@@ -3,7 +3,7 @@ __version__ = '0.4.0.dev0'
 __all__ = ["get_app", "main"]
 
 
-def main(cleanup=None):
+def main():
     import optparse
     import os
     import sys
@@ -72,7 +72,7 @@ def main(cleanup=None):
                 os.execv(sys.executable, [sys.executable, "-m", "radian"] + sys.argv[1:])
 
     from .radianapp import RadianApplication
-    RadianApplication(r_home, ver=__version__).run(options, cleanup)
+    RadianApplication(r_home, ver=__version__).run(options)
 
 
 def get_app():
