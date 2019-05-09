@@ -78,9 +78,9 @@ class Var(object):
     def observe(self, *args, **kwargs):
         return self.getter(*args, **kwargs)
 
-    def _assert(self, op, operand):
+    def _assert(self, op, operand, timeout=5):
         t = time.time()
-        while time.time() - t < 5:
+        while time.time() - t < timeout:
             value = self.getter()
             if op(value, operand):
                 break
@@ -88,17 +88,17 @@ class Var(object):
         else:
             raise Exception("value is {}".format(value))
 
-    def assert_startswith(self, operand):
-        self._assert(six.text_type.startswith, operand)
+    def assert_startswith(self, operand, timeout=5):
+        self._assert(six.text_type.startswith, operand, timeout)
 
-    def assert_endswith(self, operand):
-        self._assert(six.text_type.endswith, operand)
+    def assert_endswith(self, operand, timeout=5):
+        self._assert(six.text_type.endswith, operand, timeout)
 
-    def assert_equal(self, operand):
-        self._assert(operator.eq, operand)
+    def assert_equal(self, operand, timeout=5):
+        self._assert(operator.eq, operand, timeout)
 
-    def assert_contains(self, operand):
-        self._assert(operator.contains, operand)
+    def assert_contains(self, operand, timeout=5):
+        self._assert(operator.contains, operand, timeout)
 
 
 class Terminal(object):

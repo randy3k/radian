@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 def test_reticulate(terminal):
     terminal.current_line().assert_startswith("r$>")
     terminal.write("~")
-    terminal.previous_line(3).assert_startswith("Python")
+    terminal.previous_line(3).assert_startswith("Python", timeout=60)
     terminal.previous_line(2).assert_startswith("Reticulate")
     terminal.current_line().assert_startswith(">>> ")
     terminal.write("imp")
