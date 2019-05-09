@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 import sys
-from .terminal import open_terminal
-from .utils import assert_equal, assert_startswith
+from .conftest import Terminal
 
 
 def test_version(pytestconfig):
@@ -9,7 +8,7 @@ def test_version(pytestconfig):
         command = [sys.executable, "-m", "coverage", "run", "-m", "radian", "--version"]
     else:
         command = [sys.executable, "-m", "radian", "--version"]
-    with open_terminal(command) as terminal:
-        assert_startswith(lambda: terminal.screen.display[0], "radian version: ")
+    with Terminal.open(command) as terminal:
+        terminal.line(0).assert_startswith("radian version: ")
         import radian
-        assert_equal(lambda: terminal.screen.display[0][16:].strip(), radian.__version__)
+        terminal.line(0).strip().assert_endswith(radian.__version__)

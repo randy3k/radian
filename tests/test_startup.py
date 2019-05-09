@@ -1,15 +1,13 @@
 from __future__ import unicode_literals
-from .utils import assert_equal, assert_startswith
 
 
-def test_startup(radian_terminal):
-    screen = radian_terminal.screen
-    assert_startswith(lambda: screen.display[0], "R ")
-    assert_equal(lambda: (screen.cursor.x, screen.cursor.y), (4, 3))
-    assert_startswith(lambda: screen.display[3], "r$>")
-    radian_terminal.write(b"\n")
-    assert_startswith(lambda: screen.display[5], "r$>")
-    assert_equal(lambda: (screen.cursor.x, screen.cursor.y), (4, 5))
-    radian_terminal.sendintr()
-    assert_startswith(lambda: screen.display[7], "r$>")
-    assert_equal(lambda: (screen.cursor.x, screen.cursor.y), (4, 7))
+def test_startup(terminal):
+    terminal.line(0).assert_startswith("R ")
+    terminal.cursor().assert_equal((4, 3))
+    terminal.current_line().assert_startswith("r$>")
+    terminal.write("\n")
+    terminal.current_line().assert_startswith("r$>")
+    terminal.cursor().assert_equal((4, 5))
+    terminal.sendintr()
+    terminal.current_line().assert_startswith("r$>")
+    terminal.cursor().assert_equal((4, 7))
