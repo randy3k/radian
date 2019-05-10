@@ -16,10 +16,12 @@ insert_mode <- radian$key_bindings$insert_mode
 default_focussed <- radian$key_bindings$default_focussed
 cursor_at_begin <- radian$key_bindings$cursor_at_begin
 text_is_empty <- radian$key_bindings$text_is_empty
+preceding_text <- radian$key_bindings$preceding_text
 prompt_mode <- radian$key_bindings$prompt_mode
 main_mode <- prompt_mode("r") | prompt_mode("browse")
 
 commit_text <- radian$key_bindings$commit_text
+newline <- radian$key_bindings$newline
 
 tidy_code <- function(code) {
     code <- gsub("\r", "", code)[[1]]
@@ -59,6 +61,12 @@ pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_
 
 pkb$add("backspace", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
     function(event) commit_text(event, "exit", FALSE)
+)
+
+pkb$add("enter", filter = insert_mode & default_focussed & preceding_text(".*:"))(
+    function(event) {
+        newline(event, chars = list(":"))
+    }
 )
 
 handle_code <- function(code) {

@@ -107,6 +107,15 @@ def commit_text(event, text, add_history=True):
     buf.validate_and_handle()
 
 
+def newline(event, chars=["{", "[", "("]):
+    should_indent = event.current_buffer.document.char_before_cursor in chars
+    copy_margin = not in_paste_mode() and event.app.session.auto_indentation
+    event.current_buffer.newline(copy_margin=copy_margin)
+    if should_indent and event.app.session.auto_indentation:
+        tab_size = event.app.session.tab_size
+        event.current_buffer.insert_text(" " * tab_size)
+
+
 def create_prompt_key_bindings(prase_text_complete):
     kb = KeyBindings()
     handle = kb.add
@@ -119,12 +128,7 @@ def create_prompt_key_bindings(prase_text_complete):
     @handle('c-j', filter=insert_mode & default_focussed)
     @handle('enter', filter=insert_mode & default_focussed)
     def _(event):
-        should_indent = event.current_buffer.document.char_before_cursor in ["{", "[", "("]
-        copy_margin = not in_paste_mode() and event.app.session.auto_indentation
-        event.current_buffer.newline(copy_margin=copy_margin)
-        if should_indent and event.app.session.auto_indentation:
-            tab_size = event.app.session.tab_size
-            event.current_buffer.insert_text(" " * tab_size)
+        newline(event)
 
     @handle('c-j', filter=insert_mode & default_focussed & prase_complete)
     @handle('enter', filter=insert_mode & default_focussed & prase_complete)
