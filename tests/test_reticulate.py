@@ -12,8 +12,9 @@ def test_reticulate(terminal):
     terminal.write("a\n")
     terminal.previous_line(2).strip().assert_equal("1")
     terminal.write("def f():\n")
-    terminal.current_line().strip().assert_equal("")
-    terminal.write("pass\n")  # auto indented
+    # auto indented
+    terminal.current_line().assert_startswith(" ")
+    terminal.write("pass\n")
     terminal.current_line().strip().assert_equal(">>>")
 
 
