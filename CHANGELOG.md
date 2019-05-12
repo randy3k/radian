@@ -1,6 +1,7 @@
 # v0.4.0
 
-  - update rchitect to v0.3.0
+  - update rchitect to version 0.3
+  - add setting `radian.escape_key_map`
 
 # v0.3.4
 
