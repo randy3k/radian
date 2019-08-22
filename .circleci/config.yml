@@ -23,7 +23,11 @@ commands:
               curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
             fi
             bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
-            $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>>
+            if [ "<<parameters.python>>" == "3.4" ]; then
+              $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>> -c conda-forge
+            else
+              $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>>
+            fi
   install-r:
     parameters:
       r:
