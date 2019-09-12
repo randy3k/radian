@@ -65,7 +65,8 @@ def create_read_console(session):
 
 
 def create_write_console_ex(session):
-    from prompt_toolkit.utils import is_windows
+    from prompt_toolkit.formatted_text import ANSI
+    from prompt_toolkit.shortcuts import print_formatted_text
     from rchitect.interface import roption
 
     # color_depth = session.color_depth
@@ -78,11 +79,7 @@ def create_write_console_ex(session):
                 sys.stdout.flush()
         else:
             if sys.stderr:
-                if is_windows():
-                    # TODO: support coloring stderr in Windows
-                    sys.stderr.write(buf)
-                else:
-                    sys.stderr.write(stderr_format.format(buf))
+                print_formatted_text(ANSI(stderr_format.format(buf)), end="", file=sys.stderr)
                 sys.stderr.flush()
 
     return write_console_ex
