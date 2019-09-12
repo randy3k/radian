@@ -110,7 +110,7 @@ options(radian.shell_prompt = "\033[0;31m#!>\033[0m ")
 options(radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ")
 
 # stderr color format
-options(stderr_format = "\x1b[31m{}\x1b[0m")
+options(stderr_format = "\033[0;31m{}\033[0m")
 
 # supress the loading message for reticulate
 options(radian.suppress_reticulate_message = FALSE)
