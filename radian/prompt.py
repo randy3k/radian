@@ -115,7 +115,7 @@ def register_modes(session):
     session.register_mode(
         "unknown",
         native=True,
-        insert_new_line=True,
+        insert_new_line=False,
         message=lambda: ANSI(session.prompt_text),
         complete_while_typing=False,
         lexer=None,

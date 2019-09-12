@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import sys
 
 STDERR_FORMAT = "\x1b[31m{}\x1b[0m"
+TERMINAL_CURSOR_AT_BEGINNING = [True]
 
 
 def create_read_console(session):
@@ -24,7 +25,8 @@ def create_read_console(session):
 
         if interrupted[0]:
             interrupted[0] = False
-        elif session.insert_new_line and current_mode.insert_new_line:
+        elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
+                (session.insert_new_line and current_mode.insert_new_line):
             session.app.output.write("\n")
 
         text = None
@@ -77,9 +79,11 @@ def create_write_console_ex(session):
             if sys.stdout:
                 sys.stdout.write(buf)
                 sys.stdout.flush()
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.replace("\r", "\n").endswith("\n")
         else:
             if sys.stderr:
                 print_formatted_text(ANSI(stderr_format.format(buf)), end="", file=sys.stderr)
                 sys.stderr.flush()
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.replace("\r", "\n").endswith("\n")
 
     return write_console_ex
