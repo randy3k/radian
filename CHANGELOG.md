@@ -1,3 +1,8 @@
+# v0.4.1
+
+   - stderr coloring for unix
+   - check if cursor is at an empty line when start a prompt
+
 # v0.4.0
 
   - update rchitect to version 0.3
