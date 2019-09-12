@@ -20,7 +20,7 @@ def test_cd(terminal):
     terminal.write("cd {}".format(d))
     terminal.current_line().strip().assert_endswith(os.sep + "radi")
     terminal.write("\t")
-    terminal.current_line().strip().assert_endswith(os.sep + "radian")
+    terminal.current_line().strip().assert_endswith(os.sep + "radian", timeout=10)
     terminal.write("\n")
     terminal.previous_line(2).strip().assert_endswith(os.sep + "radian")
     terminal.write("cd -\n")
