@@ -54,7 +54,7 @@ class RadianApplication(object):
 
     def run(self, options, cleanup=None):
         from .prompt import create_radian_prompt_session
-        from .read_console import create_read_console
+        from .consoleio import create_read_console, create_write_console_ex
         import rchitect
 
         self.set_env_vars(options)
@@ -84,6 +84,7 @@ class RadianApplication(object):
         self.session = create_radian_prompt_session(options)
 
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
+        rchitect.def_callback(name="write_console_ex")(create_write_console_ex(self.session))
 
         from . import rutils
         rutils.execute_key_bindings_script()
