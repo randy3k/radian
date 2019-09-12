@@ -30,6 +30,7 @@ PROMPT = "\x1b[34mr$>\x1b[0m "
 SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
+VI_MODE_PROMPT = "\x1b[34m[{}]\x1b[0m "
 
 
 class RadianMode(Mode):
@@ -71,13 +72,18 @@ def register_modes(session):
         text = session.default_buffer.text
         run_command(text)
 
+    def vi_mode(session):
+        if session.editing_mode.lower() == "vi" and session.show_vi_mode_prompt:
+            return session.vi_mode_prompt.format(str(session.app.vi_state.input_mode)[3:6])
+        return ''
+
     session.register_mode(
         "r",
         native=True,
         activator=lambda session: session.prompt_text == session.default_prompt,
         insert_new_line=True,
         history_share_with="browse",
-        message=ANSI(session.default_prompt),
+        message=lambda: ANSI(vi_mode(session) + session.default_prompt),
         multiline=session.indent_lines,
         complete_while_typing=session.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
@@ -90,7 +96,7 @@ def register_modes(session):
         native=False,
         on_done=shell_process_text,
         insert_new_line=True,
-        message=ANSI(session.shell_prompt),
+        message=lambda: ANSI(vi_mode(session) + session.shell_prompt),
         multiline=session.indent_lines,
         complete_while_typing=session.complete_while_typing,
         lexer=None,
@@ -103,7 +109,7 @@ def register_modes(session):
         activator=browse_activator,
         insert_new_line=True,
         history_share_with="r",
-        message=lambda: ANSI(session.browse_prompt.format(session.browse_level)),
+        message=lambda: ANSI(vi_mode(session) + session.browse_prompt.format(session.browse_level)),
         multiline=session.indent_lines,
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
@@ -116,7 +122,7 @@ def register_modes(session):
         "unknown",
         native=True,
         insert_new_line=False,
-        message=lambda: ANSI(session.prompt_text),
+        message=lambda: ANSI(vi_mode(session) + session.prompt_text),
         complete_while_typing=False,
         lexer=None,
         completer=None,
@@ -161,6 +167,12 @@ def load_settings(session):
 
     browse_prompt = roption("radian.browse_prompt", BROWSE_PROMPT)
     session.browse_prompt = browse_prompt
+
+    show_vi_mode_prompt = roption("radian.show_vi_mode_prompt", True)
+    session.show_vi_mode_prompt = show_vi_mode_prompt
+
+    vi_mode_prompt = roption("radian.vi_mode_prompt", VI_MODE_PROMPT)
+    session.vi_mode_prompt = vi_mode_prompt
 
     set_width_on_resize = roption("setWidthOnResize", True)
     session.auto_width = roption("radian.auto_width", set_width_on_resize)

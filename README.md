@@ -109,6 +109,10 @@ options(radian.prompt = "\033[0;34mr$>\033[0m ")
 options(radian.shell_prompt = "\033[0;31m#!>\033[0m ")
 options(radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ")
 
+# show vi mode state when radian.editing_mode is `vi`
+options(radian.show_vi_mode_prompt = TRUE)
+options(radian.vi_mode_prompt = "\033[34m[{}]\033[0m ")
+
 # stderr color format
 options(radian.stderr_format = "\033[0;31m{}\033[0m")
 
