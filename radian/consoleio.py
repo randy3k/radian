@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import sys
 
-STDOUT_FORMAT = "\x1b[31m{}\x1b[0m"
+STDERR_FORMAT = "\x1b[31m{}\x1b[0m"
 
 
 def create_read_console(session):
@@ -68,7 +68,7 @@ def create_write_console_ex(session):
     from rchitect.interface import roption
 
     # color_depth = session.color_depth
-    stderr_format = roption("radian.stderr_format", STDOUT_FORMAT)
+    stderr_format = roption("radian.stderr_format", STDERR_FORMAT)
 
     def write_console_ex(buf, otype):
         if otype == 0:
