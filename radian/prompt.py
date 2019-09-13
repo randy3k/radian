@@ -13,7 +13,6 @@ from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 
-from pygments.lexers.r import SLexer
 from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, reval
@@ -24,6 +23,7 @@ from .rutils import prase_text_complete
 from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
 from .completion import RCompleter, SmartPathCompleter
 from .vt100 import CustomVt100Input, CustomVt100Output
+from .lexer import CustomSLexer as SLexer
 
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
