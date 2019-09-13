@@ -19,8 +19,8 @@ from pygments.styles import get_style_by_name
 from rchitect import rcopy, reval
 from rchitect.interface import roption, setoption, process_events
 
+from . import shell
 from .rutils import prase_text_complete
-from .shell import run_command
 from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
 from .completion import RCompleter, SmartPathCompleter
 from .vt100 import CustomVt100Input, CustomVt100Output
@@ -70,12 +70,7 @@ def register_modes(session):
 
     def shell_process_text(session):
         text = session.default_buffer.text
-        run_command(text)
-
-    def vi_mode(session):
-        if session.editing_mode.lower() == "vi" and session.show_vi_mode_prompt:
-            return session.vi_mode_prompt.format(str(session.app.vi_state.input_mode)[3:6])
-        return ''
+        shell.run_command(text)
 
     session.register_mode(
         "r",
@@ -83,7 +78,7 @@ def register_modes(session):
         activator=lambda session: session.prompt_text == session.default_prompt,
         insert_new_line=True,
         history_share_with="browse",
-        message=lambda: ANSI(vi_mode(session) + session.default_prompt),
+        get_message=lambda: session.default_prompt,
         multiline=session.indent_lines,
         complete_while_typing=session.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
@@ -96,7 +91,7 @@ def register_modes(session):
         native=False,
         on_done=shell_process_text,
         insert_new_line=True,
-        message=lambda: ANSI(vi_mode(session) + session.shell_prompt),
+        get_message=lambda: session.shell_prompt,
         multiline=session.indent_lines,
         complete_while_typing=session.complete_while_typing,
         lexer=None,
@@ -109,7 +104,7 @@ def register_modes(session):
         activator=browse_activator,
         insert_new_line=True,
         history_share_with="r",
-        message=lambda: ANSI(vi_mode(session) + session.browse_prompt.format(session.browse_level)),
+        get_message=lambda: session.browse_prompt.format(session.browse_level),
         multiline=session.indent_lines,
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
@@ -122,7 +117,7 @@ def register_modes(session):
         "unknown",
         native=True,
         insert_new_line=False,
-        message=lambda: ANSI(vi_mode(session) + session.prompt_text),
+        get_message=lambda: session.prompt_text,
         complete_while_typing=False,
         lexer=None,
         completer=None,
@@ -130,6 +125,27 @@ def register_modes(session):
         switchable_from=False,
         switchable_to=False
     )
+
+    def vi_mode_prompt():
+        if session.editing_mode.lower() == "vi" and session.show_vi_mode_prompt:
+            return session.vi_mode_prompt.format(str(session.app.vi_state.input_mode)[3:6])
+        return ""
+
+    def message():
+        if hasattr(session.current_mode, "get_message"):
+            return ANSI(vi_mode_prompt() + session.current_mode.get_message())
+        elif hasattr(session.current_mode, "message"):
+            message = session.current_mode.message
+            if callable(message):
+                return ANSI(vi_mode_prompt() + message())
+            else:
+                return ANSI(vi_mode_prompt() + message)
+        else:
+            return ""
+
+    # FIXME: pass `message` to ModalPromptSession directly
+    session.message = message
+    session._backup_settings()
 
 
 def load_settings(session):

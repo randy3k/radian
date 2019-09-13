@@ -144,7 +144,7 @@ app$session$register_mode(
     native = FALSE,
     on_done = function(session) handle_code(session$default_buffer$text),
     activator = function(session) reticulate:::py_repl_active(),
-    message = function() app$session$prompt_text,
+    get_message = function() app$session$prompt_text,
     multiline = TRUE,
     insert_new_line = TRUE,
     lexer = prompt_toolkit$lexers$PygmentsLexer(pygments$lexers$python$PythonLexer),
