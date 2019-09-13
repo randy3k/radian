@@ -19,8 +19,12 @@ def test_cd(terminal):
     d = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "radi"))
     terminal.write("cd {}".format(d))
     terminal.current_line().strip().assert_endswith(os.sep + "radi")
-    terminal.write("\t")
-    terminal.current_line().strip().assert_endswith(os.sep + "radian", timeout=10)
+    try:
+        terminal.write("\t")
+        terminal.current_line().strip().assert_endswith(os.sep + "radian")
+    except Exception:
+        terminal.write("\t")
+        terminal.current_line().strip().assert_endswith(os.sep + "radian")
     terminal.write("\n")
     terminal.previous_line(2).strip().assert_endswith(os.sep + "radian")
     terminal.write("cd -\n")
@@ -33,8 +37,12 @@ def test_cd2(terminal):
     d = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "radi"))
     terminal.write("cd \"{}".format(d))
     terminal.current_line().strip().assert_endswith(os.sep + "radi")
-    terminal.write("\t")
-    terminal.current_line().strip().assert_endswith(os.sep + "radian")
+    try:
+        terminal.write("\t")
+        terminal.current_line().strip().assert_endswith(os.sep + "radian")
+    except Exception:
+        terminal.write("\t")
+        terminal.current_line().strip().assert_endswith(os.sep + "radian")
     terminal.write("\"\n")
     terminal.previous_line(2).strip().assert_endswith(os.sep + "radian")
     terminal.write("cd -\n")
