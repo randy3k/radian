@@ -60,7 +60,7 @@ You could alias `r` to _radian_ by putting
 ```bash
 alias r="radian"
 ```
-in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open the tranditional R console.
+in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open the traditional R console.
 (`R` is still useful, e.g, running `R CMD BUILD`.)
 
 
@@ -104,7 +104,7 @@ options(radian.completion_timeout = 0.05)
 # automatically adjust R buffer size based on terminal width
 options(radian.auto_width = TRUE)
 
-# insert new line between prompts, turnning it off may hide buffered lines
+# insert new line between prompts, turning it off may hide buffered lines
 options(radian.insert_new_line = TRUE)
 
 # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
@@ -122,7 +122,7 @@ options(radian.vi_mode_prompt = "\033[34m[{}]\033[0m ")
 # stderr color format
 options(radian.stderr_format = "\033[0;31m{}\033[0m")
 
-# supress the loading message for reticulate
+# suppress the loading message for reticulate
 options(radian.suppress_reticulate_message = FALSE)
 # enable reticulate prompt and trigger `~`
 options(radian.enable_reticulate_prompt = TRUE)
@@ -191,7 +191,7 @@ pip install jedi
 libreadline.so.6: undefined symbol: PC
 ```
 
-It may occurr if python and R use different two versions of `libreadline`. You could try preloading the system `libreadline.so` first.
+It may occurr if python and R use different two versions of `libreadline`. You could try preloading a version of `libreadline.so` first, e.g.,
 
 ```
 env LD_PRELOAD=/lib64/libreadline.so.6 radian
@@ -226,4 +226,4 @@ _radian_ is powered by (π)thon.
 
 ## Credits
 
-_radian_ wouldn't be possible witout the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
+_radian_ wouldn't be possible without the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
