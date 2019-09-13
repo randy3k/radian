@@ -37,10 +37,15 @@ def source_key_bindings_script(*args):
     source_file(os.path.join(os.path.dirname(__file__), "R", "key_bindings.R"))
 
 
-def source_radian_profile():
-    profile = user_path(".radian_profile")
-    if os.path.exists(profile):
-        source_file(profile)
+def source_radian_profile(path):
+    if not path:
+        if os.path.exists(".radian_profile"):
+            path = ".radian_profile"
+        else:
+            path = user_path(".radian_profile")
+    path = os.path.expanduser(path)
+    if os.path.exists(path):
+        source_file(path)
 
 
 def finalizer(cleanup):

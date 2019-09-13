@@ -82,7 +82,7 @@ class RadianApplication(object):
 
         rchitect.init(args=args)
 
-        rutils.source_radian_profile()
+        rutils.source_radian_profile(options.profile)
         self.session = create_radian_prompt_session(options)
 
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
