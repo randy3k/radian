@@ -25,11 +25,22 @@ def package_is_installed(pkg):
     return pkg in rcopy(reval("rownames(installed.packages())"))
 
 
-def execute_key_bindings_script(*args):
-    rcall(
-        ("base", "source"),
-        os.path.join(os.path.dirname(__file__), "R", "key_bindings.R"),
-        rcall("new.env"))
+def source_file(path):
+    rcall(("base", "source"), path, rcall("new.env"))
+
+
+def user_path(*args):
+    return os.path.join(rcopy(rcall(("base", "path.expand"), "~")), *args)
+
+
+def source_key_bindings_script(*args):
+    source_file(os.path.join(os.path.dirname(__file__), "R", "key_bindings.R"))
+
+
+def source_radian_profile():
+    profile = user_path(".radian_profile")
+    if os.path.exists(profile):
+        source_file(profile)
 
 
 def finalizer(cleanup):

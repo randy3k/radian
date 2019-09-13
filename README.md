@@ -66,8 +66,14 @@ in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open 
 
 ## Settings
 
-_radian_ can be customized via `options` in `.Rprofile` file. This file is usually located in your user home directory.
-*Do not copy the whole configuration, just specify what you need in `.Rprofile`*
+_radian_ can be customized by specifying the following options in `.Rprofile`
+at your user home directory. However, when running _radian_ in vanilla mode
+(`radian --vanilla`), the file `.Rprofile` would not be executed. If
+persistent settings are required, one could put those options in `.radian_profile`.
+This file will be executed even if `radian` is in vanilla mode.
+
+
+*Do not copy the whole configuration, just specify what you need!*
 
 ```r
 # see https://help.farbox.com/pygments.html
@@ -120,7 +126,11 @@ options(radian.stderr_format = "\033[0;31m{}\033[0m")
 options(radian.suppress_reticulate_message = FALSE)
 # enable reticulate prompt and trigger `~`
 options(radian.enable_reticulate_prompt = TRUE)
+```
 
+### Custom key bindings
+
+```r
 # allows user defined shortcuts, these keys should be escaped when send through the terminal.
 # In the following example, `esc` + `-` sends `<-` and `esc` + `m` sends `%>%`.
 # Note that in some terminals, you could mark `alt` as `escape` so you could use `alt` + `-` instead.
