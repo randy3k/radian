@@ -6,11 +6,11 @@ from code import compile_command
 from rchitect import rcall, rcopy
 from rchitect.interface import roption, setoption, set_hook, package_event
 
-from .rutils import package_is_installed
+from radian.rutils import package_is_installed
 
-from .key_bindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty
-from .key_bindings import commit_text
-from . import get_app
+from radian.key_bindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty
+from radian.key_bindings import commit_text
+from radian import get_app
 
 
 try:
@@ -56,7 +56,7 @@ def reticulate_message_hook(*args):
 def reticulate_prompt_hook(*args):
     rcall(
         ("base", "source"),
-        os.path.join(os.path.dirname(__file__), "R", "reticulate.R"),
+        os.path.join(os.path.dirname(__file__), "key_bindings.R"),
         rcall("new.env"))
 
 

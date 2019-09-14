@@ -88,7 +88,7 @@ class RadianApplication(object):
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
         rchitect.def_callback(name="write_console_ex")(create_write_console_ex(self.session))
 
-        rutils.source_key_bindings_script()
+        rutils.load_custom_key_bindings()
 
         from radian import main
         if main.cleanup:

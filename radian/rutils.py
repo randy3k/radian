@@ -3,7 +3,8 @@ import os
 import sys
 from rchitect import rcopy, rcall, reval
 from rchitect._cffi import ffi, lib
-from rchitect.interface import protected, rstring_p
+from rchitect.interface import roption, protected, rstring_p
+from .key_bindings import map_key
 
 
 def prase_text_complete(text):
@@ -33,10 +34,6 @@ def user_path(*args):
     return os.path.join(rcopy(rcall(("base", "path.expand"), "~")), *args)
 
 
-def source_key_bindings_script(*args):
-    source_file(os.path.join(os.path.dirname(__file__), "R", "key_bindings.R"))
-
-
 def source_radian_profile(path):
     if not path:
         if os.path.exists(".radian_profile"):
@@ -46,6 +43,12 @@ def source_radian_profile(path):
     path = os.path.expanduser(path)
     if os.path.exists(path):
         source_file(path)
+
+
+def load_custom_key_bindings(*args):
+    esc_keymap = roption("radian.escape_key_map", [])
+    for m in esc_keymap:
+        map_key(("escape", m["key"]), m["value"], mode=m["mode"] if "mode" in m else "r")
 
 
 def finalizer(cleanup):
