@@ -27,7 +27,7 @@ def package_is_installed(pkg):
 
 
 def source_file(path):
-    rcall(("base", "source"), path, rcall("new.env"))
+    rcall(("base", "source"), path, rcall(("base", "new.env")))
 
 
 def user_path(*args):
@@ -51,7 +51,7 @@ def load_custom_key_bindings(*args):
         map_key(("escape", m["key"]), m["value"], mode=m["mode"] if "mode" in m else "r")
 
 
-def finalizer(cleanup):
+def register_cleanup(cleanup):
     rcall(("base", "reg.finalizer"),
           rcall(("base", "getOption"), "rchitect.py_tools"),
           cleanup,

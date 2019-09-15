@@ -126,27 +126,6 @@ def register_modes(session):
         switchable_to=False
     )
 
-    def vi_mode_prompt():
-        if session.editing_mode.lower() == "vi" and session.show_vi_mode_prompt:
-            return session.vi_mode_prompt.format(str(session.app.vi_state.input_mode)[3:6])
-        return ""
-
-    def message():
-        if hasattr(session.current_mode, "get_message"):
-            return ANSI(vi_mode_prompt() + session.current_mode.get_message())
-        elif hasattr(session.current_mode, "message"):
-            message = session.current_mode.message
-            if callable(message):
-                return ANSI(vi_mode_prompt() + message())
-            else:
-                return ANSI(vi_mode_prompt() + message)
-        else:
-            return ""
-
-    # FIXME: pass `message` to ModalPromptSession directly
-    session.message = message
-    session._backup_settings()
-
 
 def load_settings(session):
     if roption("radian.editing_mode", "emacs") in ["vim", "vi"]:
@@ -242,7 +221,25 @@ def create_radian_prompt_session(options):
 
         return _
 
+    def vi_mode_prompt():
+        if session.editing_mode.lower() == "vi" and session.show_vi_mode_prompt:
+            return session.vi_mode_prompt.format(str(session.app.vi_state.input_mode)[3:6])
+        return ""
+
+    def message():
+        if hasattr(session.current_mode, "get_message"):
+            return ANSI(vi_mode_prompt() + session.current_mode.get_message())
+        elif hasattr(session.current_mode, "message"):
+            message = session.current_mode.message
+            if callable(message):
+                return ANSI(vi_mode_prompt() + message())
+            else:
+                return ANSI(vi_mode_prompt() + message)
+        else:
+            return ""
+
     session = ModalPromptSession(
+        message=message,
         color_depth=ColorDepth.default(term=os.environ.get("TERM")),
         history=history,
         enable_history_search=True,

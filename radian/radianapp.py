@@ -4,6 +4,9 @@ import sys
 import subprocess
 
 
+STDERR_FORMAT = "\x1b[31m{}\x1b[0m"
+
+
 class RadianApplication(object):
     instance = None
     r_home = None
@@ -54,7 +57,7 @@ class RadianApplication(object):
 
     def run(self, options, cleanup=None):
         from .prompt import create_radian_prompt_session
-        from .consoleio import create_read_console, create_write_console_ex
+        from .console import create_read_console, create_write_console_ex
         import rchitect
         from . import rutils
 
@@ -85,17 +88,20 @@ class RadianApplication(object):
         rutils.source_radian_profile(options.profile)
         self.session = create_radian_prompt_session(options)
 
+        stderr_format = rchitect.interface.roption("radian.stderr_format", STDERR_FORMAT)
+
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
-        rchitect.def_callback(name="write_console_ex")(create_write_console_ex(self.session))
+        rchitect.def_callback(name="write_console_ex")(
+            create_write_console_ex(self.session, stderr_format))
 
         rutils.load_custom_key_bindings()
 
         from radian import main
         if main.cleanup:
-            rutils.finalizer(main.cleanup)
+            rutils.register_cleanup(main.cleanup)
 
         from . import reticulate
-        reticulate.hooks()
+        reticulate.configure()
 
         # print welcome message
         if options.quiet is not True:

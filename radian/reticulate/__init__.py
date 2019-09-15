@@ -6,7 +6,7 @@ from code import compile_command
 from rchitect import rcall, rcopy
 from rchitect.interface import roption, setoption, set_hook, package_event
 
-from radian.rutils import package_is_installed
+from radian.rutils import package_is_installed, source_file
 
 from radian.key_bindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty
 from radian.key_bindings import commit_text
@@ -30,7 +30,7 @@ difficulties in loading `reticulate`.
 """.format(sys.executable).strip()
 
 
-def hooks():
+def configure():
     if not roption("radian.suppress_reticulate_message", False):
         set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
@@ -54,10 +54,7 @@ def reticulate_message_hook(*args):
 
 
 def reticulate_prompt_hook(*args):
-    rcall(
-        ("base", "source"),
-        os.path.join(os.path.dirname(__file__), "key_bindings.R"),
-        rcall("new.env"))
+    source_file(os.path.join(os.path.dirname(__file__), "key_bindings.R"))
 
 
 def prase_text_complete(code):
