@@ -2,6 +2,10 @@
 
    - stderr coloring for unix
    - check if cursor is at an empty line when start a prompt
+   - add vi mode state in prompt
+   - support .radian_profile
+   - allow -q flag
+   - Added custom R lexer for better colour
 
 # v0.4.0
 
