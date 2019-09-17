@@ -6,7 +6,6 @@ import sys
 import time
 
 from lineedit import Mode, ModalPromptSession, ModalInMemoryHistory, ModalFileHistory
-from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.output import ColorDepth
