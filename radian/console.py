@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 import sys
 
+from radian.settings import radian_settings as settings
+
+
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
 
@@ -25,7 +28,7 @@ def create_read_console(session):
         if interrupted[0]:
             interrupted[0] = False
         elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
-                (session.insert_new_line and current_mode.insert_new_line):
+                (settings.insert_new_line and current_mode.insert_new_line):
             session.app.output.write("\n")
 
         text = None
@@ -56,7 +59,7 @@ def create_read_console(session):
                 result = current_mode.on_done(session)
                 if result is not None:
                     return result
-                if session.insert_new_line and current_mode.insert_new_line:
+                if settings.insert_new_line and current_mode.insert_new_line:
                     session.app.output.write("\n")
                 text = None
 

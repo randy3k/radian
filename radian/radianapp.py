@@ -4,9 +4,6 @@ import sys
 import subprocess
 
 
-STDERR_FORMAT = "\x1b[31m{}\x1b[0m"
-
-
 class RadianApplication(object):
     instance = None
     r_home = None
@@ -56,10 +53,10 @@ class RadianApplication(object):
         os.environ["R_SHARE_DIR"] = share_dir
 
     def run(self, options, cleanup=None):
-        from .prompt import create_radian_prompt_session
+        from .session import create_radian_prompt_session
         from .console import create_read_console, create_write_console_ex
         import rchitect
-        from . import rutils
+        from . import rutils, settings
 
         self.set_env_vars(options)
 
@@ -86,13 +83,14 @@ class RadianApplication(object):
         rchitect.init(args=args)
 
         rutils.source_radian_profile(options.profile)
-        self.session = create_radian_prompt_session(options)
 
-        stderr_format = rchitect.interface.roption("radian.stderr_format", STDERR_FORMAT)
+        settings = settings.radian_settings
+        settings.load()
+        self.session = create_radian_prompt_session(options, settings)
 
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
         rchitect.def_callback(name="write_console_ex")(
-            create_write_console_ex(self.session, stderr_format))
+            create_write_console_ex(self.session, settings.stderr_format))
 
         rutils.load_custom_key_bindings()
 
