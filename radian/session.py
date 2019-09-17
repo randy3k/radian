@@ -55,12 +55,6 @@ class RadianMode(Mode):
 
 
 def apply_settings(session, settings):
-    if settings.editing_mode in ["vim", "vi"]:
-        session.editing_mode = EditingMode.VI
-    else:
-        session.editing_mode = EditingMode.EMACS
-    session.style = style_from_pygments_cls(get_style_by_name(settings.color_scheme))
-
     setoption("prompt", settings.prompt)
 
     if settings.auto_width:
@@ -131,6 +125,8 @@ def create_radian_prompt_session(options, settings):
     session = ModalPromptSession(
         message=message,
         color_depth=ColorDepth.default(term=os.environ.get("TERM")),
+        style=style_from_pygments_cls(get_style_by_name(settings.color_scheme)),
+        editing_mode="VI" if settings.editing_mode in ["vim", "vi"] else "EMACS",
         history=history,
         enable_history_search=True,
         history_search_no_duplicates=settings.history_search_no_duplicates,
