@@ -61,7 +61,6 @@ def apply_settings(session, settings):
         session.editing_mode = EditingMode.EMACS
     session.style = style_from_pygments_cls(get_style_by_name(settings.color_scheme))
 
-    session.default_prompt = settings.prompt
     setoption("prompt", settings.prompt)
 
     if settings.auto_width:
@@ -165,10 +164,10 @@ def create_radian_prompt_session(options, settings):
     session.register_mode(
         "r",
         native=True,
-        activator=lambda session: session.prompt_text == session.default_prompt,
+        activator=lambda session: session.prompt_text == settings.prompt,
         insert_new_line=True,
         history_share_with="browse",
-        get_message=lambda: session.default_prompt,
+        get_message=lambda: settings.prompt,
         multiline=settings.indent_lines,
         complete_while_typing=settings.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
