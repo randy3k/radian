@@ -7,6 +7,7 @@ jobs:
     strategy:
       matrix:
         r: [3.5, latest, devel]
+        python: [2.7, 3.5, 3.6, 3.7]
     runs-on: ubuntu-latest
     container: rocker/tidyverse:${{ matrix.r }}
     steps:
@@ -24,7 +25,7 @@ jobs:
     - name: Running tests
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
-        conda create -n myenv python=3.7
+        conda create -n myenv python=${{ matrix.python }}
         source $HOME/miniconda/bin/activate myenv
         python -m pip install -e .[test]
         python -m pip install jedi
@@ -36,6 +37,7 @@ jobs:
     strategy:
       matrix:
         r: [3.5, latest, devel]
+        python: [2.7, 3.5, 3.6, 3.7]
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
@@ -60,7 +62,7 @@ jobs:
     - name: Running tests
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
-        conda create -n myenv python=3.7
+        conda create -n myenv python=${{ matrix.python }}
         source $HOME/miniconda/bin/activate myenv
         python -m pip install -e .[test]
         python -m pip install jedi
@@ -72,6 +74,7 @@ jobs:
     strategy:
       matrix:
         r: [3.5, latest, devel]
+        python: [2.7, 3.5, 3.6, 3.7]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
@@ -95,7 +98,7 @@ jobs:
     - name: Running tests
       run: |
         SET PATH=%CONDA%;%CONDA%\Scripts;%PATH%
-        conda create -n myenv python=3.7
+        conda create -n myenv python=${{ matrix.python }}
         activate myenv
         python -m pip install -e .[test]
         python -m pip install jedi
