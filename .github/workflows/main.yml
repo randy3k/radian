@@ -6,8 +6,10 @@ jobs:
   linux:
     strategy:
       matrix:
-        r: [3.5, latest, devel]
-        python: [2.7, 3.4, 3.5, 3.6, 3.7]
+        r: [latest]
+        # r: [3.5, latest, devel]
+        python: [3.7]
+        # python: [2.7, 3.4, 3.5, 3.6, 3.7]
     runs-on: ubuntu-latest
     container: rocker/tidyverse:${{ matrix.r }}
     steps:
@@ -40,8 +42,10 @@ jobs:
   macos:
     strategy:
       matrix:
-        r: [3.5, latest, devel]
-        python: [2.7, 3.4, 3.5, 3.6, 3.7]
+        r: [latest]
+        # r: [3.5, latest, devel]
+        python: [3.7]
+        # python: [2.7, 3.4, 3.5, 3.6, 3.7]
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
@@ -81,8 +85,10 @@ jobs:
   windows:
     strategy:
       matrix:
-        r: [3.5, latest, devel]
-        python: [2.7, 3.4, 3.5, 3.6, 3.7]
+        r: [latest]
+        # r: [3.5, latest, devel]
+        python: [3.7]
+        # python: [2.7, 3.4, 3.5, 3.6, 3.7]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
