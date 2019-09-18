@@ -133,27 +133,27 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - linux-test:
-          name: linux-rlatest-py34
-          r: latest
-          python: "3.4"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-rlatest-py35
-          r: latest
-          python: "3.5"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-rlatest-py36
-          r: latest
-          python: "3.6"
-          filters:
-            tags:
-              only: /^v.*/
+      # - linux-test:
+      #     name: linux-rlatest-py34
+      #     r: latest
+      #     python: "3.4"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      # - linux-test:
+      #     name: linux-rlatest-py35
+      #     r: latest
+      #     python: "3.5"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      # - linux-test:
+      #     name: linux-rlatest-py36
+      #     r: latest
+      #     python: "3.6"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
       - linux-test:
           name: linux-rlatest-py37
           r: latest
@@ -161,34 +161,34 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - linux-test:
-          name: linux-rdevel-py27
-          r: devel
-          python: "2.7"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-rdevel-py37
-          r: devel
-          python: "3.7"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-r35-py27
-          r: "3.5"
-          python: "2.7"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-r35-py37
-          r: "3.5"
-          python: "3.7"
-          filters:
-            tags:
-              only: /^v.*/
+      # - linux-test:
+      #     name: linux-rdevel-py27
+      #     r: devel
+      #     python: "2.7"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      # - linux-test:
+      #     name: linux-rdevel-py37
+      #     r: devel
+      #     python: "3.7"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      # - linux-test:
+      #     name: linux-r35-py27
+      #     r: "3.5"
+      #     python: "2.7"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      # - linux-test:
+      #     name: linux-r35-py37
+      #     r: "3.5"
+      #     python: "3.7"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
       - osx-test:
           name: osx-rlatest-py27
           r: "latest"
@@ -203,35 +203,35 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - osx-test:
-          name: osx-rdevel-py27
-          r: "devel"
-          python: "2.7"
-          filters:
-            tags:
-              only: /^v.*/
-      - osx-test:
-          name: osx-rdevel-py37
-          r: "devel"
-          python: "3.7"
-          filters:
-            tags:
-              only: /^v.*/
+      # - osx-test:
+      #     name: osx-rdevel-py27
+      #     r: "devel"
+      #     python: "2.7"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      # - osx-test:
+      #     name: osx-rdevel-py37
+      #     r: "devel"
+      #     python: "3.7"
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
       - upload-tarball:
           requires:
             - linux-rlatest-py27
-            - linux-rlatest-py34
-            - linux-rlatest-py35
-            - linux-rlatest-py36
+            # - linux-rlatest-py34
+            # - linux-rlatest-py35
+            # - linux-rlatest-py36
             - linux-rlatest-py37
-            - linux-rdevel-py27
-            - linux-rdevel-py37
-            - linux-r35-py27
-            - linux-r35-py37
+            # - linux-rdevel-py27
+            # - linux-rdevel-py37
+            # - linux-r35-py27
+            # - linux-r35-py37
             - osx-rlatest-py27
             - osx-rlatest-py37
-            - osx-rdevel-py27
-            - osx-rdevel-py37
+            # - osx-rdevel-py27
+            # - osx-rdevel-py37
           filters:
             branches:
               ignore: /.*/

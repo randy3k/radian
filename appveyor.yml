@@ -1,11 +1,11 @@
 environment:
   USE_RTOOLS: true
   matrix:
-    - PYTHON: "C:\\Python27-x64"
-      R_VERSION: "3.5.3"
+    # - PYTHON: "C:\\Python27-x64"
+    #   R_VERSION: "3.5.3"
 
-    - PYTHON: "C:\\Python37-x64"
-      R_VERSION: "3.5.3"
+    # - PYTHON: "C:\\Python37-x64"
+    #   R_VERSION: "3.5.3"
 
     - PYTHON: "C:\\Python27-x64"
       R_VERSION: "release"
@@ -13,11 +13,11 @@ environment:
     - PYTHON: "C:\\Python37-x64"
       R_VERSION: "release"
 
-    - PYTHON: "C:\\Python27-x64"
-      R_VERSION: "devel"
+    # - PYTHON: "C:\\Python27-x64"
+    #   R_VERSION: "devel"
 
-    - PYTHON: "C:\\Python37-x64"
-      R_VERSION: "devel"
+    # - PYTHON: "C:\\Python37-x64"
+    #   R_VERSION: "devel"
 
 # matrix:
 #   allow_failures:
