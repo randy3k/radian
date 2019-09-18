@@ -1,0 +1,76 @@
+name: build
+
+on: [push]
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    container: rocker/tidyverse:latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install apt-get dependencies
+      run: |
+        apt-get update
+        apt-get install git ssh curl bzip2 libffi6 libffi-dev -y
+    - name: Install Miniconda
+      run: |
+        curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
+        bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
+    - name: Install reticulate
+      run: R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+    - name: Running tests
+      run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda create -n pyenv python=3.7
+        source activate pyenv
+        python -m pip install -e .[test]
+        python -m pip install jedi
+        pytest
+      shell:
+        bash
+
+  macos:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install R
+      run: |
+        URL="https://cran.r-project.org/bin/macosx/el-capitan/base/R-latest.pkg"
+        echo downloading "$URL"
+        curl -L "$URL" -o R.pkg
+        sudo installer -pkg R.pkg -target /
+    - name: Install reticulate
+      run: R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+    - name: Running tests
+      run: |
+        export PATH="$CONDA/bin:$PATH"
+        conda create -n pyenv python=3.7
+        source activate pyenv
+        python -m pip install -e .[test]
+        python -m pip install jedi
+        pytest
+      shell:
+        bash
+
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download R
+      run: |
+        (new-object net.webclient).DownloadString("http://cran.rstudio.com/bin/windows/base/") -match 'href="(R-[0-9.]*[a-zA-Z]*-win.exe)"';
+        (new-object net.webclient).DownloadFile($("http://cran.rstudio.com/bin/windows/base/"+$matches[1]),"C:\R-binary.exe")
+      shell:
+        pwsh
+    - name: Install R
+      run: C:\R-binary.exe /VERYSILENT /DIR=C:\R
+    - name: Install reticulate
+      run: C:\R\bin\R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+    - name: Running tests
+      run: |
+        SET PATH=%CONDA%;%CONDA%\Scripts;%PATH%
+        conda create -n pyenv python=3.7
+        activate pyenv
+        python -m pip install -e .[test]
+        python -m pip install jedi
+        pytest
