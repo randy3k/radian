@@ -4,8 +4,11 @@ on: [push]
 
 jobs:
   linux:
+    strategy:
+      matrix:
+        r: [3.5, latest, devel]
     runs-on: ubuntu-latest
-    container: rocker/tidyverse:latest
+    container: rocker/tidyverse:${{ matrix.r }}
     steps:
     - uses: actions/checkout@v1
     - name: Install apt-get dependencies
@@ -30,12 +33,20 @@ jobs:
         bash
 
   macos:
+    strategy:
+      matrix:
+        r: [3.5, latest, devel]
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
     - name: Install R
       run: |
-        URL="https://cran.r-project.org/bin/macosx/el-capitan/base/R-latest.pkg"
+        if [ "${{ matrix.r }}" == "devel" ]; then
+          R_DEVEL_FILE=$(curl -sL http://mac.r-project.org/ | sed -nE 's|.*href="?(.*/R-[^/]*\.pkg)"?>.*|\1|p' | tail -n1)
+          URL="http://mac.r-project.org/$R_DEVEL_FILE"
+        else
+          URL="https://cran.r-project.org/bin/macosx/el-capitan/base/R-<<parameters.r>>.pkg"
+        fi
         echo downloading "$URL"
         curl -L "$URL" -o R.pkg
         sudo installer -pkg R.pkg -target /
@@ -53,13 +64,23 @@ jobs:
         bash
 
   windows:
+    strategy:
+      matrix:
+        r: [3.5, latest, devel]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
     - name: Download R
       run: |
-        (new-object net.webclient).DownloadString("http://cran.rstudio.com/bin/windows/base/") -match 'href="(R-[0-9.]*[a-zA-Z]*-win.exe)"';
-        (new-object net.webclient).DownloadFile($("http://cran.rstudio.com/bin/windows/base/"+$matches[1]),"C:\R-binary.exe")
+        If ('${{ matrix.r }}' -eq 'latest') {
+          (new-object net.webclient).DownloadString("http://cran.rstudio.com/bin/windows/base/") -match 'href="(R-[0-9.]*[a-zA-Z]*-win.exe)"';
+          (new-object net.webclient).DownloadFile($("http://cran.rstudio.com/bin/windows/base/"+$matches[1]),"C:\R-binary.exe")
+        } ElseIf ('${{ matrix.r }}' -eq 'devel') {
+          (new-object net.webclient).DownloadFile("https://cran.r-project.org/bin/windows/base/R-devel-win.exe","C:\R-binary.exe")
+        } Else {
+          (new-object net.webclient).DownloadString("http://cran.rstudio.com/bin/windows/base/old/") -match 'R (${{ matrix.r }}[\\.0-9]*)</a>'
+          (new-object net.webclient).DownloadFile($("https://cran.r-project.org/bin/windows/base/old/"+$matches[1]+"/R-"+$matches[1]+"-win.exe"),"C:\R-binary.exe")
+        }
       shell:
         pwsh
     - name: Install R
