@@ -111,8 +111,8 @@ jobs:
       run: C:\R\bin\R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
     - name: Running tests
       run: |
-        SET PATH=%CONDA%;%CONDA%\Scripts;%PATH%
-        If ('${{ matrix.r }}' == '3.4') {
+        $env:PATH = "$env:CONDA;$env:CONDA\Scripts;$env:PATH"
+        If ('${{ matrix.r }}' -eq '3.4') {
           conda create -n myenv python=${{ matrix.python }} -c conda-forge
         } Else {
           conda create -n myenv python=${{ matrix.python }}
@@ -121,3 +121,5 @@ jobs:
         python -m pip install -e .[test]
         python -m pip install jedi
         pytest
+      shell:
+        pwsh
