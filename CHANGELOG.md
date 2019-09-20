@@ -1,3 +1,7 @@
+# v0.4.2
+
+  - make sure settings are in correct type
+
 # v0.4.1
 
    - stderr coloring for unix
