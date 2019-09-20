@@ -21,9 +21,9 @@ class RadianSettings(object):
     def __setattr__(self, key, value):
         self._settings[key] = value
 
-    def _load_setting(self, key, default):
+    def _load_setting(self, key, default, coercion=lambda x: x):
         value = roption("radian." + key, default)
-        self._settings[key] = value
+        self._settings[key] = coercion(value)
 
     def _load_prompt(self):
         prompt = roption("radian.prompt", None)
@@ -38,23 +38,23 @@ class RadianSettings(object):
     def load(self):
         self._load_setting("editing_mode", "emacs")
         self._load_setting("color_scheme", "native")
-        self._load_setting("auto_match", False)
-        self._load_setting("auto_indentation", True)
-        self._load_setting("tab_size", 4)
-        self._load_setting("complete_while_typing", True)
+        self._load_setting("auto_match", False, bool)
+        self._load_setting("auto_indentation", True, bool)
+        self._load_setting("tab_size", 4, int)
+        self._load_setting("complete_while_typing", True, bool)
         self._load_setting("completion_timeout", 0.05)
-        self._load_setting("history_search_no_duplicates", False)
-        self._load_setting("insert_new_line", True)
-        self._load_setting("indent_lines", True)
+        self._load_setting("history_search_no_duplicates", False, bool)
+        self._load_setting("insert_new_line", True, bool)
+        self._load_setting("indent_lines", True, bool)
         self._load_prompt()
         self._load_setting("shell_prompt", SHELL_PROMPT)
         self._load_setting("browse_prompt", BROWSE_PROMPT)
-        self._load_setting("show_vi_mode_prompt", True)
+        self._load_setting("show_vi_mode_prompt", True, bool)
         self._load_setting("vi_mode_prompt", VI_MODE_PROMPT)
         self._load_setting("stderr_format", STDERR_FORMAT)
 
         set_width_on_resize = roption("setWidthOnResize", True)
-        self._load_setting("auto_width", set_width_on_resize)
+        self._load_setting("auto_width", set_width_on_resize, bool)
 
 
 radian_settings = RadianSettings()
