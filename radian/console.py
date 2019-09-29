@@ -51,7 +51,8 @@ def create_read_console(session):
                     print(e)
                     import traceback
                     traceback.print_exc()
-                    sys.exit(1)
+                    import os
+                    os._exit(1)
 
             current_mode = session.current_mode
 
