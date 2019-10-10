@@ -1,3 +1,7 @@
+# v0.4.3
+
+  - handle carriage return in stderr
+
 # v0.4.2
 
   - make sure settings are in correct type
