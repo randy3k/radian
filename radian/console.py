@@ -80,11 +80,16 @@ def create_write_console_ex(session, stderr_format):
             if sys.stdout:
                 sys.stdout.write(buf)
                 sys.stdout.flush()
-                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.replace("\r", "\n").endswith("\n")
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
         else:
             if sys.stderr:
-                print_formatted_text(ANSI(stderr_format.format(buf)), end="", file=sys.stderr)
+                buf = buf.replace("\r\n", "\n")
+                sbuf = buf.split("\r")
+                for i, b in enumerate(sbuf):
+                    print_formatted_text(ANSI(stderr_format.format(b)), end="", file=sys.stderr)
+                    if i < len(sbuf) - 1:
+                        sys.stderr.write("\r")
                 sys.stderr.flush()
-                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.replace("\r", "\n").endswith("\n")
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
     return write_console_ex
