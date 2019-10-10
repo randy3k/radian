@@ -64,6 +64,8 @@ class RCompleter(Completer):
 
         for c in completions:
             if c.startswith(token):
+                if c.endswith("="):
+                    c = c[:-1] + " ="
                 yield Completion(c, -len(token))
 
         library_prefix = LIBRARY_PATTERN.match(text)
