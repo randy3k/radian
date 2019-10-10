@@ -24,9 +24,9 @@ commands:
             fi
             bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
             if [ "<<parameters.python>>" == "3.4" ]; then
-              $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>> -c conda-forge
+              $HOME/miniconda/bin/conda create -y --name myenv python=<<parameters.python>> -c conda-forge
             else
-              $HOME/miniconda/bin/conda create --name myenv python=<<parameters.python>>
+              $HOME/miniconda/bin/conda create -y --name myenv python=<<parameters.python>>
             fi
   install-r:
     parameters:
