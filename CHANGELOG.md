@@ -1,9 +1,6 @@
-# v0.4.3
-
-  - handle carriage return in stderr
-
 # v0.4.2
 
+  - handle carriage return in stderr
   - make sure settings are in correct type
 
 # v0.4.1
