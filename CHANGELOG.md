@@ -1,3 +1,7 @@
+# v0.4.3
+
+  - add a space before and after equal sign in completion
+
 # v0.4.2
 
   - handle carriage return in stderr
