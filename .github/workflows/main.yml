@@ -107,9 +107,14 @@ jobs:
       shell:
         pwsh
     - name: Install R
-      run: C:\R-binary.exe /VERYSILENT /DIR=C:\R
+      run: |
+        Start-Process -FilePath "C:\R-binary.exe" -Wait -ArgumentList "/VERYSILENT /DIR=C:\R"
+      shell:
+        pwsh
     - name: Install reticulate
       run: C:\R\bin\R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+      shell:
+        pwsh
     - name: Install and running tests
       run: |
         $env:PATH = "$env:CONDA;$env:CONDA\Scripts;$env:PATH"
