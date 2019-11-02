@@ -13,7 +13,7 @@ else:
     import ptyprocess
 
 
-__all__ = ["PtyProcess", "Screen", "ByteStream", "Terminal", "LazyTerminal"]
+__all__ = ["PtyProcess", "Screen", "ByteStream", "Terminal"]
 
 
 if sys.platform.startswith("win"):
@@ -111,8 +111,9 @@ class Terminal(object):
     @classmethod
     @contextmanager
     def open(cls, cmd):
-        process = PtyProcess.spawn(cmd)
-        screen = Screen(process, 80, 24)
+        # github actions windows-2019 doesn't like (24, 80)
+        process = PtyProcess.spawn(cmd, dimensions=(40, 80))
+        screen = Screen(process, 80, 40)
         stream = ByteStream(screen)
         stream.start_feeding()
         try:
