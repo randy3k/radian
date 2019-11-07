@@ -67,12 +67,11 @@ in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open 
 
 ## Settings
 
-_radian_ can be customized by specifying the following options in `.Rprofile`
-at your user home directory. However, when running _radian_ in vanilla mode
-(`radian --vanilla`), the file `.Rprofile` would not be executed. If
-persistent settings are required, one could put those options in `.radian_profile`.
-This file will be executed even if `radian` is in vanilla mode.
-
+_radian_ can be customized by specifying the following options in `.radian_profile`
+at your user home directory. If a local `.radian_profile` is present at the working directory,
+that file is used instead. The options could be also specified in `.Rprofile` file, however,
+it is less recommended because 1. the settings are not persistent when vanilla mode is used;
+2. it is conflicted with the use of packret.
 
 *Do not copy the whole configuration, just specify what you need!*
 
