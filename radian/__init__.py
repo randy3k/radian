@@ -7,6 +7,7 @@ def main():
     import optparse
     import os
     import sys
+    import subprocess
     from rchitect.utils import Rhome, rversion
 
     parser = optparse.OptionParser("usage: radian")
@@ -54,12 +55,21 @@ def main():
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
     if sys.platform.startswith("linux"):
+        # respect R_ARCH variable?
         libPath = os.path.join(r_home, "lib")
-        if "R_LD_LIBRARY_PATH" not in os.environ or libPath not in os.environ["R_LD_LIBRARY_PATH"]:
-            if "R_LD_LIBRARY_PATH" in os.environ:
+        ldpaths = os.path.join(r_home, "etc", "ldpaths")
+        if "R_LD_LIBRARY_PATH" not in os.environ:
+            if os.path.exists(ldpaths):
+                R_LD_LIBRARY_PATH = subprocess.check_output([
+                    "/bin/env",
+                    "bash", "-c",
+                    ". \"{}\"; echo $R_LD_LIBRARY_PATH".format(ldpaths)
+                ]).decode("utf-8").strip()
+            elif "R_LD_LIBRARY_PATH" in os.environ:
                 R_LD_LIBRARY_PATH = "{}:{}".format(libPath, os.environ["R_LD_LIBRARY_PATH"])
             else:
                 R_LD_LIBRARY_PATH = libPath
+
             os.environ['R_LD_LIBRARY_PATH'] = R_LD_LIBRARY_PATH
 
             if "LD_LIBRARY_PATH" in os.environ:
