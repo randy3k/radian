@@ -27,9 +27,9 @@ init:
   - ECHO %PYTHON%
   # https://github.com/rstudio/reticulate/blob/master/appveyor.yml
   - ps: |
-        $ErrorActionPreference = "Stop"
-        Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
-        Import-Module '..\appveyor-tool.ps1'
+      $ErrorActionPreference = "Stop"
+      Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
+      Import-Module '..\appveyor-tool.ps1'
 
 install:
   - ps: Bootstrap
