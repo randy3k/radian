@@ -1,6 +1,7 @@
 # v0.4.3
 
   - add a space before and after equal sign in completion
+  - requires rchitect 0.3.14 to fix a bug for R 3.6.2-dev
 
 # v0.4.2
 
