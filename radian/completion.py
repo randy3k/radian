@@ -5,26 +5,16 @@ import sys
 import shlex
 import re
 
-from rchitect.interface import rcall, reval, rcopy, rstring, rint
+from rchitect import completion as rcompletion
+from .rutils import installed_packages
+from .latex import latex_symbols
 
 from six import text_type
 
 
+TOKEN_PATTERN = re.compile(r".*?([a-zA_Z0-9._]+)$")
+LATEX_PATTERN = re.compile(r".*?(\\[a-zA_Z0-9^_]+)$")
 LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
-
-CompleteCode = """
-local(suppressWarnings({{tryCatch(
-    {{
-        if ({settimelimit}) base::setTimeLimit({timeout})
-        utils:::.completeToken()
-        if ({settimelimit}) base::setTimeLimit()
-    }},
-    error = function(e) {{
-        if ({settimelimit}) base::setTimeLimit()
-        assign("comps", NULL, env = utils:::.CompletionEnv)
-    }}
-)}}))
-"""
 
 
 class RCompleter(Completer):
@@ -35,54 +25,67 @@ class RCompleter(Completer):
         super(RCompleter, self).__init__()
 
     def get_completions(self, document, complete_event):
-        token = ""
-        text = document.current_line_before_cursor
+        text_before = document.current_line_before_cursor
         text_after = document.text_after_cursor
-
-        completions = []
-        rcall(reval("utils:::.assignLinebuffer"), rstring(text))
-        rcall(reval("utils:::.assignEnd"), rint(len(text)))
-        token = rcopy(text_type, rcall(reval("utils:::.guessTokenFromLine")))
         completion_requested = complete_event.completion_requested
-        completions = []
 
-        if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
-            orig_stderr = sys.stderr
-            sys.stderr = None
-            try:
-                reval(CompleteCode.format(
-                    settimelimit="TRUE" if not completion_requested and self.timeout > 0 else "FALSE",
-                    timeout=str(self.timeout)))
-            except Exception:
-                return
-            finally:
-                sys.stderr = orig_stderr
+        latex_comps = list(self.latex_completion(text_before, text_after, completion_requested))
+        if len(latex_comps) > 0:
+            for x in latex_comps:
+                yield x
+            # only return latex completions if prefix has \
+            return
 
-            completions = rcopy(list, rcall(reval("utils:::.retrieveCompletions")))
-            if not completions:
-                completions = []
+        for x in self.r_completion(text_before, text_after, completion_requested):
+            yield x
+        for x in self.package_completion(text_before, text_after, completion_requested):
+            yield x
+
+    def r_completion(self, text_before, text_after, completion_requested):
+        orig_stderr = sys.stderr
+        sys.stderr = None
+        try:
+            token = rcompletion.assign_line_buffer(text_before)
+            rcompletion.complete_token(0 if completion_requested else self.timeout)
+            completions = rcompletion.retrieve_completions()
+        except Exception:
+            completions = []
+        finally:
+            sys.stderr = orig_stderr
 
         for c in completions:
             if c.startswith(token):
                 if c.endswith("="):
                     c = c[:-1] + " = "
+                if c.endswith("::"):
+                    # let package_completion handles it
+                    continue
                 yield Completion(c, -len(token))
 
-        library_prefix = LIBRARY_PATTERN.match(text)
-        if token and not library_prefix:
-            if (len(token) >= 3 and text[-1].isalnum()) or completion_requested:
-                instring = text_after.startswith("'") or text_after.startswith('"')
-                packages = rcopy(list, reval("""
-                    tryCatch(
-                        base::rownames(utils::installed.packages()),
-                        error = function(e) character(0)
-                    )
-                    """))
-                for p in packages:
-                    if p.startswith(token):
-                        comp = p if instring else p + "::"
-                        if comp not in completions:
-                            yield Completion(comp, -len(token))
+    def package_completion(self, text_before, text_after, completion_requested):
+        token_match = TOKEN_PATTERN.match(text_before)
+        library_prefix = LIBRARY_PATTERN.match(text_before)
+        if token_match and not library_prefix:
+            token = token_match.group(1)
+            instring = text_after.startswith("'") or text_after.startswith('"')
+            for p in installed_packages():
+                if p.startswith(token):
+                    comp = p if instring else p + "::"
+                    yield Completion(comp, -len(token))
+
+    def latex_completion(self, text_before, text_after, completion_requested):
+        latex_match = LATEX_PATTERN.match(text_before)
+        if latex_match:
+            token = latex_match.group(1)
+            exact_match_found = False
+            for command, sym in latex_symbols:
+                if command == token:
+                    exact_match_found = True
+                    yield Completion(sym, -len(token), display=command, display_meta=sym)
+                    break
+            for command, sym in latex_symbols:
+                if command.startswith(token) and not (exact_match_found and command == token):
+                    yield Completion(sym, -len(token), display=command, display_meta=sym)
 
 
 class SmartPathCompleter(Completer):

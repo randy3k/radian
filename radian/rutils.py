@@ -26,6 +26,20 @@ def package_is_installed(pkg):
     return pkg in rcopy(reval("rownames(installed.packages())"))
 
 
+def installed_packages():
+    return rcopy(
+        list,
+        reval(
+            """
+            tryCatch(
+                base::rownames(utils::installed.packages()),
+                error = function(e) character(0)
+            )
+            """
+            )
+        )
+
+
 def source_file(path):
     rcall(("base", "source"), path, rcall(("base", "new.env")))
 
