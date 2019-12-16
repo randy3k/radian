@@ -28,9 +28,9 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
     - auto completion (reticulate autocompletion depends on `jedi`)
 - unicode support
 - auto matching parens/quotes.
-- brackated paste mode
+- bracketed paste mode
 - emacs/vi editing mode
-- automiatically adjust to terminal width
+- automatically adjust to terminal width
 - read more than 4096 bytes per line
 
 
@@ -39,7 +39,7 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
 Requirements:
 
 - An installation of R (version 3.4.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
-- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/en/latest/miniconda.html. Both version 2 and version 3 should work, though python 3 is recommended. Also, `radian` doesn't support python from Microsoft Store.
+- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/en/latest/miniconda.html. Python 2.7 or 3.5+ are supported, though 3.5+ are recommended. Also, `radian` doesn't support python from Microsoft Store.
 - `pip` is optional but it makes the installation a bit easier.
 
 ```sh
@@ -71,7 +71,7 @@ _radian_ can be customized by specifying the following options in `.radian_profi
 at your user home directory. If a local `.radian_profile` is present at the working directory,
 that file is used instead. The options could be also specified in `.Rprofile` file, however,
 it is less recommended because 1. the settings are not persistent when vanilla mode is used;
-2. it is conflicted with the use of packret.
+2. it is conflicted with the use of `packret`.
 
 *Do not copy the whole configuration, just specify what you need!*
 
@@ -195,7 +195,7 @@ pip install jedi
 libreadline.so.6: undefined symbol: PC
 ```
 
-It may occurr if python and R use different two versions of `libreadline`. You could try preloading a version of `libreadline.so` first, e.g.,
+It may occur if python and R use different two versions of `libreadline`. You could try preloading a version of `libreadline.so` first, e.g.,
 
 ```
 env LD_PRELOAD=/lib64/libreadline.so.6 radian

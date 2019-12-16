@@ -40,6 +40,7 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages('.'),
     package_data={'radian': ['reticulate/*.R']},
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
         'rchitect>=0.3.14,<0.4.0',
         'lineedit>=0.1.3,<0.2.0',

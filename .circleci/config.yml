@@ -134,13 +134,6 @@ workflows:
             tags:
               only: /^v.*/
       - linux-test:
-          name: linux-rlatest-py34
-          r: latest
-          python: "3.4"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
           name: linux-rlatest-py35
           r: latest
           python: "3.5"
@@ -158,6 +151,13 @@ workflows:
           name: linux-rlatest-py37
           r: latest
           python: "3.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - linux-test:
+          name: linux-rlatest-py38
+          r: latest
+          python: "3.8"
           filters:
             tags:
               only: /^v.*/
@@ -220,10 +220,10 @@ workflows:
       - upload-tarball:
           requires:
             - linux-rlatest-py27
-            - linux-rlatest-py34
             - linux-rlatest-py35
             - linux-rlatest-py36
             - linux-rlatest-py37
+            - linux-rlatest-py38
             - linux-rdevel-py27
             - linux-rdevel-py37
             - linux-r35-py27
