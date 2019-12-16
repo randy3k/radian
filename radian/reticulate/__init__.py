@@ -3,6 +3,8 @@ import os
 import sys
 from code import compile_command
 
+from prompt_toolkit.completion import Completion
+
 from rchitect import rcall, rcopy
 from rchitect.interface import roption, setoption, set_hook, package_event
 
@@ -11,6 +13,7 @@ from radian.rutils import package_is_installed, source_file
 from radian.key_bindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty
 from radian.key_bindings import commit_text
 from radian import get_app
+from radian.settings import radian_settings as settings
 
 
 try:
@@ -77,7 +80,8 @@ def prase_text_complete(code):
 
 def get_reticulate_completions(document, complete_event):
     word = document.get_word_before_cursor()
-    if len(word) < 3 and not complete_event.completion_requested:
+    prefix_length = settings.completion_prefix_length
+    if len(word) < prefix_length and not complete_event.completion_requested:
         return []
 
     glo = rcopy(rcall(("reticulate", "py_run_string"), "globals()"))
@@ -96,4 +100,6 @@ def get_reticulate_completions(document, complete_event):
     if not script:
         return []
 
-    return list(script.completions())
+    return list(
+        Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols))
+        for c in script.completions())

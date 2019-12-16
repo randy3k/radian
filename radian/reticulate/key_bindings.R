@@ -120,17 +120,18 @@ if (is.null(tryCatch(import("jedi"), error = function(e) NULL))) {
     python_completer <- NULL
 } else {
     Completer <- prompt_toolkit$completion$Completer
-    Completion <- prompt_toolkit$completion$Completion
     get_reticulate_completions <- radian$reticulate$get_reticulate_completions
+    get_latex_completions <- radian$latex$get_latex_completions
     PythonCompleter <- builtins$type(
         py_call(builtins$str, "PythonCompleter"),
         tuple(Completer),
         dict(
             get_completions = function(self, document, complete_event) {
-                completions <- get_reticulate_completions(document, complete_event)
-                lapply(completions, function(c) {
-                    Completion(c$name_with_symbols, nchar(c$complete) - nchar(c$name_with_symbols))
-                })
+                latex_comps <- get_latex_completions(document, complete_event)
+                if (length(latex_comps) > 0) {
+                    return(latex_comps)
+                }
+                get_reticulate_completions(document, complete_event)
             }
         )
     )

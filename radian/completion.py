@@ -6,42 +6,44 @@ import shlex
 import re
 
 from rchitect import completion as rcompletion
+
+from .settings import radian_settings as settings
+from .latex import get_latex_completions
 from .rutils import installed_packages
-from .latex import latex_symbols
 
 from six import text_type
 
 
-TOKEN_PATTERN = re.compile(r".*?([a-zA_Z0-9._]+)$")
-LATEX_PATTERN = re.compile(r".*?(\\[a-zA_Z0-9^_]+)$")
+TOKEN_PATTERN = re.compile(r".*?([a-zA-Z0-9._]+)$")
 LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
 class RCompleter(Completer):
-    initialized = False
-
     def __init__(self, timeout=0.02):
         self.timeout = timeout
         super(RCompleter, self).__init__()
 
     def get_completions(self, document, complete_event):
-        text_before = document.current_line_before_cursor
-        text_after = document.text_after_cursor
-        completion_requested = complete_event.completion_requested
+        word = document.get_word_before_cursor()
+        prefix_length = settings.completion_prefix_length
+        if len(word) < prefix_length and not complete_event.completion_requested:
+            return
 
-        latex_comps = list(self.latex_completion(text_before, text_after, completion_requested))
+        latex_comps = list(get_latex_completions(document, complete_event))
+        # only return latex completions if prefix has \
         if len(latex_comps) > 0:
             for x in latex_comps:
                 yield x
-            # only return latex completions if prefix has \
             return
 
-        for x in self.r_completion(text_before, text_after, completion_requested):
+        for x in self.get_r_completions(document, complete_event):
             yield x
-        for x in self.package_completion(text_before, text_after, completion_requested):
+        for x in self.get_package_completions(document, complete_event):
             yield x
 
-    def r_completion(self, text_before, text_after, completion_requested):
+    def get_r_completions(self, document, complete_event):
+        text_before = document.current_line_before_cursor
+        completion_requested = complete_event.completion_requested
         orig_stderr = sys.stderr
         sys.stderr = None
         try:
@@ -58,11 +60,13 @@ class RCompleter(Completer):
                 if c.endswith("="):
                     c = c[:-1] + " = "
                 if c.endswith("::"):
-                    # let package_completion handles it
+                    # let get_package_completions handles it
                     continue
                 yield Completion(c, -len(token))
 
-    def package_completion(self, text_before, text_after, completion_requested):
+    def get_package_completions(self, document, complete_event):
+        text_before = document.current_line_before_cursor
+        text_after = document.text_after_cursor
         token_match = TOKEN_PATTERN.match(text_before)
         library_prefix = LIBRARY_PATTERN.match(text_before)
         if token_match and not library_prefix:
@@ -72,20 +76,6 @@ class RCompleter(Completer):
                 if p.startswith(token):
                     comp = p if instring else p + "::"
                     yield Completion(comp, -len(token))
-
-    def latex_completion(self, text_before, text_after, completion_requested):
-        latex_match = LATEX_PATTERN.match(text_before)
-        if latex_match:
-            token = latex_match.group(1)
-            exact_match_found = False
-            for command, sym in latex_symbols:
-                if command == token:
-                    exact_match_found = True
-                    yield Completion(sym, -len(token), display=command, display_meta=sym)
-                    break
-            for command, sym in latex_symbols:
-                if command.startswith(token) and not (exact_match_found and command == token):
-                    yield Completion(sym, -len(token), display=command, display_meta=sym)
 
 
 class SmartPathCompleter(Completer):

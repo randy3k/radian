@@ -43,7 +43,8 @@ setup(
     install_requires=[
         'rchitect>=0.3.14,<0.4.0',
         'lineedit>=0.1.3,<0.2.0',
-        'six>=1.9.0'
+        'six>=1.9.0',
+        'pygments>=2.5.0'
     ],
     entry_points={
         'console_scripts': [
