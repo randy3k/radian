@@ -2,6 +2,7 @@ include(joinpath(Sys.BINDIR, "..", "share", "julia", "stdlib", "v$(VERSION.major
 
 φ = open("latex_symbols.py", "w")
 
+println(φ, "# This Python file uses the following encoding: utf-8")
 println(φ, "from __future__ import unicode_literals\n\n")
 println(φ, "latex_symbols = [")
 for (ω, (α, β)) in enumerate(latex_symbols)
