@@ -15,6 +15,7 @@ from radian.key_bindings import commit_text
 from radian import get_app
 from radian.settings import radian_settings as settings
 
+from six import text_type
 
 try:
     import jedi
@@ -100,6 +101,9 @@ def get_reticulate_completions(document, complete_event):
     if not script:
         return []
 
-    return list(
-        Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols))
-        for c in script.completions())
+    return [
+        Completion(
+            text_type(c.name_with_symbols),
+            len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
+        for c in script.completions()
+    ]
