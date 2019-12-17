@@ -42,7 +42,7 @@ setup(
     package_data={'radian': ['reticulate/*.R']},
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
-        'rchitect>=0.3.14,<0.4.0',
+        'rchitect>=0.3.15,<0.4.0',
         'lineedit>=0.1.3,<0.2.0',
         'six>=1.9.0',
         'pygments>=2.5.0'
