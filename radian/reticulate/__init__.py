@@ -95,15 +95,12 @@ def get_reticulate_completions(document, complete_event):
             path="input-text",
             namespaces=[glo, loc]
         )
+        return [
+            Completion(
+                text_type(c.name_with_symbols),
+                len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
+            for c in script.completions()
+        ]
+
     except Exception:
-        script = None
-
-    if not script:
         return []
-
-    return [
-        Completion(
-            text_type(c.name_with_symbols),
-            len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
-        for c in script.completions()
-    ]
