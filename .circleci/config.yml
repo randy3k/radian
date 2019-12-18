@@ -16,11 +16,13 @@ commands:
               curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
             fi
             bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
+            export PATH="$HOME/miniconda/bin/:$PATH"
             if [ "<<parameters.python>>" == "3.4" ]; then
               $HOME/miniconda/bin/conda create -y --name myenv python=<<parameters.python>> -c conda-forge
             else
               $HOME/miniconda/bin/conda create -y --name myenv python=<<parameters.python>>
             fi
+            conda init
   setup-conda-windows:
     parameters:
       python:
@@ -111,7 +113,7 @@ jobs:
       - run:
           name: Install and test
           command: |
-            source $HOME/miniconda/bin/activate myenv
+            conda activate myenv
             python -m pip install -e .[test]
             python -m pip install jedi
             pytest --coverage
@@ -136,7 +138,7 @@ jobs:
       - run:
           name: Install and test
           command: |
-            source $HOME/miniconda/bin/activate myenv
+            conda activate myenv
             python -m pip install -e .[test]
             python -m pip install jedi
             pytest --coverage
