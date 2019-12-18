@@ -18,12 +18,12 @@ jobs:
         run: |
           apt-get update
           apt-get install git ssh curl bzip2 libffi6 libffi-dev -y
-      - name: Install Miniconda
+      - name: Setup Miniconda
         run: |
           curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
           bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
       - name: Install reticulate
-        run: R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+        run: Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - name: Install and running tests
         shell: bash  # to allow `source`
         run: |
@@ -48,7 +48,7 @@ jobs:
     runs-on: macOS-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Install Miniconda
+      - name: Setup Miniconda
         run: |
           curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda.sh
           bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
@@ -65,7 +65,7 @@ jobs:
           curl -L "$URL" -o R.pkg
           sudo installer -pkg R.pkg -target /
       - name: Install reticulate
-        run: R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+        run: Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - name: Install and running tests
         run: |
           export PATH="$HOME/miniconda/bin:$PATH"
@@ -89,7 +89,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Download R
+      - name: Setup Miniconda
+        run: |
+          $env:PATH = "$env:CONDA;$env:CONDA\Scripts;$env:PATH"
+          If ('${{ matrix.r }}' -eq '3.4') {
+            conda create -y -n myenv python=${{ matrix.python }} -c conda-forge
+          } Else {
+            conda create -y -n myenv python=${{ matrix.python }}
+          }
+          conda init powershell
+      - name: Install R
         run: |
           If ('${{ matrix.r }}' -eq 'latest') {
             (new-object net.webclient).DownloadString("http://cran.rstudio.com/bin/windows/base/") -match 'href="(R-[0-9.]*[a-zA-Z]*-win.exe)"';
@@ -100,20 +109,11 @@ jobs:
             (new-object net.webclient).DownloadString("http://cran.rstudio.com/bin/windows/base/old/") -match 'R (${{ matrix.r }}[\\.0-9]*)</a>'
             (new-object net.webclient).DownloadFile($("https://cran.r-project.org/bin/windows/base/old/"+$matches[1]+"/R-"+$matches[1]+"-win.exe"),"C:\R-binary.exe")
           }
-      - name: Install R
-        run: |
           Start-Process -FilePath "C:\R-binary.exe" -Wait -ArgumentList "/VERYSILENT /DIR=C:\R"
+          $env:PATH = "C:\R\bin\x64;$env:PATH"
+          [System.Environment]::SetEnvironmentVariable("PATH", $env:PATH, "User")
       - name: Install reticulate
-        run: C:\R\bin\R -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
-      - name: Setup conda
-        run: |
-          $env:PATH = "$env:CONDA;$env:CONDA\Scripts;$env:PATH"
-          If ('${{ matrix.r }}' -eq '3.4') {
-            conda create -y -n myenv python=${{ matrix.python }} -c conda-forge
-          } Else {
-            conda create -y -n myenv python=${{ matrix.python }}
-          }
-          conda init powershell
+        run: C:\R\bin\Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org', type = 'win.binary')"
       - name: Install and running tests
         run: |
           conda activate myenv
