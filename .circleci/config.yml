@@ -22,7 +22,7 @@ commands:
             else
               $HOME/miniconda/bin/conda create -y --name myenv python=<<parameters.python>>
             fi
-            conda init
+            echo "export PATH=$HOME/miniconda/bin:$PATH" >> $BASH_ENV
   setup-conda-windows:
     parameters:
       python:
@@ -113,7 +113,7 @@ jobs:
       - run:
           name: Install and test
           command: |
-            conda activate myenv
+            source activate myenv
             python -m pip install -e .[test]
             python -m pip install jedi
             pytest --coverage
@@ -138,7 +138,7 @@ jobs:
       - run:
           name: Install and test
           command: |
-            conda activate myenv
+            source activate myenv
             python -m pip install -e .[test]
             python -m pip install jedi
             pytest --coverage
@@ -184,6 +184,20 @@ workflows:
   build:
     jobs:
       - linux-test:
+          name: linux-r35-py27
+          r: "3.5"
+          python: "2.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - linux-test:
+          name: linux-r35-py37
+          r: "3.5"
+          python: "3.7"
+          filters:
+            tags:
+              only: /^v.*/
+      - linux-test:
           name: linux-rlatest-py27
           r: latest
           python: "2.7"
@@ -228,20 +242,6 @@ workflows:
       - linux-test:
           name: linux-rdevel-py37
           r: devel
-          python: "3.7"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-r35-py27
-          r: "3.5"
-          python: "2.7"
-          filters:
-            tags:
-              only: /^v.*/
-      - linux-test:
-          name: linux-r35-py37
-          r: "3.5"
           python: "3.7"
           filters:
             tags:
@@ -304,6 +304,8 @@ workflows:
               only: /^v.*/
       - upload-tarball:
           requires:
+            - linux-r35-py27
+            - linux-r35-py37
             - linux-rlatest-py27
             - linux-rlatest-py35
             - linux-rlatest-py36
@@ -311,8 +313,6 @@ workflows:
             - linux-rlatest-py38
             - linux-rdevel-py27
             - linux-rdevel-py37
-            - linux-r35-py27
-            - linux-r35-py37
             - macos-rlatest-py27
             - macos-rlatest-py37
             - macos-rdevel-py27

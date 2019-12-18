@@ -28,13 +28,13 @@ jobs:
           else
             conda create -y -n myenv python=${{ matrix.python }}
           fi
-          conda init
+          echo "::add-path::$HOME/miniconda/bin"
       - name: Install reticulate
         run: Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - name: Install and running tests
         shell: bash  # to allow `source`
         run: |
-          conda activate myenv
+          source activate myenv
           python -m pip install -e .[test]
           python -m pip install jedi
           pytest -s
@@ -53,13 +53,13 @@ jobs:
         run: |
           curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda.sh
           bash /tmp/miniconda.sh -b -f -p $HOME/miniconda
-          export PATH="$HOME/miniconda/bin/:$PATH"
+          export PATH="$HOME/miniconda/bin:$PATH"
           if [ "${{ matrix.python }}" == "3.4" ]; then
             conda create -y -n myenv python=${{ matrix.python }} -c conda-forge
           else
             conda create -y -n myenv python=${{ matrix.python }}
           fi
-          conda init
+          echo "::add-path::$HOME/miniconda/bin"
       - name: Install R
         run: |
           if [ "${{ matrix.r }}" = "devel" ]; then
@@ -76,7 +76,7 @@ jobs:
         run: Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - name: Install and running tests
         run: |
-          conda activate myenv
+          source activate myenv
           python -m pip install -e .[test]
           python -m pip install jedi
           pytest -s
@@ -114,7 +114,9 @@ jobs:
           Start-Process -FilePath "C:\R-binary.exe" -Wait -ArgumentList "/VERYSILENT /DIR=C:\R"
           echo "::add-path::C:\R\bin\x64"
       - name: Install reticulate
-        run: Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org', type = 'win.binary')" -ErrorAction Continue
+        run: |
+          $ErrorActionPreference = "Continue"
+          Rscript -e "install.packages('reticulate', repo = 'https://cloud.r-project.org', type = 'win.binary')"
       - name: Install and running tests
         run: |
           conda activate myenv
