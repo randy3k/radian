@@ -27,6 +27,7 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
     - syntax highlight
     - auto completion (reticulate autocompletion depends on `jedi`)
 - unicode support
+- latex completion
 - auto matching parens/quotes.
 - bracketed paste mode
 - emacs/vi editing mode

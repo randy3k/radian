@@ -1,3 +1,8 @@
+# v0.4.4
+
+  - latex completion
+  - require rchitect 0.3.16 for better windows support
+
 # v0.4.3
 
   - add a space before and after equal sign in completion
