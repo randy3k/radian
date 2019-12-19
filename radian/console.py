@@ -78,8 +78,8 @@ def create_write_console_ex(session, stderr_format):
     def write_console_ex(buf, otype):
         if otype == 0:
             if sys.stdout:
-                output.write(buf)
-                output.flush()  # do we have to flush?
+                sys.stdout.write(buf)
+                sys.stdout.flush()  # do we have to flush?
                 TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
         else:
             if sys.stderr:
