@@ -105,7 +105,7 @@ options(radian.completion_timeout = 0.05)
 # automatically adjust R buffer size based on terminal width
 options(radian.auto_width = TRUE)
 
-# insert new line between prompts, turning it off may hide buffered lines
+# insert new line between prompts.
 options(radian.insert_new_line = TRUE)
 
 # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
