@@ -157,7 +157,7 @@ Please also make sure that R was installed with the R shared library `libR.so` o
 
 #### Microsoft Store python
 
-It is [known](https://github.com/randy3k/radian/issues/120#issuecomment-565695557) that `rchitect` doesn't work with python from Microsoft Store.
+It is [known](https://github.com/randy3k/radian/issues/120#issuecomment-565695557) that _radian_ doesn't work with python from Microsoft Store.
 
 
 #### how to use local history file
