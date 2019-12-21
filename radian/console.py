@@ -56,8 +56,8 @@ def create_read_console(session):
 
             current_mode = session.current_mode
 
-            if not current_mode.native:
-                result = current_mode.on_done(session)
+            if current_mode.on_post_accept:
+                result = current_mode.on_post_accept(session)
                 if result is not None:
                     return result
                 if settings.insert_new_line and current_mode.insert_new_line:

@@ -36,19 +36,12 @@ class RadianMode(Mode):
     def __init__(
             self,
             name,
-            native,
-            on_done=None,
             activator=None,
+            on_post_accept=None,
             insert_new_line=False,
             **kwargs):
-
-        self.native = native
-        if native:
-            assert on_done is None
-        else:
-            assert on_done is not None
-        self.on_done = on_done
         self.activator = activator
+        self.on_post_accept = on_post_accept
         self.insert_new_line = insert_new_line
         super(RadianMode, self).__init__(name, **kwargs)
 
@@ -158,7 +151,6 @@ def create_radian_prompt_session(options, settings):
 
     session.register_mode(
         "r",
-        native=True,
         activator=lambda session: session.prompt_text == settings.prompt,
         insert_new_line=True,
         history_share_with="browse",
@@ -172,8 +164,7 @@ def create_radian_prompt_session(options, settings):
     )
     session.register_mode(
         "shell",
-        native=False,
-        on_done=shell_process_text,
+        on_post_accept=shell_process_text,
         insert_new_line=True,
         get_message=lambda: settings.shell_prompt,
         multiline=settings.indent_lines,
@@ -184,7 +175,6 @@ def create_radian_prompt_session(options, settings):
     )
     session.register_mode(
         "browse",
-        native=True,
         activator=browse_activator,
         # on_pre_accept=browse_on_pre_accept,  # disable
         insert_new_line=True,
@@ -200,7 +190,6 @@ def create_radian_prompt_session(options, settings):
     )
     session.register_mode(
         "unknown",
-        native=True,
         insert_new_line=False,
         get_message=lambda: session.prompt_text,
         complete_while_typing=False,

@@ -142,9 +142,8 @@ if (is.null(tryCatch(import("jedi"), error = function(e) NULL))) {
 app <- radian$get_app()
 app$session$register_mode(
     "reticulate",
-    native = FALSE,
-    on_done = function(session) handle_code(session$default_buffer$text),
     activator = function(session) reticulate:::py_repl_active(),
+    on_post_accept = function(session) handle_code(session$default_buffer$text),
     get_message = function() app$session$prompt_text,
     multiline = TRUE,
     insert_new_line = TRUE,
