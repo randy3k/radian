@@ -124,6 +124,7 @@ def create_radian_prompt_session(options, settings):
         editing_mode="VI" if settings.editing_mode in ["vim", "vi"] else "EMACS",
         history=history,
         enable_history_search=True,
+        enable_open_in_editor=True,
         history_search_no_duplicates=settings.history_search_no_duplicates,
         enable_suspend=True,
         tempfile_suffix=".R",
