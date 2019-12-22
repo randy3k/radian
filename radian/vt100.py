@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
-from prompt_toolkit.application.current import get_app
 from prompt_toolkit.utils import is_windows
-import errno
+
 
 if not is_windows():
     from prompt_toolkit.input.vt100 import Vt100Input
@@ -13,42 +12,15 @@ if not is_windows():
             return False
 
     class CustomVt100Output(Vt100_Output):
+        # we don't need buffering
+        def write_raw(self, data):
+            self.stdout.write(data)
+
+        def write(self, data):
+            self.write_raw(data.replace('\x1b', '?'))
 
         def flush(self):
-            # it is needed when the stdout was redirected
-            # see https://github.com/Non-Contradiction/JuliaCall/issues/39
-            try:
-                if self._buffer:
-                    data = ''.join(self._buffer)
-                    if self.write_binary:
-                        if hasattr(self.stdout, 'buffer'):
-                            out = self.stdout.buffer  # Py3.
-                        else:
-                            out = self.stdout
-                        out.write(data.encode(self.stdout.encoding or 'utf-8', 'replace'))
-                    else:
-                        self.stdout.write(data)
-                    self._buffer = []
-            except IOError as e:
-                if e.args and e.args[0] == errno.EINTR:
-                    pass
-                elif e.args and e.args[0] == 0:
-                    pass
-                else:
-                    raise
-            try:
-                self.stdout.flush()
-            except IOError as e:
-                if e.args and e.args[0] == errno.EAGAIN:
-                    app = get_app()
-                    app.renderer.render(app, app.layout)
-                    pass
-                else:
-                    raise
+            self.stdout.flush()
 else:
-
-    class CustomVt100Input(object):
-        pass
-
-    class CustomVt100Output(object):
-        pass
+    CustomVt100Input = None
+    CustomVt100Output = None

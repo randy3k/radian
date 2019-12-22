@@ -29,7 +29,7 @@ def create_read_console(session):
             interrupted[0] = False
         elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
                 (settings.insert_new_line and current_mode.insert_new_line):
-            session.app.output.write("\n")
+            session.app.output.write_raw("\n")
 
         text = None
 
@@ -61,7 +61,7 @@ def create_read_console(session):
                 if result is not None:
                     return result
                 if settings.insert_new_line and current_mode.insert_new_line:
-                    session.app.output.write("\n")
+                    session.app.output.write_raw("\n")
                 text = None
 
         return text
@@ -70,28 +70,20 @@ def create_read_console(session):
 
 
 def create_write_console_ex(session, stderr_format):
-    from prompt_toolkit.formatted_text import ANSI
-    from prompt_toolkit.shortcuts import print_formatted_text
-    # color_depth = session.color_depth
     output = session.app.output
 
     def write_console_ex(buf, otype):
         if otype == 0:
+            # although we do not use sys.stdout and sys.stderr directly, we use them to flag
+            # whether we should print to them
             if sys.stdout:
-                sys.stdout.write(buf)
-                sys.stdout.flush()  # do we have to flush?
+                output.write_raw(buf)
+                output.flush()
                 TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
         else:
             if sys.stderr:
-                # although we do not use sys.stderr directly, but we use it to flag
-                # whether we should print to error buffer
-                buf = buf.replace("\r\n", "\n")
-                sbuf = buf.split("\r")
-                for i, b in enumerate(sbuf):
-                    print_formatted_text(ANSI(stderr_format.format(b)), end="", output=output)
-                    if i < len(sbuf) - 1:
-                        output.write("\r")
-                output.flush()  # do we have to flush?
+                output.write_raw(stderr_format.format(buf))
+                output.flush()
                 TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
     return write_console_ex
