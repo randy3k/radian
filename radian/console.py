@@ -71,19 +71,53 @@ def create_read_console(session):
 
 def create_write_console_ex(session, stderr_format):
     output = session.app.output
+    from prompt_toolkit.utils import is_windows
 
-    def write_console_ex(buf, otype):
-        if otype == 0:
-            # although we do not use sys.stdout and sys.stderr directly, we use them to flag
-            # whether we should print to them
-            if sys.stdout:
-                output.write_raw(buf)
-                output.flush()
-                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
-        else:
-            if sys.stderr:
-                output.write_raw(stderr_format.format(buf))
-                output.flush()
-                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+    write_console_ex = None
+
+    if is_windows():
+        from prompt_toolkit.output.win32 import Win32Output
+        if isinstance(output, Win32Output):
+            # we use print_formatted_text to support ANSI sequences in older Windows
+            from prompt_toolkit.formatted_text import ANSI
+            from prompt_toolkit.shortcuts import print_formatted_text
+
+            def write_console_ex(buf, otype):
+                if otype == 0:
+                    if sys.stdout:
+                        buf = buf.replace("\r\n", "\n")
+                        sbuf = buf.split("\r")
+                        for i, b in enumerate(sbuf):
+                            print_formatted_text(ANSI(b), end="", output=output)
+                            if i < len(sbuf) - 1:
+                                output.write("\r")
+                        output.flush()
+                        TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+                else:
+                    if sys.stderr:
+                        buf = buf.replace("\r\n", "\n")
+                        sbuf = buf.split("\r")
+                        for i, b in enumerate(sbuf):
+                            print_formatted_text(
+                                ANSI(stderr_format.format(b)), end="", output=output)
+                            if i < len(sbuf) - 1:
+                                output.write("\r")
+                        output.flush()
+                        TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+
+    if not write_console_ex:
+        def write_console_ex(buf, otype):
+            if otype == 0:
+                # although we do not use sys.stdout and sys.stderr directly, we use them to flag
+                # whether we should print to them
+                if sys.stdout:
+                    output.write_raw(buf)
+                    output.flush()
+                    TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+            else:
+                if sys.stderr:
+                    output.write_raw(stderr_format.format(buf))
+                    output.flush()
+                    TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
     return write_console_ex
