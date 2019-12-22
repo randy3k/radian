@@ -15,7 +15,7 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, rcall
-from rchitect.interface import setoption, process_events
+from rchitect.interface import roption, setoption, process_events
 
 from . import shell
 from .rutils import prase_text_complete
@@ -56,6 +56,9 @@ def apply_settings(session, settings):
 
     # necessary on windows
     setoption("menu.graphics", False)
+
+    if is_windows() and roption("crayon.enabled", None) is None:
+        setoption("crayon.enabled", True)
 
     # enables completion of installed package names
     if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
