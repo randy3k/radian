@@ -7,6 +7,10 @@ from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.filters import Condition, has_focus, \
     emacs_insert_mode, vi_insert_mode, in_paste_mode, has_completions, completion_is_selected
+from prompt_toolkit.filters import (
+    emacs_mode,
+    has_selection
+)
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
 from radian.settings import radian_settings as settings
@@ -302,6 +306,11 @@ def create_key_bindings():
         if event.current_buffer.text:
             copy_margin = not in_paste_mode() and settings.auto_indentation
             event.current_buffer.newline(copy_margin=copy_margin)
+
+    @handle('c-x', 'c-e', filter=emacs_mode & ~has_selection)
+    def _(event):
+        buff = event.current_buffer
+        buff.open_in_editor()
 
     return kb
 

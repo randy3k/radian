@@ -12,6 +12,7 @@ from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 
+
 from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, rcall
@@ -124,7 +125,6 @@ def create_radian_prompt_session(options, settings):
         editing_mode="VI" if settings.editing_mode in ["vim", "vi"] else "EMACS",
         history=history,
         enable_history_search=True,
-        enable_open_in_editor=True,
         history_search_no_duplicates=settings.history_search_no_duplicates,
         enable_suspend=True,
         tempfile_suffix=".R",
