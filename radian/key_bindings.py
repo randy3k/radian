@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 import re
+import os
 
 from prompt_toolkit.application.current import get_app
-
+from prompt_toolkit.application.run_in_terminal import run_in_terminal
+from prompt_toolkit.eventloop import From, ensure_future
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.filters import Condition, has_focus, \
@@ -15,6 +17,9 @@ from prompt_toolkit.enums import DEFAULT_BUFFER
 
 from radian.settings import radian_settings as settings
 from radian import get_app as get_radian_app
+from rchitect.interface import roption
+
+from six import text_type
 
 
 default_focussed = has_focus(DEFAULT_BUFFER)
@@ -285,7 +290,7 @@ def create_shell_key_bindings():
     return kb
 
 
-def create_key_bindings():
+def create_key_bindings(editor=""):
     kb = KeyBindings()
     handle = kb.add
 
@@ -309,8 +314,34 @@ def create_key_bindings():
 
     @handle('c-x', 'c-e', filter=emacs_mode & ~has_selection)
     def _(event):
+        # match R behavior
+        editor = roption("editor")
+        if not editor or not isinstance(editor, text_type):
+            if 'VISUAL' in os.environ:
+                editor = os.environ['VISUAL']
+            elif 'EDITOR' in os.environ:
+                editor = os.environ['EDITOR']
+            if not editor:
+                editor = "vi"
+
         buff = event.current_buffer
+        if editor:
+            orig_visual = os.environ['VISUAL'] if 'VISUAL' in os.environ else None
+            os.environ['VISUAL'] = editor
+
         buff.open_in_editor()
+
+        if editor:
+            def run():
+                def cleanup():
+                    if orig_visual:
+                        os.environ['VISUAL'] = orig_visual
+                    else:
+                        del os.environ['VISUAL']
+
+                yield From(run_in_terminal(cleanup, in_executor=True))
+
+            ensure_future(run())
 
     return kb
 
