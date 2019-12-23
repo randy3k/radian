@@ -60,7 +60,7 @@ class RadianApplication(object):
 
         self.set_env_vars(options)
 
-        args = ["rchitect", "--quiet", "--no-restore-history"]
+        args = ["radian", "--quiet", "--no-restore-history"]
 
         if sys.platform != "win32":
             args.append("--no-readline")
