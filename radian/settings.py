@@ -42,7 +42,7 @@ class RadianSettings(object):
         self._load_setting("auto_indentation", True, bool)
         self._load_setting("tab_size", 4, int)
         self._load_setting("complete_while_typing", True, bool)
-        self._load_setting("completion_timeout", 0.05)
+        self._load_setting("completion_timeout", 0.15)
         self._load_setting("completion_prefix_length", 2, int)
         self._load_setting("history_search_no_duplicates", False, bool)
         self._load_setting("insert_new_line", True, bool)
