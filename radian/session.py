@@ -61,6 +61,12 @@ def apply_settings(session, settings):
     if is_windows() and roption("crayon.enabled", None) is None:
         setoption("crayon.enabled", True)
 
+    def askpass(message):
+        from prompt_toolkit import prompt
+        return prompt(message, is_password=True)
+
+    setoption("askpass", askpass)
+
     # enables completion of installed package names
     if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
         rcall(("utils", "rc.settings"), ipck=True)
