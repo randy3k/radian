@@ -74,9 +74,9 @@ that file is used instead. The options could be also specified in `.Rprofile` fi
 it is less recommended because 1. the settings are not persistent when vanilla mode is used;
 2. it is conflicted with the use of `packret`.
 
-*Do not copy the whole configuration, just specify what you need!*
 
 ```r
+# Do not copy the whole configuration, just specify what you need!
 # see https://help.farbox.com/pygments.html
 # for a list of supported color schemes, default scheme is "native"
 options(radian.color_scheme = "native")
@@ -90,7 +90,10 @@ options(radian.editing_mode = "emacs")
 options(radian.indent_lines = TRUE)
 
 # auto match brackets and quotes
-options(radian.auto_match = FALSE)
+options(radian.auto_match = TRUE)
+
+# highlight matching bracket
+options(radian.highlight_matching_bracket = FALSE)
 
 # auto indentation for new line and curly braces
 options(radian.auto_indentation = TRUE)
@@ -98,6 +101,8 @@ options(radian.tab_size = 4)
 
 # pop up completion while typing
 options(radian.complete_while_typing = TRUE)
+# the minimum length of prefix to trigger auto completions
+options(radian.completion_prefix_length = 2)
 # timeout in seconds to cancel completion if it takes too long
 # set it to 0 to disable it
 options(radian.completion_timeout = 0.05)

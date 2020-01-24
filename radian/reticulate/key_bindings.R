@@ -11,6 +11,8 @@ builtins <- import_builtins()
 len <- builtins$len
 
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
+HighlightMatchingBracketProcessor <- prompt_toolkit$layout$processors$HighlightMatchingBracketProcessor
+
 
 insert_mode <- radian$key_bindings$insert_mode
 default_focussed <- radian$key_bindings$default_focussed
@@ -150,5 +152,7 @@ app$session$register_mode(
     lexer = prompt_toolkit$lexers$PygmentsLexer(pygments$lexers$python$PythonLexer),
     key_bindings = kb,
     prompt_key_bindings = pkb,
+    tempfile_suffix = ".py",
+    input_processors = list(HighlightMatchingBracketProcessor()),
     completer = python_completer
 )

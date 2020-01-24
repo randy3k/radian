@@ -38,7 +38,8 @@ class RadianSettings(object):
     def load(self):
         self._load_setting("editing_mode", "emacs")
         self._load_setting("color_scheme", "native")
-        self._load_setting("auto_match", False, bool)
+        self._load_setting("auto_match", True, bool)
+        self._load_setting("highlight_matching_bracket", False, bool)
         self._load_setting("auto_indentation", True, bool)
         self._load_setting("tab_size", 4, int)
         self._load_setting("complete_while_typing", True, bool)

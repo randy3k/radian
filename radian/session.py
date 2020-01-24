@@ -7,11 +7,11 @@ import time
 
 from lineedit import Mode, ModalPromptSession, ModalInMemoryHistory, ModalFileHistory
 from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
-
 
 from pygments.styles import get_style_by_name
 
@@ -159,6 +159,10 @@ def create_radian_prompt_session(options, settings):
         text = session.default_buffer.text
         shell.run_command(text)
 
+    input_processors = []
+    if settings.highlight_matching_bracket:
+        input_processors.append(HighlightMatchingBracketProcessor())
+
     session.register_mode(
         "r",
         activator=lambda session: session.prompt_text == settings.prompt,
@@ -170,6 +174,7 @@ def create_radian_prompt_session(options, settings):
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=settings.completion_timeout),
         key_bindings=create_key_bindings(),
+        input_processors=input_processors,
         prompt_key_bindings=create_r_key_bindings(prase_text_complete)
     )
     session.register_mode(
@@ -194,6 +199,7 @@ def create_radian_prompt_session(options, settings):
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=settings.completion_timeout),
+        input_processors=input_processors,
         prompt_key_bindings=create_r_key_bindings(prase_text_complete),
         switchable_from=False,
         switchable_to=False
@@ -207,7 +213,8 @@ def create_radian_prompt_session(options, settings):
         completer=None,
         prompt_key_bindings=None,
         switchable_from=False,
-        switchable_to=False
+        switchable_to=False,
+        input_processors=[]
     )
 
     return session
