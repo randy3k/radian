@@ -1,3 +1,10 @@
+# v0.4.5
+
+ - enable crayon on windows terminals
+ - allow c-x c-e to edit in editor
+ - support askpass
+ - add radian.highlight_matching_bracket
+
 # v0.4.4
 
   - latex completion
