@@ -44,6 +44,7 @@ def create_read_console(session):
 
         if CALLING_FROM_PROMPT:
             # fallback to `input` if `read_console` is called nestedly
+            # c.f. run_coroutine_in_terminal of prompt_toolkit
             global SUPPRESS_STDERR
             OLD_SUPPRESS_STDERR = SUPPRESS_STDERR
             SUPPRESS_STDERR = False
