@@ -10,6 +10,8 @@ from rchitect import completion as rcompletion
 from .settings import radian_settings as settings
 from .latex import get_latex_completions
 from .rutils import installed_packages
+from .console import native_read_console
+
 
 from six import text_type
 
@@ -44,16 +46,14 @@ class RCompleter(Completer):
     def get_r_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
-        orig_stderr = sys.stderr
-        sys.stderr = None
-        try:
-            token = rcompletion.assign_line_buffer(text_before)
-            rcompletion.complete_token(0 if completion_requested else self.timeout)
-            completions = rcompletion.retrieve_completions()
-        except Exception:
-            completions = []
-        finally:
-            sys.stderr = orig_stderr
+
+        with native_read_console():
+            try:
+                token = rcompletion.assign_line_buffer(text_before)
+                rcompletion.complete_token(0 if completion_requested else self.timeout)
+                completions = rcompletion.retrieve_completions()
+            except Exception:
+                completions = []
 
         for c in completions:
             if c.startswith(token):
