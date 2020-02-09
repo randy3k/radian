@@ -52,6 +52,10 @@ class RadianApplication(object):
         os.environ["R_INCLUDE_DIR"] = include_dir
         os.environ["R_SHARE_DIR"] = share_dir
 
+        # enable crayon on windows
+        if sys.platform.startswith("win"):
+            os.environ["ANSICON"] = "1"
+
     def run(self, options, cleanup=None):
         from .session import create_radian_prompt_session
         from .console import create_read_console, create_write_console_ex
