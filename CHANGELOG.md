@@ -1,3 +1,8 @@
+# v0.4.6
+
+ - enable crayon via ANSICON env variable instead of options crayon.enabled
+ - fix a bug of nested read console when loading R.cache
+
 # v0.4.5
 
  - enable crayon on windows terminals
