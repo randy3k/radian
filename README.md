@@ -115,6 +115,8 @@ options(radian.insert_new_line = TRUE)
 
 # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
 options(radian.history_search_no_duplicates = FALSE)
+# ignore case in history search
+options(radian.history_search_ignore_case = FALSE)
 
 # custom prompt for different modes
 options(radian.prompt = "\033[0;34mr$>\033[0m ")

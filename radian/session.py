@@ -129,6 +129,7 @@ def create_radian_prompt_session(options, settings):
         history=history,
         enable_history_search=True,
         history_search_no_duplicates=settings.history_search_no_duplicates,
+        search_ignore_case=settings.history_search_ignore_case,
         enable_suspend=True,
         tempfile_suffix=".R",
         input=CustomVt100Input(sys.stdin) if not is_windows() else None,

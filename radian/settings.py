@@ -46,6 +46,7 @@ class RadianSettings(object):
         self._load_setting("completion_timeout", 0.15)
         self._load_setting("completion_prefix_length", 2, int)
         self._load_setting("history_search_no_duplicates", False, bool)
+        self._load_setting("history_search_ignore_case", False, bool)
         self._load_setting("insert_new_line", True, bool)
         self._load_setting("indent_lines", True, bool)
         self._load_prompt()
