@@ -26,6 +26,14 @@ def main():
     parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
     parser.add_option("--coverage", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP)
 
+    # we accept these options, but never check them
+    parser.add_option("--no-save", action="store_true", dest="no_save", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-restore-data", action="store_true", dest="no_restore_data", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-restore-history", action="store_true", dest="no_restore_history", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-restore", action="store_true", dest="no_restore", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-readline", action="store_true", dest="no_readline", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--interactive", action="store_true", dest="interactive", help=optparse.SUPPRESS_HELP)
+
     options, args = parser.parse_args()
 
     r_home = Rhome()
