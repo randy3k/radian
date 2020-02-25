@@ -136,7 +136,7 @@ def create_write_console_ex(session, stderr_format):
 
             def write_console_ex(buf, otype):
                 if otype == 0:
-                    if sys.stdout:
+                    if not SUPPRESS_STDOUT:
                         buf = buf.replace("\r\n", "\n")
                         sbuf = buf.split("\r")
                         for i, b in enumerate(sbuf):
@@ -146,7 +146,7 @@ def create_write_console_ex(session, stderr_format):
                         output.flush()
                         TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
                 else:
-                    if sys.stderr:
+                    if not SUPPRESS_STDERR:
                         buf = buf.replace("\r\n", "\n")
                         sbuf = buf.split("\r")
                         for i, b in enumerate(sbuf):
