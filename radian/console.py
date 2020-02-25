@@ -33,6 +33,7 @@ def native_read_console():
     try:
         yield
     finally:
+        console.flush()
         CALLING_FROM_PROMPT = False
         SUPPRESS_STDERR = False
 
