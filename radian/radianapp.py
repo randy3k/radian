@@ -105,6 +105,9 @@ class RadianApplication(object):
         from . import reticulate
         reticulate.configure()
 
+        # run user on load hooks
+        rutils.run_on_load_hooks()
+
         # print welcome message
         if options.quiet is not True:
             self.session.app.output.write(rchitect.interface.greeting())

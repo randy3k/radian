@@ -70,3 +70,9 @@ def register_cleanup(cleanup):
           rcall(("base", "getOption"), "rchitect.py_tools"),
           cleanup,
           onexit=True)
+
+
+def run_on_load_hooks():
+    hooks = roption("radian.on_load_hooks", [])
+    for hook in hooks:
+        hook()
