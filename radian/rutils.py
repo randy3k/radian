@@ -23,7 +23,7 @@ def package_is_loaded(pkg):
 
 
 def package_is_installed(pkg):
-    return pkg in rcopy(reval("rownames(installed.packages())"))
+    return pkg in rcopy(reval(".packages(TRUE)"))
 
 
 def installed_packages():
@@ -32,7 +32,7 @@ def installed_packages():
         reval(
             """
             tryCatch(
-                base::rownames(utils::installed.packages()),
+                base::.packages(TRUE),
                 error = function(e) character(0)
             )
             """
