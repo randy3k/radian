@@ -53,7 +53,7 @@ class RadianApplication(object):
         os.environ["R_SHARE_DIR"] = share_dir
 
         # enable crayon on windows
-        if sys.platform.startswith("win"):
+        if sys.platform.startswith("win") and "APPVEYOR" not in os.environ:
             os.environ["ANSICON"] = "1"
             # crayon 1.3.4 doesn't respect ANSICON
             # we use ConEmuANSI as a temporary workaround
