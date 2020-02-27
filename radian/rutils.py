@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import os
 import sys
-from rchitect import rcopy, rcall, reval
+from rchitect import rcopy, rcall
 from rchitect._cffi import ffi, lib
 from rchitect.interface import roption, protected, rstring_p
 from .key_bindings import map_key
@@ -23,21 +23,14 @@ def package_is_loaded(pkg):
 
 
 def package_is_installed(pkg):
-    return pkg in rcopy(reval("rownames(installed.packages())"))
+    return pkg in installed_packages()
 
 
 def installed_packages():
-    return rcopy(
-        list,
-        reval(
-            """
-            tryCatch(
-                base::rownames(utils::installed.packages()),
-                error = function(e) character(0)
-            )
-            """
-            )
-        )
+    try:
+        return rcall(("base", ".packages"), all=True, _convert=True)
+    except Exception:
+        return []
 
 
 def source_file(path):
