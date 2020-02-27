@@ -55,6 +55,9 @@ class RadianApplication(object):
         # enable crayon on windows
         if sys.platform.startswith("win"):
             os.environ["ANSICON"] = "1"
+            # crayon 1.3.4 doesn't respect ANSICON
+            # we use ConEmuANSI as a temporary workaround
+            os.environ["ConEmuANSI"] = "ON"
 
     def run(self, options, cleanup=None):
         from .session import create_radian_prompt_session
