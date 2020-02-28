@@ -1,3 +1,9 @@
+# v0.4.7
+
+ - switch from ANSICON to CMDER_ROOT to support crayon
+ - added history_search_ignore_case
+ - accept some common settings from plain R
+
 # v0.4.6
 
  - enable crayon via ANSICON env variable instead of options crayon.enabled
