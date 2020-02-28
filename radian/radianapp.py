@@ -53,11 +53,10 @@ class RadianApplication(object):
         os.environ["R_SHARE_DIR"] = share_dir
 
         # enable crayon on windows
-        if sys.platform.startswith("win") and "APPVEYOR" not in os.environ:
-            os.environ["ANSICON"] = "1"
-            # crayon 1.3.4 doesn't respect ANSICON
-            # we use ConEmuANSI as a temporary workaround
-            os.environ["ConEmuANSI"] = "ON"
+        # we use CMDER_ROOT as a temporary workaround
+        if sys.platform.startswith("win"):
+            if "CMDER_ROOT" not in os.environ:
+                os.environ["CMDER_ROOT"] = "NA"
 
     def run(self, options, cleanup=None):
         from .session import create_radian_prompt_session
