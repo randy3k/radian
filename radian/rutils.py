@@ -28,7 +28,7 @@ def package_is_installed(pkg):
 
 def installed_packages():
     try:
-        return rcall(("base", ".packages"), all=True, _convert=True)
+        return rcall(("base", ".packages"), **{"all.available": True, "_convert": True})
     except Exception:
         return []
 
