@@ -72,7 +72,7 @@ _radian_ can be customized by specifying the following options in `.radian_profi
 at your user home directory. If a local `.radian_profile` is present at the working directory,
 that file is used instead. The options could be also specified in `.Rprofile` file, however,
 it is less recommended because 1. the settings are not persistent when vanilla mode is used;
-2. it is conflicted with the use of `packret`.
+2. it is conflicted with the use of `packrat`.
 
 
 ```r
