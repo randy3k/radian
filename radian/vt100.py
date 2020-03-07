@@ -12,15 +12,19 @@ if not is_windows():
             return False
 
     class CustomVt100Output(Vt100_Output):
-        # we don't need buffering
-        def write_raw(self, data):
-            self.stdout.write(data)
 
-        def write(self, data):
-            self.write_raw(data.replace('\x1b', '?'))
+        # we actually need buffering in python 2, otherwise wide unicode may not print
+        pass
 
-        def flush(self):
-            self.stdout.flush()
+        # # we don't need buffering
+        # def write_raw(self, data):
+        #     self.stdout.write(data)
+
+        # def write(self, data):
+        #     self.write_raw(data.replace('\x1b', '?'))
+
+        # def flush(self):
+        #     self.stdout.flush()
 else:
     CustomVt100Input = None
     CustomVt100Output = None
