@@ -1,3 +1,9 @@
+# v0.4.8
+
+  - bug unicode rendering problem in python 2
+  - process events in rare mode
+  - better support later::later
+
 # v0.4.7
 
  - switch from ANSICON to CMDER_ROOT to support crayon
