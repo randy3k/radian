@@ -22,7 +22,7 @@ from . import shell
 from .rutils import prase_text_complete
 from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
 from .completion import RCompleter, SmartPathCompleter
-from .vt100 import CustomVt100Input, CustomVt100Output
+from .io import CustomInput, CustomOutput
 from .lexer import CustomSLexer as SLexer
 
 
@@ -82,27 +82,26 @@ def create_radian_prompt_session(options, settings):
     if is_windows():
         output = None
     else:
-        output = CustomVt100Output.from_pty(sys.stdout, term=get_term_environment_variable())
+        output = CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
 
     def get_inputhook():
         terminal_width = [None]
 
         def _(context):
+            output_width = session.app.output.get_size().columns
+            if output_width and terminal_width[0] != output_width:
+                terminal_width[0] = output_width
+                setoption("width", max(terminal_width[0], 20))
+
             while True:
                 if context.input_is_ready():
                     break
                 try:
-                    # TODO: do not echo input
                     with session.app.input.detach():
-                        with session.app.input.cooked_mode():
+                        with session.app.input.rare_mode():
                             process_events()
                 except Exception:
                     pass
-
-                output_width = session.app.output.get_size().columns
-                if output_width and terminal_width[0] != output_width:
-                    terminal_width[0] = output_width
-                    setoption("width", max(terminal_width[0], 20))
                 time.sleep(1.0 / 30)
 
         return _
@@ -135,7 +134,7 @@ def create_radian_prompt_session(options, settings):
         search_ignore_case=settings.history_search_ignore_case,
         enable_suspend=True,
         tempfile_suffix=".R",
-        input=CustomVt100Input(sys.stdin) if not is_windows() else None,
+        input=CustomInput(sys.stdin),
         output=output,
         inputhook=get_inputhook(),
         mode_class=RadianMode
