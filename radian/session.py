@@ -92,7 +92,8 @@ def create_radian_prompt_session(options, settings):
                 if context.input_is_ready():
                     break
                 try:
-                    process_events()
+                    with session.app.input.cooked_mode():
+                        process_events()
                 except Exception:
                     pass
 
