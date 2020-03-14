@@ -10,7 +10,7 @@ from rchitect import completion as rcompletion
 from .settings import radian_settings as settings
 from .latex import get_latex_completions
 from .rutils import installed_packages
-from .console import native_read_console
+from .console import suppress_stderr
 
 
 from six import text_type
@@ -47,7 +47,7 @@ class RCompleter(Completer):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
-        with native_read_console():
+        with suppress_stderr():
             try:
                 token = rcompletion.assign_line_buffer(text_before)
                 rcompletion.complete_token(0 if completion_requested else self.timeout)

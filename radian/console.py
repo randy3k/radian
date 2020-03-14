@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
-import sys
+import signal
+from six.moves import input as six_input
+from contextlib import contextmanager
 
 from radian.settings import radian_settings as settings
 from rchitect import console
-from contextlib import contextmanager
 
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
@@ -13,29 +14,33 @@ SUPPRESS_STDOUT = False
 SUPPRESS_STDERR = False
 
 
-if sys.version >= "3":
-    def ask_input(s):
-        return input(s)
-else:
-    def ask_input(s):
-        return raw_input(s).decode("utf-8", "backslashreplace")
-
-
 @contextmanager
-def native_read_console():
+def suppress_stderr(suppress=True):
     """
     It is used in completion to avoid running prompt-toolkit nestedly
     """
-    global CALLING_FROM_PROMPT
     global SUPPRESS_STDERR
-    CALLING_FROM_PROMPT = True
-    SUPPRESS_STDERR = True
+    OLD_SUPPRESS_STDERR = SUPPRESS_STDERR
+    SUPPRESS_STDERR = suppress
     try:
         yield
     finally:
         console.flush()
-        CALLING_FROM_PROMPT = False
-        SUPPRESS_STDERR = False
+        SUPPRESS_STDERR = OLD_SUPPRESS_STDERR
+
+
+def sigint_handler(signum, frame):
+    raise KeyboardInterrupt()
+
+
+def ask_input(s):
+    orig_handler = signal.getsignal(signal.SIGINT)
+    # allow Ctrl+C to throw KeyboardInterrupt in callback
+    signal.signal(signal.SIGINT, sigint_handler)
+    try:
+        return six_input(s)
+    finally:
+        signal.signal(signal.SIGINT, orig_handler)
 
 
 def create_read_console(session):
@@ -43,26 +48,27 @@ def create_read_console(session):
 
     def read_console(message, add_history=1):
 
-        if CALLING_FROM_PROMPT:
+        app = session.app
+
+        if app.is_running:
             # fallback to `input` if `read_console` is called nestedly
             # c.f. run_coroutine_in_terminal of prompt_toolkit
-            global SUPPRESS_STDERR
-            OLD_SUPPRESS_STDERR = SUPPRESS_STDERR
-            SUPPRESS_STDERR = False
-            app = session.app
-            console.flush()
-            app.output.flush()
-            app._running_in_terminal = True
-            try:
-                with app.input.detach():
-                    with app.input.cooked_mode():
-                        return ask_input(message)
-            finally:
-                SUPPRESS_STDERR = OLD_SUPPRESS_STDERR
-                app._running_in_terminal = False
-                app.renderer.reset()
-                app._request_absolute_cursor_position()
-                app._redraw()
+            with suppress_stderr(False):
+                console.flush()
+                app.output.flush()
+                app._running_in_terminal = True
+                try:
+                    with app.input.detach():
+                        with app.input.cooked_mode():
+                            return ask_input(message)
+                except KeyboardInterrupt:
+                    app.output.write_raw("\n")
+                    raise
+                finally:
+                    app._running_in_terminal = False
+                    app.renderer.reset()
+                    app._request_absolute_cursor_position()
+                    app._redraw()
 
         session.prompt_text = message
 
@@ -82,7 +88,7 @@ def create_read_console(session):
             interrupted[0] = False
         elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
                 (settings.insert_new_line and current_mode.insert_new_line):
-            session.app.output.write_raw("\n")
+            app.output.write_raw("\n")
 
         text = None
 
@@ -114,7 +120,7 @@ def create_read_console(session):
                 if result is not None:
                     return result
                 if settings.insert_new_line and current_mode.insert_new_line:
-                    session.app.output.write_raw("\n")
+                    app.output.write_raw("\n")
                 text = None
 
         return text
@@ -123,7 +129,8 @@ def create_read_console(session):
 
 
 def create_write_console_ex(session, stderr_format):
-    output = session.app.output
+    app = session.app
+    output = app.output
     from prompt_toolkit.utils import is_windows
 
     write_console_ex = None

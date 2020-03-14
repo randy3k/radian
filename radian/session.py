@@ -92,6 +92,7 @@ def create_radian_prompt_session(options, settings):
                 if context.input_is_ready():
                     break
                 try:
+                    # TODO: do not echo input
                     with session.app.input.detach():
                         with session.app.input.cooked_mode():
                             process_events()
