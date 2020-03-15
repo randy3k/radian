@@ -10,7 +10,7 @@ if not is_windows():
     class rare_mode(cooked_mode):
         @classmethod
         def _patch_lflag(cls, attrs):
-            return attrs | (termios.ICANON | termios.IEXTEN | termios.ISIG)
+            return attrs | (termios.IEXTEN | termios.ISIG)
 
     class CustomInput(Vt100Input):
         @property
@@ -29,12 +29,10 @@ else:
 
     class rare_mode(cooked_mode):
         def _patch(self):
-            ENABLE_LINE_INPUT = 0x0002
             ENABLE_PROCESSED_INPUT = 0x0001
 
             windll.kernel32.SetConsoleMode(
-                self.handle, self.original_mode.value |
-                (ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT))
+                self.handle, self.original_mode.value | ENABLE_PROCESSED_INPUT)
 
     class CustomInput(Win32Input):
         def rare_mode(self):
