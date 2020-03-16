@@ -85,6 +85,10 @@ def create_radian_prompt_session(options, settings):
         output = CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
 
     def get_inputhook():
+        # make testing more robust
+        if "CIRCLECI" in os.environ or "GITHUB_REPOSITORY" in os.environ:
+            return None
+
         terminal_width = [None]
 
         def _(context):
