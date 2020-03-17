@@ -12,7 +12,7 @@ def test_startup(terminal):
         terminal.cursor().assert_equal((4, 5))
         terminal.write("a")
         terminal.sendintr()
-        terminal.current_line().assert_startswith("r$>")
+        terminal.current_line().strip().assert_equal("r$>")
         terminal.cursor().assert_equal((4, 7))
     except Exception:
         print("\n".join(terminal.screen.display))
