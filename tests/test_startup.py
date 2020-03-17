@@ -10,6 +10,7 @@ def test_startup(terminal):
         terminal.write("\n")
         terminal.current_line().assert_startswith("r$>")
         terminal.cursor().assert_equal((4, 5))
+        terminal.write("a")
         terminal.sendintr()
         terminal.current_line().assert_startswith("r$>")
         terminal.cursor().assert_equal((4, 7))
