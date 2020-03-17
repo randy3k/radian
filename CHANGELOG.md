@@ -3,6 +3,7 @@
   - bug unicode rendering problem in python 2
   - process events in rare mode
   - better support later::later
+  - require rchitect 0.3.19
 
 # v0.4.7
 
