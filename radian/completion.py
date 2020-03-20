@@ -56,7 +56,7 @@ class RCompleter(Completer):
                 completions = []
 
         for c in completions:
-            if c.startswith(token):
+            if c.startswith(token) and c != token:
                 if c.endswith("="):
                     c = c[:-1] + " = "
                 if c.endswith("::"):
