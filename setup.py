@@ -38,7 +38,7 @@ setup(
     description='A 21 century R console',
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
-    packages=find_packages('.'),
+    packages=find_packages('.', exclude=["tests"]),
     package_data={'radian': ['reticulate/*.R']},
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
