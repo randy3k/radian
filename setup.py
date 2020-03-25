@@ -43,7 +43,7 @@ setup(
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
         'rchitect>=0.3.19<0.4.0',
-        'lineedit>=0.1.4<0.2.0',
+        'lineedit>=0.1.5<0.2.0',
         'six>=1.9.0',
         'pygments>=2.5.0'
     ],
