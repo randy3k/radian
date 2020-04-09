@@ -1,3 +1,7 @@
+# v0.4.9
+
+  - require rchitect 0.3.20
+
 # v0.4.8
 
   - bug unicode rendering problem in python 2
