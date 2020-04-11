@@ -1,3 +1,7 @@
+# v0.5.0.dev0
+
+ - support of R 4.0 raw strings
+
 # v0.4.9
 
   - require rchitect 0.3.20
