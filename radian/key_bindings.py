@@ -19,6 +19,10 @@ from radian.settings import radian_settings as settings
 from radian import get_app as get_radian_app
 from rchitect.interface import roption
 
+from pygments.token import Token
+from radian.lexer import CustomSLexer
+
+
 from six import text_type
 
 
@@ -73,6 +77,29 @@ def following_text(pattern):
     condition = Condition(_following_text)
     _following_text_cache[pattern] = condition
     return condition
+
+
+lexer = CustomSLexer()
+
+
+@Condition
+def in_string_scope():
+    app = get_app()
+    tokens = list(lexer.get_tokens(app.current_buffer.document.text_before_cursor.rstrip()))
+    with open("/tmp/radian", "w") as f:
+        f.write(str(tokens) + "\n")
+    if not tokens:
+        return False
+    for t, s in reversed(tokens):
+        if t is Token.Text and s == "\n":
+            continue
+        elif t is Token.Error:
+            return True
+        elif t is Token.Literal.String:
+            return True
+        else:
+            return False
+    return False
 
 
 @Condition
@@ -161,31 +188,64 @@ def create_prompt_key_bindings(prase_text_complete):
         event.current_buffer.cursor_position -= 1
 
     # auto match
-    @handle('(', filter=insert_mode & default_focussed & auto_match & following_text(r"[)}\]]|$"))
+    @handle('(', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
     def _(event):
         event.current_buffer.insert_text("()")
         event.current_buffer.cursor_left()
 
-    @handle('[', filter=insert_mode & default_focussed & auto_match & following_text(r"[)}\]]|$"))
+    @handle('[', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
     def _(event):
         event.current_buffer.insert_text("[]")
         event.current_buffer.cursor_left()
 
-    @handle('{', filter=insert_mode & default_focussed & auto_match & following_text(r"[)}\]]|$"))
+    @handle('{', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
     def _(event):
         event.current_buffer.insert_text("{}")
         event.current_buffer.cursor_left()
 
-    @handle('"', filter=insert_mode & default_focussed & auto_match & ~preceding_text(r".*[\"a-zA-Z0-9_]$") & following_text(r"[)}\]]|$"))
+    @handle('"', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & auto_match & ~preceding_text(r".*['a-zA-Z0-9_]$") & following_text(r"[)}\]]|$"))
+    @handle("'", filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
 
+    # raw string
+    @handle('(', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
+    def _(event):
+        matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
+        dashes = matches.group(2) or ""
+        event.current_buffer.insert_text("()" + dashes)
+        event.current_buffer.cursor_left(len(dashes) + 1)
+
+    @handle('[', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
+    def _(event):
+        matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
+        dashes = matches.group(2) or ""
+        event.current_buffer.insert_text("[]" + dashes)
+        event.current_buffer.cursor_left(len(dashes) + 1)
+
+    @handle('{', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
+    def _(event):
+        matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
+        dashes = matches.group(2) or ""
+        event.current_buffer.insert_text("{}" + dashes)
+        event.current_buffer.cursor_left(len(dashes) + 1)
+
+    @handle('"', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~in_string_scope)
+    def _(event):
+        event.current_buffer.insert_text('""')
+        event.current_buffer.cursor_left()
+
+    @handle("'", filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~in_string_scope)
+    def _(event):
+        event.current_buffer.insert_text("''")
+        event.current_buffer.cursor_left()
+
+    # just move cursor
     @handle(')', filter=insert_mode & default_focussed & auto_match & following_text(r"^\)"))
     @handle(']', filter=insert_mode & default_focussed & auto_match & following_text(r"^\]"))
     @handle('}', filter=insert_mode & default_focussed & auto_match & following_text(r"^\}"))
