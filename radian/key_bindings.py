@@ -86,8 +86,6 @@ lexer = CustomSLexer()
 def in_string_scope():
     app = get_app()
     tokens = list(lexer.get_tokens(app.current_buffer.document.text_before_cursor.rstrip()))
-    with open("/tmp/radian", "w") as f:
-        f.write(str(tokens) + "\n")
     if not tokens:
         return False
     for t, s in reversed(tokens):
