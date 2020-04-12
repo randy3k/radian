@@ -11,6 +11,7 @@ from .settings import radian_settings as settings
 from .latex import get_latex_completions
 from .rutils import installed_packages
 from .console import suppress_stderr
+from .document import cursor_in_string
 
 
 from six import text_type
@@ -44,6 +45,9 @@ class RCompleter(Completer):
             yield x
 
     def get_r_completions(self, document, complete_event):
+        if cursor_in_string(document):
+            return
+
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
@@ -66,12 +70,11 @@ class RCompleter(Completer):
 
     def get_package_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
-        text_after = document.text_after_cursor
         token_match = TOKEN_PATTERN.match(text_before)
         library_prefix = LIBRARY_PATTERN.match(text_before)
         if token_match and not library_prefix:
             token = token_match.group(1)
-            instring = text_after.startswith("'") or text_after.startswith('"')
+            instring = cursor_in_string(document)
             for p in installed_packages():
                 if p.startswith(token):
                     comp = p if instring else p + "::"

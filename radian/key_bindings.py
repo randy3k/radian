@@ -16,11 +16,9 @@ from prompt_toolkit.filters import (
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
 from radian.settings import radian_settings as settings
+from radian.document import cursor_in_string
 from radian import get_app as get_radian_app
 from rchitect.interface import roption
-
-from pygments.token import Token
-from radian.lexer import CustomSLexer
 
 
 from six import text_type
@@ -79,25 +77,10 @@ def following_text(pattern):
     return condition
 
 
-lexer = CustomSLexer()
-
-
 @Condition
-def in_string_scope():
+def string_scope():
     app = get_app()
-    tokens = list(lexer.get_tokens(app.current_buffer.document.text_before_cursor.rstrip()))
-    if not tokens:
-        return False
-    for t, s in reversed(tokens):
-        if t is Token.Text and s == "\n":
-            continue
-        elif t is Token.Error:
-            return True
-        elif t is Token.Literal.String:
-            return True
-        else:
-            return False
-    return False
+    return cursor_in_string(app.current_buffer.document)
 
 
 @Condition
@@ -186,27 +169,27 @@ def create_prompt_key_bindings(prase_text_complete):
         event.current_buffer.cursor_position -= 1
 
     # auto match
-    @handle('(', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
+    @handle('(', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("()")
         event.current_buffer.cursor_left()
 
-    @handle('[', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
+    @handle('[', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("[]")
         event.current_buffer.cursor_left()
 
-    @handle('{', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
+    @handle('{', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("{}")
         event.current_buffer.cursor_left()
 
-    @handle('"', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
+    @handle('"', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~in_string_scope)
+    @handle("'", filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
@@ -233,12 +216,12 @@ def create_prompt_key_bindings(prase_text_complete):
         event.current_buffer.insert_text("{}" + dashes)
         event.current_buffer.cursor_left(len(dashes) + 1)
 
-    @handle('"', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~in_string_scope)
+    @handle('"', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~in_string_scope)
+    @handle("'", filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
