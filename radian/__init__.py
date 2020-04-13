@@ -38,9 +38,7 @@ def main():
     options, args = parser.parse_args()
 
     if options.r:
-        path = options.r
-        if os.path.isfile(path):
-            os.environ["R_BINARY"] = path
+        os.environ["R_BINARY"] = options.r
 
     r_home = Rhome()
 
