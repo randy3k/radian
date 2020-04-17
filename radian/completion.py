@@ -22,8 +22,7 @@ LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
 class RCompleter(Completer):
-    def __init__(self, timeout=0.02):
-        self.timeout = timeout
+    def __init__(self):
         super(RCompleter, self).__init__()
 
     def get_completions(self, document, complete_event):
@@ -46,12 +45,11 @@ class RCompleter(Completer):
 
     def get_r_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
-        completion_requested = complete_event.completion_requested
 
         with suppress_stderr():
             try:
                 token = rcompletion.assign_line_buffer(text_before)
-                rcompletion.complete_token(0 if completion_requested else self.timeout)
+                rcompletion.complete_token()
                 completions = rcompletion.retrieve_completions()
             except Exception:
                 completions = []

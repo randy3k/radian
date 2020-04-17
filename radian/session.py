@@ -176,7 +176,7 @@ def create_radian_prompt_session(options, settings):
         multiline=settings.indent_lines,
         complete_while_typing=settings.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
-        completer=RCompleter(timeout=settings.completion_timeout),
+        completer=RCompleter(),
         key_bindings=create_key_bindings(),
         input_processors=input_processors,
         prompt_key_bindings=create_r_key_bindings(prase_text_complete)
@@ -202,7 +202,7 @@ def create_radian_prompt_session(options, settings):
         multiline=settings.indent_lines,
         complete_while_typing=True,
         lexer=PygmentsLexer(SLexer),
-        completer=RCompleter(timeout=settings.completion_timeout),
+        completer=RCompleter(),
         input_processors=input_processors,
         prompt_key_bindings=create_r_key_bindings(prase_text_complete),
         switchable_from=False,
