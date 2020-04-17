@@ -45,9 +45,6 @@ class RCompleter(Completer):
             yield x
 
     def get_r_completions(self, document, complete_event):
-        if cursor_in_string(document):
-            return
-
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
