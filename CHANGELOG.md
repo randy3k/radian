@@ -1,6 +1,7 @@
-# v0.5.0.dev0
+# v0.5.0
 
  - support of R 4.0 raw strings
+ - disable completion timeout
 
 # v0.4.9
 
