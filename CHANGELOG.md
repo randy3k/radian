@@ -1,3 +1,7 @@
+# v0.5.1
+
+  - fix a bug in malformed input
+
 # v0.5.0
 
  - support of R 4.0 raw strings
