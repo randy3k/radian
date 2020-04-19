@@ -1,6 +1,7 @@
 # v0.5.1
 
   - fix a bug in malformed input
+  - revert: disable completion timeout in v0.5.0
 
 # v0.5.0
 

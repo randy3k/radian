@@ -51,7 +51,12 @@ class RCompleter(Completer):
         with suppress_stderr():
             try:
                 token = rcompletion.assign_line_buffer(text_before)
-                rcompletion.complete_token(0 if completion_requested else self.timeout)
+                # do not timeout package::func
+                if "::" in token or completion_requested:
+                    timeout = 0
+                else:
+                    timeout = self.timeout
+                rcompletion.complete_token(timeout)
                 completions = rcompletion.retrieve_completions()
             except Exception:
                 completions = []
