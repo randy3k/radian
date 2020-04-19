@@ -103,6 +103,9 @@ options(radian.tab_size = 4)
 options(radian.complete_while_typing = TRUE)
 # the minimum length of prefix to trigger auto completions
 options(radian.completion_prefix_length = 2)
+# timeout in seconds to cancel completion if it takes too long
+# set it to 0 to disable it
+options(radian.completion_timeout = 0.05)
 
 # automatically adjust R buffer size based on terminal width
 options(radian.auto_width = TRUE)
