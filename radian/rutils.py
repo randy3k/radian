@@ -5,6 +5,7 @@ from rchitect import rcopy, rcall
 from rchitect._cffi import ffi, lib
 from rchitect.interface import roption, protected, rstring_p
 from .key_bindings import map_key
+from .console import suppress_stderr
 
 
 def prase_text_complete(text):
@@ -12,7 +13,7 @@ def prase_text_complete(text):
     s = rstring_p(text)
     orig_stderr = sys.stderr
     sys.stderr = None
-    with protected(s):
+    with protected(s), suppress_stderr():
         lib.R_ParseVector(s, -1, status, lib.R_NilValue)
         sys.stderr = orig_stderr
     return status[0] != 2
