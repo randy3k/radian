@@ -101,9 +101,9 @@ def create_radian_prompt_session(options, settings):
                 if context.input_is_ready():
                     break
                 try:
-                    with session.app.input.detach():
-                        with session.app.input.rare_mode():
-                            process_events()
+                    # with session.app.input.detach():
+                    # with session.app.input.rare_mode():
+                    process_events()
                 except Exception:
                     pass
                 time.sleep(1.0 / 30)

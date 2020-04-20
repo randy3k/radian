@@ -1,3 +1,8 @@
+# v0.5.2
+
+  - some code introduced in earlier to support later::later lead to
+    high cpu loading, disable it for now
+
 # v0.5.1
 
   - fix a bug in malformed input
