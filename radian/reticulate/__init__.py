@@ -10,7 +10,7 @@ from rchitect.interface import roption, setoption, set_hook, package_event
 
 from radian.rutils import package_is_installed, source_file
 
-from radian.key_bindings import insert_mode, default_focussed, cursor_at_begin, text_is_empty
+from radian.key_bindings import insert_mode, default_focused, cursor_at_begin, text_is_empty
 from radian.key_bindings import commit_text
 from radian import get_app
 from radian.settings import radian_settings as settings
@@ -45,8 +45,8 @@ def configure():
         kb = session.modes["r"].prompt_key_bindings
         browsekb = session.modes["browse"].prompt_key_bindings
 
-        @kb.add('~', filter=insert_mode & default_focussed & cursor_at_begin & text_is_empty)
-        @browsekb.add('~', filter=insert_mode & default_focussed & cursor_at_begin & text_is_empty)
+        @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
+        @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
         def _(event):
             setoption("radian.suppress_reticulate_message", True)
             commit_text(event, "reticulate::repl_python()", False)

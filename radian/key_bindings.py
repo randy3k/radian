@@ -24,7 +24,7 @@ from rchitect.interface import roption
 from six import text_type
 
 
-default_focussed = has_focus(DEFAULT_BUFFER)
+default_focused = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 
 _prompt_mode_cache = {}
@@ -147,18 +147,18 @@ def create_prompt_key_bindings(prase_text_complete):
         app = get_app()
         return prase_text_complete(app.current_buffer.text)
 
-    @handle('c-j', filter=insert_mode & default_focussed)
-    @handle('enter', filter=insert_mode & default_focussed)
+    @handle('c-j', filter=insert_mode & default_focused)
+    @handle('enter', filter=insert_mode & default_focused)
     def _(event):
         newline(event)
 
-    @handle('c-j', filter=insert_mode & default_focussed & prase_complete)
-    @handle('enter', filter=insert_mode & default_focussed & prase_complete)
+    @handle('c-j', filter=insert_mode & default_focused & prase_complete)
+    @handle('enter', filter=insert_mode & default_focused & prase_complete)
     def _(event):
         event.current_buffer.validate_and_handle()
 
-    @handle('c-j', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
-    @handle('enter', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
+    @handle('c-j', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
+    @handle('enter', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
     def _(event):
         copy_margin = not in_paste_mode() and settings.auto_indentation
         event.current_buffer.newline(copy_margin=copy_margin)
@@ -169,85 +169,85 @@ def create_prompt_key_bindings(prase_text_complete):
         event.current_buffer.cursor_position -= 1
 
     # auto match
-    @handle('(', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
+    @handle('(', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("()")
         event.current_buffer.cursor_left()
 
-    @handle('[', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
+    @handle('[', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("[]")
         event.current_buffer.cursor_left()
 
-    @handle('{', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
+    @handle('{', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("{}")
         event.current_buffer.cursor_left()
 
-    @handle('"', filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
+    @handle('"', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
+    @handle("'", filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
 
     # raw string
-    @handle('(', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
+    @handle('(', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
     def _(event):
         matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
         dashes = matches.group(2) or ""
         event.current_buffer.insert_text("()" + dashes)
         event.current_buffer.cursor_left(len(dashes) + 1)
 
-    @handle('[', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
+    @handle('[', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
     def _(event):
         matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
         dashes = matches.group(2) or ""
         event.current_buffer.insert_text("[]" + dashes)
         event.current_buffer.cursor_left(len(dashes) + 1)
 
-    @handle('{', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
+    @handle('{', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
     def _(event):
         matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
         dashes = matches.group(2) or ""
         event.current_buffer.insert_text("{}" + dashes)
         event.current_buffer.cursor_left(len(dashes) + 1)
 
-    @handle('"', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
+    @handle('"', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text('""')
         event.current_buffer.cursor_left()
 
-    @handle("'", filter=insert_mode & default_focussed & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
+    @handle("'", filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
     def _(event):
         event.current_buffer.insert_text("''")
         event.current_buffer.cursor_left()
 
     # just move cursor
-    @handle(')', filter=insert_mode & default_focussed & auto_match & following_text(r"^\)"))
-    @handle(']', filter=insert_mode & default_focussed & auto_match & following_text(r"^\]"))
-    @handle('}', filter=insert_mode & default_focussed & auto_match & following_text(r"^\}"))
-    @handle('"', filter=insert_mode & default_focussed & auto_match & following_text("^\""))
-    @handle("'", filter=insert_mode & default_focussed & auto_match & following_text("^'"))
+    @handle(')', filter=insert_mode & default_focused & auto_match & following_text(r"^\)"))
+    @handle(']', filter=insert_mode & default_focused & auto_match & following_text(r"^\]"))
+    @handle('}', filter=insert_mode & default_focused & auto_match & following_text(r"^\}"))
+    @handle('"', filter=insert_mode & default_focused & auto_match & following_text("^\""))
+    @handle("'", filter=insert_mode & default_focused & auto_match & following_text("^'"))
     def _(event):
         event.current_buffer.cursor_right()
 
-    @handle('backspace', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*\($") & following_text(r"^\)"))
-    @handle('backspace', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*\[$") & following_text(r"^\]"))
-    @handle('backspace', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
-    @handle('backspace', filter=insert_mode & default_focussed & auto_match & preceding_text('.*"$') & following_text('^"'))
-    @handle('backspace', filter=insert_mode & default_focussed & auto_match & preceding_text(r".*'$") & following_text(r"^'"))
+    @handle('backspace', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\($") & following_text(r"^\)"))
+    @handle('backspace', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\[$") & following_text(r"^\]"))
+    @handle('backspace', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
+    @handle('backspace', filter=insert_mode & default_focused & auto_match & preceding_text('.*"$') & following_text('^"'))
+    @handle('backspace', filter=insert_mode & default_focused & auto_match & preceding_text(r".*'$") & following_text(r"^'"))
     def _(event):
         event.current_buffer.delete()
         event.current_buffer.delete_before_cursor()
 
     # indentation
-    @handle('}', filter=insert_mode & default_focussed & auto_indentation & preceding_text(r"^\s*$"))
-    @handle(']', filter=insert_mode & default_focussed & auto_indentation & preceding_text(r"^\s*$"))
-    @handle(')', filter=insert_mode & default_focussed & auto_indentation & preceding_text(r"^\s*$"))
+    @handle('}', filter=insert_mode & default_focused & auto_indentation & preceding_text(r"^\s*$"))
+    @handle(']', filter=insert_mode & default_focused & auto_indentation & preceding_text(r"^\s*$"))
+    @handle(')', filter=insert_mode & default_focused & auto_indentation & preceding_text(r"^\s*$"))
     def _(event):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
@@ -263,20 +263,20 @@ def create_prompt_key_bindings(prase_text_complete):
 
         event.current_buffer.insert_text(event.data)
 
-    @handle('backspace', filter=insert_mode & default_focussed & preceding_text(r"^\s+$"))
+    @handle('backspace', filter=insert_mode & default_focused & preceding_text(r"^\s+$"))
     def _(event):
         tab_size = settings.tab_size
         buf = event.current_buffer
         leading_spaces = len(buf.document.text_before_cursor)
         buf.delete_before_cursor(min(tab_size, leading_spaces))
 
-    @handle('tab', filter=insert_mode & default_focussed & preceding_text(r"^\s*$"))
+    @handle('tab', filter=insert_mode & default_focused & preceding_text(r"^\s*$"))
     def _(event):
         tab_size = settings.tab_size
         event.current_buffer.insert_text(" " * tab_size)
 
     # bracketed paste
-    @handle(Keys.BracketedPaste, filter=default_focussed)
+    @handle(Keys.BracketedPaste, filter=default_focused)
     def _(event):
         data = event.data
 
@@ -302,7 +302,7 @@ def create_r_key_bindings(prase_text_complete):
     handle = kb.add
 
     # r mode
-    @handle(';', filter=insert_mode & default_focussed & cursor_at_begin)
+    @handle(';', filter=insert_mode & default_focused & cursor_at_begin)
     def _(event):
         app = get_radian_app()
         app.session.change_mode("shell")
@@ -317,14 +317,14 @@ def create_shell_key_bindings():
     # shell mode
     @handle(
         'backspace',
-        filter=insert_mode & default_focussed & cursor_at_begin,
+        filter=insert_mode & default_focused & cursor_at_begin,
         save_before=if_no_repeat)
     def _(event):
         app = get_radian_app()
         app.session.change_mode("r")
 
-    @handle('c-j', filter=insert_mode & default_focussed)
-    @handle('enter', filter=insert_mode & default_focussed)
+    @handle('c-j', filter=insert_mode & default_focused)
+    @handle('enter', filter=insert_mode & default_focused)
     def _(event):
         event.current_buffer.validate_and_handle()
 
@@ -336,13 +336,13 @@ def create_key_bindings(editor=""):
     handle = kb.add
 
     # emit completion
-    @handle('c-j', filter=insert_mode & default_focussed & completion_is_selected)
-    @handle('enter', filter=insert_mode & default_focussed & completion_is_selected)
+    @handle('c-j', filter=insert_mode & default_focused & completion_is_selected)
+    @handle('enter', filter=insert_mode & default_focused & completion_is_selected)
     def _(event):
         event.current_buffer.complete_state = None
 
     # cancel completion
-    @handle('c-c', filter=default_focussed & has_completions)
+    @handle('c-c', filter=default_focused & has_completions)
     def _(event):
         event.current_buffer.cancel_completion()
 
@@ -390,6 +390,6 @@ def create_key_bindings(editor=""):
 def map_key(key, value, mode="r", filter_str=""):
     app = get_radian_app()
     kb = app.session.modes[mode].prompt_key_bindings
-    @kb.add(*key, filter=insert_mode & default_focussed, eager=True)
+    @kb.add(*key, filter=insert_mode & default_focused, eager=True)
     def _(event):
         event.current_buffer.insert_text(value)

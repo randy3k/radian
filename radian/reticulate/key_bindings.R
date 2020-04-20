@@ -15,7 +15,7 @@ HighlightMatchingBracketProcessor <- prompt_toolkit$layout$processors$HighlightM
 
 
 insert_mode <- radian$key_bindings$insert_mode
-default_focussed <- radian$key_bindings$default_focussed
+default_focused <- radian$key_bindings$default_focused
 cursor_at_begin <- radian$key_bindings$cursor_at_begin
 text_is_empty <- radian$key_bindings$text_is_empty
 preceding_text <- radian$key_bindings$preceding_text
@@ -48,7 +48,7 @@ unindent <- function(lines) {
 
 
 kb <- KeyBindings()
-kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty & main_mode)(
+kb$add("~", filter = insert_mode & default_focused & cursor_at_begin & text_is_empty & main_mode)(
     function(event) {
         commit_text(event, "reticulate::repl_python(quiet = TRUE)", FALSE)
     })
@@ -57,15 +57,15 @@ kb$add("~", filter = insert_mode & default_focussed & cursor_at_begin & text_is_
 prase_text_complete <- radian$reticulate$prase_text_complete
 pkb <- radian$key_bindings$create_prompt_key_bindings(prase_text_complete)
 
-pkb$add("c-d", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
+pkb$add("c-d", filter = insert_mode & default_focused & cursor_at_begin & text_is_empty)(
     function(event) commit_text(event, "exit", FALSE)
 )
 
-pkb$add("backspace", filter = insert_mode & default_focussed & cursor_at_begin & text_is_empty)(
+pkb$add("backspace", filter = insert_mode & default_focused & cursor_at_begin & text_is_empty)(
     function(event) commit_text(event, "exit", FALSE)
 )
 
-pkb$add("enter", filter = insert_mode & default_focussed & preceding_text(".*:"))(
+pkb$add("enter", filter = insert_mode & default_focused & preceding_text(".*:"))(
     function(event) {
         newline(event, chars = list(":"))
     }
