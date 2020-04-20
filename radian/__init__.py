@@ -26,6 +26,7 @@ def main():
     parser.add_option("--restore-data", action="store_true", dest="restore_data", help="Restore previously saved objects")
     parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
     parser.add_option("--coverage", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--cprofile", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP)
 
     # we accept these options, but never check them
     parser.add_option("--no-save", action="store_true", dest="no_save", help=optparse.SUPPRESS_HELP)
