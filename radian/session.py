@@ -17,6 +17,10 @@ from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, rcall
 from rchitect.interface import setoption, process_events
+try:
+    from rchitect.interface import peek_event
+except ImportError:
+    pass
 
 from . import shell
 from .rutils import prase_text_complete
@@ -101,9 +105,12 @@ def create_radian_prompt_session(options, settings):
                 if context.input_is_ready():
                     break
                 try:
-                    # with session.app.input.detach():
-                    # with session.app.input.rare_mode():
-                    process_events()
+                    if peek_event():
+                        with session.app.input.detach():
+                            with session.app.input.rare_mode():
+                                process_events()
+                    elif sys.platform == "darwin":
+                        process_events()
                 except Exception:
                     pass
                 time.sleep(1.0 / 30)
