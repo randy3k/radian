@@ -18,7 +18,7 @@ from pygments.styles import get_style_by_name
 from rchitect import rcopy, rcall
 from rchitect.interface import setoption, process_events
 try:
-    from rchitect.interface import peek_event
+    from rchitect.interface import peek_event, polled_events
 except ImportError:
     pass
 
@@ -109,8 +109,9 @@ def create_radian_prompt_session(options, settings):
                         with session.app.input.detach():
                             with session.app.input.rare_mode():
                                 process_events()
-                    elif sys.platform == "darwin":
-                        process_events()
+                    else:
+                        polled_events()
+
                 except Exception:
                     pass
                 time.sleep(1.0 / 30)
