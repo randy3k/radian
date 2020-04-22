@@ -114,10 +114,10 @@ class RadianApplication(object):
         if options.quiet is not True:
             self.session.app.output.write(rchitect.interface.greeting())
 
-        if sys.platform.startswith("darwin"):
-            # a workaround to suppress quartz error message
-            # see https://bugs.r-project.org/bugzilla/show_bug.cgi?id=17734
-            devnull = os.open(os.devnull, os.O_WRONLY)
-            os.dup2(devnull, 2)
+        # if sys.platform.startswith("darwin"):
+        #     # a workaround to suppress quartz error message
+        #     # see https://bugs.r-project.org/bugzilla/show_bug.cgi?id=17734
+        #     devnull = os.open(os.devnull, os.O_WRONLY)
+        #     os.dup2(devnull, 2)
 
         rchitect.loop()
