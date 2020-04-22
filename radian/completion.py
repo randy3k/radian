@@ -21,6 +21,14 @@ TOKEN_PATTERN = re.compile(r".*?([a-zA-Z0-9._]+)$")
 LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
 
 
+def remove_nested_paren(text):
+    new_text = re.sub(r"\([^())]*\)", "", text)
+    while new_text != text:
+        text = new_text
+        new_text = re.sub(r"\([^())]*\)", "", text)
+    return text
+
+
 class RCompleter(Completer):
     def __init__(self, timeout=0.02):
         self.timeout = timeout
@@ -48,7 +56,10 @@ class RCompleter(Completer):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
-        if not completion_requested and re.match(r".*print\(\w*$", text_before):
+        # somehow completion while typing is very slow in "print("
+        # so we manually disable it
+        if not completion_requested and "print(" in text_before and \
+                re.match(r".*print\([^\)]*$", remove_nested_paren(text_before)):
             token = rcompletion.assign_line_buffer(text_before)
             text_before = token
 
