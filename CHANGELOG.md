@@ -1,5 +1,11 @@
 # v0.5.2
 
+  - reqiure rchitect 0.3.23
+  - better support of later::later with rchitect 0.3.23
+  - a workaround to make "print(" completion faster
+
+# v0.5.2
+
   - some code introduced in earlier to support later::later lead to
     high cpu loading, disable it for now
 
