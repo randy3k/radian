@@ -48,6 +48,10 @@ class RCompleter(Completer):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
+        if not completion_requested and re.match(r".*print\(\w*$", text_before):
+            token = rcompletion.assign_line_buffer(text_before)
+            text_before = token
+
         with suppress_stderr():
             try:
                 token = rcompletion.assign_line_buffer(text_before)
