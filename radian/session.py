@@ -16,11 +16,7 @@ from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, rcall
-from rchitect.interface import setoption, process_events
-try:
-    from rchitect.interface import peek_event, polled_events
-except ImportError:
-    pass
+from rchitect.interface import setoption, process_events, peek_event, polled_events
 
 from . import shell
 from .rutils import prase_text_complete
