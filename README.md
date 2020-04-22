@@ -156,10 +156,10 @@ There are serveral options.
 
 - The easiest option is to pass the path to the R binary with `--r-binary`, i.e., `radian --r-binary=/path/to/R`
 - Also, one could expose the path to the R binary in the `PATH` variable
-- The environment variable `R_HOME` could also be used to specify R. Note that it is should be set as the result of `R.home()`, not the directory where `R` is located. For example, in Linux/macOS
+- The environment variable `R_BINARY` could also be used to specify the path to R.
+- The environment variable `R_HOME` could also be used to specify R home directory. Note that it is should be set as the result of `R.home()`, not the directory where `R` is located. For example, in Unix
 ```sh
 $ env R_HOME=/usr/local/lib/R radian
-$ radian
 ```
 
 #### Cannot find shared library
