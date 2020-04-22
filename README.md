@@ -150,26 +150,31 @@ options(radian.escape_key_map = list(
 
 ## FAQ
 
-#### How to specify R_HOME location
+#### How to switch to a different R or specify the version of R.
 
-If _radian_ cannot locate the installation of R automatically. The best option is to expose the R binary to the system `PATH` variable. 
+There are serveral options.
 
-In Linux/macOS, you could also export the environment variable `R_HOME`. For example,
+- The easiest option is to pass the path to the R binary with `--r-binary`, i.e., `radian --r-binary=/path/to/R`
+- Also, one could expose the path to the R binary in the `PATH` variable
+- The environment variable `R_HOME` could also be used to specify R. Note that it is should be set as the result of `R.home()`, not the directory where `R` is located. For example, in Linux/macOS
 ```sh
-$ export R_HOME=/usr/local/lib/R
+$ env R_HOME=/usr/local/lib/R radian
 $ radian
 ```
 
+#### Cannot find shared library
+
 Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed to install R from the source.
+
 
 #### Microsoft Store python
 
 It is [known](https://github.com/randy3k/radian/issues/120#issuecomment-565695557) that _radian_ doesn't work with python from Microsoft Store.
 
 
-#### how to use local history file
+#### How to use local history file
 
-_radian_ maintains its own history file `.radian_history` and doesn't use the `.Rhistory` file. A local `.radian_history` is used if it is found in the launching directory. Otherwise, the global history file `~/.radian_history` would be used. To override the default behavior, you could launch _radian_ with the options: `radian --local-history`, `radian --global-history` or `radian --no-history`.
+_radian_ maintains its own history file `.radian_history` and doesn't use the `.Rhistory` file. A local `.radian_history` is used if it is found in the launch directory. Otherwise, the global history file `~/.radian_history` would be used. To override the default behavior, you could launch _radian_ with the options: `radian --local-history`, `radian --global-history` or `radian --no-history`.
 
 
 #### Does it slow down my R program?
@@ -195,31 +200,6 @@ To enable reticulate prompt completions, make sure that `jedi` is installed.
 
 ```sh
 pip install jedi
-```
-
-#### Readline Error
-
-```
-libreadline.so.6: undefined symbol: PC
-```
-
-It may occur if python and R use different two versions of `libreadline`. You could try preloading a version of `libreadline.so` first, e.g.,
-
-```
-env LD_PRELOAD=/lib64/libreadline.so.6 radian
-```
-
-#### `setTimeLimit` not working
-
-_radian_ utilizes the function `setTimeLimit` to set timeout for long completion. Users may notice that `setTimeLimit` is not working under the
-global environment. A workaround is to put the code inside a block or a function,
-
-```r
-{
-    setTimeLimit(1)
-    while(1) {}
-    setTimeLimit()
-}
 ```
 
 #### Prompt not shown inside a docker container
