@@ -29,6 +29,6 @@ def terminal(radian_command):
         t.write("q()\n")
         start_time = time.time()
         while t.isalive():
-            if time.time() - start_time > 5:
+            if time.time() - start_time > 15:
                 raise Exception("radian didn't quit cleanly")
-            time.sleep(0.01)
+            time.sleep(0.1)
