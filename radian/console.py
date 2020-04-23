@@ -9,7 +9,6 @@ from rchitect import console
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
-CALLING_FROM_PROMPT = False
 SUPPRESS_STDOUT = False
 SUPPRESS_STDERR = False
 
