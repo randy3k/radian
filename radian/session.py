@@ -18,6 +18,8 @@ from pygments.styles import get_style_by_name
 from rchitect import rcopy, rcall
 from rchitect.interface import setoption, process_events, peek_event, polled_events
 
+from six import string_types
+
 from . import shell
 from .rutils import prase_text_complete
 from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
@@ -116,7 +118,12 @@ def create_radian_prompt_session(options, settings):
 
     def vi_mode_prompt():
         if session.editing_mode.lower() == "vi" and settings.show_vi_mode_prompt:
-            return settings.vi_mode_prompt.format(str(session.app.vi_state.input_mode)[3:6])
+            im = session.app.vi_state.input_mode
+            vi_mode_prompt = settings.vi_mode_prompt
+            if isinstance(vi_mode_prompt, string_types):
+                return vi_mode_prompt.format(str(im)[3:6])
+            else:
+                return vi_mode_prompt[im]
         return ""
 
     def message():
