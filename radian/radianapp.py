@@ -88,7 +88,11 @@ class RadianApplication(object):
 
         rchitect.init(args=args)
 
-        rutils.source_radian_profile(options.profile)
+        try:
+            rutils.source_radian_profile(options.profile)
+        except RuntimeError as e:
+            print("Got an error while loading radian profile")
+            print(e)
 
         settings = settings.radian_settings
         settings.load()
