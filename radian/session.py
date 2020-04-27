@@ -123,7 +123,7 @@ def create_radian_prompt_session(options, settings):
             if isinstance(vi_mode_prompt, string_types):
                 return vi_mode_prompt.format(str(im)[3:6])
             else:
-                return vi_mode_prompt[im]
+                return vi_mode_prompt[str(im)[3:6]]
         return ""
 
     def message():
