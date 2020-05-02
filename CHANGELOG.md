@@ -1,3 +1,8 @@
+# v0.5.4
+
+  - support microsoft store python
+  - reqiure rchitect 0.3.25
+
 # v0.5.2
 
   - reqiure rchitect 0.3.23
