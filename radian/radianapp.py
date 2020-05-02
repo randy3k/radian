@@ -86,7 +86,7 @@ class RadianApplication(object):
         if options.restore_data is not True:
             args.append("--no-restore-data")
 
-        rchitect.init(args=args)
+        rchitect.init(args=args, register_signal_handlers=True)
 
         try:
             rutils.source_radian_profile(options.profile)
