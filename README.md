@@ -40,7 +40,7 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
 Requirements:
 
 - An installation of R (version 3.4.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
-- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/en/latest/miniconda.html. Python 2.7 or 3.5+ are supported, though 3.5+ are recommended. Also, `radian` doesn't support python from Microsoft Store.
+- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/en/latest/miniconda.html. Python 2.7 or 3.5+ are supported, though 3.5+ are recommended.
 - `pip` is optional but it makes the installation a bit easier.
 
 ```sh
@@ -165,11 +165,6 @@ $ env R_HOME=/usr/local/lib/R radian
 #### Cannot find shared library
 
 Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed to install R from the source.
-
-
-#### Microsoft Store python
-
-It is [known](https://github.com/randy3k/radian/issues/120#issuecomment-565695557) that _radian_ doesn't work with python from Microsoft Store.
 
 
 #### How to use local history file
