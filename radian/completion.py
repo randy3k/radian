@@ -78,7 +78,7 @@ class RCompleter(Completer):
 
         for c in completions:
             if c.startswith(token) and c != token:
-                if c.endswith("="):
+                if c.endswith("=") and settings.add_spaces_around_equals:
                     c = c[:-1] + " = "
                 if c.endswith("::"):
                     # let get_package_completions handles it

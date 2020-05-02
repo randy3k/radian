@@ -56,6 +56,7 @@ class RadianSettings(object):
         self._load_setting("vi_mode_prompt", VI_MODE_PROMPT)
         self._load_setting("stderr_format", STDERR_FORMAT)
 
+        self._load_setting("add_spaces_around_equals", True, bool)
         set_width_on_resize = roption("setWidthOnResize", True)
         self._load_setting("auto_width", set_width_on_resize, bool)
 
