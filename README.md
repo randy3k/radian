@@ -106,6 +106,8 @@ options(radian.completion_prefix_length = 2)
 # timeout in seconds to cancel completion if it takes too long
 # set it to 0 to disable it
 options(radian.completion_timeout = 0.05)
+# add spaces around equals in function argument completion
+options(radian.completion_adding_spaces_around_equals = TRUE)
 
 # automatically adjust R buffer size based on terminal width
 options(radian.auto_width = TRUE)

@@ -1,3 +1,7 @@
+# v0.5.5
+
+  - new option: radian.completion_adding_spaces_around_equals
+
 # v0.5.4
 
   - support microsoft store python
