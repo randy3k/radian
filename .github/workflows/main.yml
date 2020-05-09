@@ -17,7 +17,7 @@ jobs:
       - name: Install apt-get dependencies
         run: |
           apt-get update
-          apt-get install git ssh curl bzip2 libffi6 libffi-dev -y
+          apt-get install git ssh curl bzip2 libffi-dev -y
       - name: Setup Miniconda
         run: |
           curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh

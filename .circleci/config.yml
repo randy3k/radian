@@ -105,7 +105,7 @@ jobs:
           name: Install apt-get dependencies
           command: |
             apt-get update
-            apt-get install git ssh curl bzip2 libffi6 libffi-dev -y
+            apt-get install git ssh curl bzip2 libffi-dev -y
       - checkout
       - setup-conda:
           python: <<parameters.python>>
