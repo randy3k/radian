@@ -14,6 +14,7 @@ KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 HighlightMatchingBracketProcessor <- prompt_toolkit$layout$processors$HighlightMatchingBracketProcessor
 
 
+settings <- radian$settings$radian_settings
 insert_mode <- radian$key_bindings$insert_mode
 default_focused <- radian$key_bindings$default_focused
 cursor_at_begin <- radian$key_bindings$cursor_at_begin
@@ -153,6 +154,7 @@ app$session$register_mode(
     key_bindings = kb,
     prompt_key_bindings = pkb,
     tempfile_suffix = ".py",
-    input_processors = list(HighlightMatchingBracketProcessor()),
+    input_processors = if (settings$highlight_matching_bracket)
+            list(HighlightMatchingBracketProcessor()) else NULL,
     completer = python_completer
 )
