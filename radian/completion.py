@@ -93,14 +93,15 @@ class RCompleter(Completer):
     def get_package_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
         token_match = TOKEN_PATTERN.match(text_before)
+        if not token_match:
+            return
+        token = token_match.group(1)
         library_prefix = LIBRARY_PATTERN.match(text_before)
-        if token_match:
-            token = token_match.group(1)
-            instring = cursor_in_string(document)
-            for p in installed_packages():
-                if p.startswith(token):
-                    comp = p if instring or library_prefix else p + "::"
-                    yield Completion(comp, -len(token))
+        instring = cursor_in_string(document)
+        for p in installed_packages():
+            if p.startswith(token):
+                comp = p if instring or library_prefix else p + "::"
+                yield Completion(comp, -len(token))
 
 
 class SmartPathCompleter(Completer):
