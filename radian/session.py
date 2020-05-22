@@ -88,7 +88,7 @@ def create_radian_prompt_session(options, settings):
 
     def get_inputhook():
         # make testing more robust
-        if "CIRCLECI" in os.environ or "GITHUB_REPOSITORY" in os.environ:
+        if "RADIAN_NO_INPUTHOOK" in os.environ:
             return None
 
         terminal_width = [None]

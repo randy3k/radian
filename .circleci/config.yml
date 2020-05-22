@@ -92,6 +92,8 @@ orbs:
 
 jobs:
   linux-test:
+    environment:
+      RADIAN_NO_INPUTHOOK: 1
     parameters:
       r:
         type: string
@@ -121,6 +123,8 @@ jobs:
             python -m pip install codecov
             codecov
   macos-test:
+    environment:
+      RADIAN_NO_INPUTHOOK: 1
     parameters:
       r:
         type: string
@@ -146,6 +150,8 @@ jobs:
             python -m pip install codecov
             codecov
   windows-test:
+    environment:
+      RADIAN_NO_INPUTHOOK: 1
     parameters:
       r:
         type: string

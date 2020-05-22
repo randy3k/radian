@@ -2,6 +2,9 @@ name: build
 
 on: [push, pull_request]
 
+env:
+  RADIAN_NO_INPUTHOOK: 1
+
 jobs:
   linux:
     strategy:
