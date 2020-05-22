@@ -18,7 +18,8 @@ from six import text_type
 
 
 TOKEN_PATTERN = re.compile(r".*?([a-zA-Z0-9._]+)$")
-LIBRARY_PATTERN = re.compile(r"(?:library|require)\([\"']?(.*)$")
+LIBRARY_PATTERN = re.compile(
+    r"(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$")
 
 
 def remove_nested_paren(text):
@@ -56,6 +57,10 @@ class RCompleter(Completer):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
+        library_prefix = LIBRARY_PATTERN.match(text_before)
+        if library_prefix:
+            return
+
         # somehow completion while typing is very slow in "print("
         # so we manually disable it
         if not completion_requested and "print(" in text_before and \
@@ -89,12 +94,12 @@ class RCompleter(Completer):
         text_before = document.current_line_before_cursor
         token_match = TOKEN_PATTERN.match(text_before)
         library_prefix = LIBRARY_PATTERN.match(text_before)
-        if token_match and not library_prefix:
+        if token_match:
             token = token_match.group(1)
             instring = cursor_in_string(document)
             for p in installed_packages():
                 if p.startswith(token):
-                    comp = p if instring else p + "::"
+                    comp = p if instring or library_prefix else p + "::"
                     yield Completion(comp, -len(token))
 
 
