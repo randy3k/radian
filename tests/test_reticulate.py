@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import time
 
 
 def test_reticulate(terminal):
@@ -22,9 +23,11 @@ def test_multiline(terminal):
     terminal.current_line().assert_startswith("r$>")
     terminal.write("~")
     terminal.current_line().strip().assert_equal(">>>")
-    # we need to add a delay between '\x1b' and '\r' in Windows
-    terminal.write("b = 2\x1b")
+    terminal.write("b = 2")
     terminal.current_line().assert_startswith(">>> b = 2")
+    terminal.write("\x1b")
+    # we need to add a delay between '\x1b' and '\r' in Windows
+    time.sleep(0.1)
     terminal.write("\rc = 3")
     terminal.previous_line(1).strip().assert_equal(">>> b = 2")
     terminal.current_line().strip().assert_equal("c = 3")
