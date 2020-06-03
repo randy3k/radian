@@ -48,12 +48,12 @@ class RCompleter(Completer):
                 yield x
             return
 
-        for x in self.get_r_completions(document, complete_event):
+        for x in self.get_r_builtin_completions(document, complete_event):
             yield x
         for x in self.get_package_completions(document, complete_event):
             yield x
 
-    def get_r_completions(self, document, complete_event):
+    def get_r_builtin_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
