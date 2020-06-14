@@ -117,7 +117,10 @@ options(radian.insert_new_line = TRUE)
 
 # where the global history is stored, environmental variables will be expanded
 # note that "~" is expanded to %USERPROFILE% in Windows
-options(radian.history_location = "~")
+options(radian.global_history_file = "~/.radian_history")
+# the filename that local history is stored, this file would be used instead of
+# `radian.global_history_file` if it exists in the current working directory
+options(radian.local_history_file = ".radian_history")
 # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
 options(radian.history_search_no_duplicates = FALSE)
 # ignore case in history search
