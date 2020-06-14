@@ -43,15 +43,17 @@ def user_path(*args):
 
 
 def source_radian_profile(path):
-    if not path:
-        if os.path.exists(".radian_profile"):
-            path = ".radian_profile"
-        else:
-            path = user_path(".radian_profile")
-    path = os.path.expanduser(path)
-    if os.path.exists(path):
-        source_file(path)
-
+    if path:
+        path = os.path.expanduser(path)
+        if os.path.exists(path):
+            source_file(path)
+    else:
+        global_profile = os.path.realpath(os.path.normpath(user_path(".radian_profile")))
+        local_profile = os.path.realpath(os.path.normpath(".radian_profile"))
+        if global_profile and os.path.exists(global_profile):
+            source_file(global_profile)
+        if local_profile and os.path.exists(local_profile) and local_profile != global_profile:
+            source_file(local_profile)
 
 def load_custom_key_bindings(*args):
     esc_keymap = roption("radian.escape_key_map", [])

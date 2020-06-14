@@ -13,7 +13,7 @@ def main():
     parser = optparse.OptionParser("usage: radian")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Get version")
     parser.add_option("--r-binary", dest="r", help="Path to R binary")
-    parser.add_option("--profile", dest="profile", help="Path to .radian_profile")
+    parser.add_option("--profile", dest="profile", help="Path to .radian_profile, ignore both global and local profiles")
     parser.add_option("-q", "--quiet", action="store_true", dest="quiet", help="Don't print startup message")
     parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
     parser.add_option("--no-site-file", action="store_true", dest="no_site_file", help="Don't read the site-wide Rprofile")
