@@ -112,9 +112,12 @@ options(radian.completion_adding_spaces_around_equals = TRUE)
 # automatically adjust R buffer size based on terminal width
 options(radian.auto_width = TRUE)
 
-# insert new line between prompts.
+# insert new line between prompts
 options(radian.insert_new_line = TRUE)
 
+# where the global history is stored, environmental variables will be expanded
+# note that "~" is expanded to %USERPROFILE% in Windows
+options(radian.history_path = "~")
 # when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
 options(radian.history_search_no_duplicates = FALSE)
 # ignore case in history search

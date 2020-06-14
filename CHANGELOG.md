@@ -1,3 +1,7 @@
+# v0.5.6
+
+  - allow custom history location
+
 # v0.5.5
 
   - new option: radian.completion_adding_spaces_around_equals
