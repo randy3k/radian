@@ -68,11 +68,19 @@ in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open 
 
 ## Settings
 
-_radian_ can be customized by specifying the following options in `.radian_profile`
-at your user home directory. If a local `.radian_profile` is present at the working directory,
-that file is used instead. The options could be also specified in `.Rprofile` file, however,
-it is less recommended because 1. the settings are not persistent when vanilla mode is used;
-2. it is conflicted with the use of `packrat`.
+_radian_ can be customized by specifying the below options in various locations
+
+- `$XDG_DATA_HOME/radian/profile` or `$HOME/.local/share/radian/profile` (Unix)
+- `%USERPROFILE%/radian/profile` (Windows)
+- `$HOME/.radian_profile` (Unix)
+- `%USERPROFILE%/.radian_profile` (Windows)
+- `.radian_profile` in the working directory
+
+The options could be also specified in the `.Rprofile` files, however,
+it is not recommended because 
+
+1. the settings are not persistent when vanilla mode is used;
+2. it doesn't work well with `packrat` or `renv`.
 
 
 ```r
@@ -116,7 +124,7 @@ options(radian.auto_width = TRUE)
 options(radian.insert_new_line = TRUE)
 
 # where the global history is stored, environmental variables will be expanded
-# note that "~" is expanded to %USERPROFILE% in Windows
+# note that "~" is always expanded to %USERPROFILE% in Windows
 options(radian.global_history_file = "~/.radian_history")
 # the filename that local history is stored, this file would be used instead of
 # `radian.global_history_file` if it exists in the current working directory

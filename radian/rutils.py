@@ -38,8 +38,12 @@ def source_file(path):
     rcall(("base", "source"), path, rcall(("base", "new.env")))
 
 
+def make_path(*p):
+    return os.path.realpath(os.path.normpath(os.path.expanduser(os.path.join(*p))))
+
+
 def user_path(*args):
-    return os.path.join(rcopy(rcall(("base", "path.expand"), "~")), *args)
+    return make_path(rcopy(rcall(("base", "path.expand"), "~")), *args)
 
 
 def source_radian_profile(path):
@@ -48,12 +52,30 @@ def source_radian_profile(path):
         if os.path.exists(path):
             source_file(path)
     else:
-        global_profile = os.path.realpath(os.path.normpath(user_path(".radian_profile")))
-        local_profile = os.path.realpath(os.path.normpath(".radian_profile"))
-        if global_profile and os.path.exists(global_profile):
+        if "XDG_DATA_HOME" in os.environ:
+            xdg_profile = make_path(os.environ["XDG_DATA_HOME"], "radian", "profile")
+        elif not sys.platform.startswith("win"):
+            xdg_profile = make_path("~", ".local", "share", "radian", "profile")
+        else:
+            xdg_profile = make_path("~", "radian", "profile")
+
+        if os.path.exists(xdg_profile):
+            source_file(xdg_profile)
+
+        global_profile = make_path(".radian_profile")
+        local_profile = make_path(".radian_profile")
+
+        if os.path.exists(global_profile):
             source_file(global_profile)
-        if local_profile and os.path.exists(local_profile) and local_profile != global_profile:
+        elif sys.platform.startswith("win"):
+            # for backward compatibility
+            global_profile = user_path(".radian_profile")
+            if os.path.exists(global_profile):
+                source_file(global_profile)
+
+        if os.path.exists(local_profile) and local_profile != global_profile:
             source_file(local_profile)
+
 
 def load_custom_key_bindings(*args):
     esc_keymap = roption("radian.escape_key_map", [])

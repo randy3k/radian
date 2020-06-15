@@ -1,6 +1,7 @@
 # v0.5.6
 
   - allow custom history location
+  - load both global and local profiles if they both exist
 
 # v0.5.5
 
