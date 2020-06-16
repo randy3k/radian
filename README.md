@@ -124,7 +124,7 @@ options(radian.auto_width = TRUE)
 options(radian.insert_new_line = TRUE)
 
 # where the global history is stored, environmental variables will be expanded
-# note that "~" is always expanded to %USERPROFILE% in Windows
+# note that "~" is expanded to %USERPROFILE% or %HOME% in Windows
 options(radian.global_history_file = "~/.radian_history")
 # the filename that local history is stored, this file would be used instead of
 # `radian.global_history_file` if it exists in the current working directory
