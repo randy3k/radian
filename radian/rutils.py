@@ -62,7 +62,7 @@ def source_radian_profile(path):
         if os.path.exists(xdg_profile):
             source_file(xdg_profile)
 
-        global_profile = make_path(".radian_profile")
+        global_profile = make_path("~", ".radian_profile")
         local_profile = make_path(".radian_profile")
 
         if os.path.exists(global_profile):
