@@ -52,8 +52,8 @@ def source_radian_profile(path):
         if os.path.exists(path):
             source_file(path)
     else:
-        if "XDG_DATA_HOME" in os.environ:
-            xdg_profile = make_path(os.environ["XDG_DATA_HOME"], "radian", "profile")
+        if "XDG_CONFIG_HOME" in os.environ:
+            xdg_profile = make_path(os.environ["XDG_CONFIG_HOME"], "radian", "profile")
         elif not sys.platform.startswith("win"):
             xdg_profile = make_path("~", ".local", "share", "radian", "profile")
         else:

@@ -70,7 +70,7 @@ in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open 
 
 _radian_ can be customized by specifying the below options in various locations
 
-- `$XDG_DATA_HOME/radian/profile` or `$HOME/.local/share/radian/profile` (Unix)
+- `$XDG_CONFIG_HOME/radian/profile` or `$HOME/.config/radian/profile` (Unix)
 - `%USERPROFILE%/radian/profile` (Windows)
 - `$HOME/.radian_profile` (Unix)
 - `%USERPROFILE%/.radian_profile` (Windows)
