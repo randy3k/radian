@@ -1,3 +1,7 @@
+# v0.5.6.dev0
+
+  - profile is now loaded from XDG_CONFIG_HOME instead of XDG_DATA_HOME
+
 # v0.5.5
 
   - new option: radian.completion_adding_spaces_around_equals
