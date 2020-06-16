@@ -1,11 +1,8 @@
-# v0.5.6
-
-  - allow custom history location
-  - load both global and local profiles if they both exist
-
 # v0.5.5
 
   - new option: radian.completion_adding_spaces_around_equals
+  - allow custom history location
+  - load both global and local profiles if they both exist
 
 # v0.5.4
 
