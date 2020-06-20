@@ -41,10 +41,29 @@ offer_upgrade_radian <- function(python, target_ver, current_ver) {
     discover_radian(python)
 }
 
+
+normalize_version <- function(v) {
+    tags <- strsplit(v, "\\.")[[1]]
+    if (length(tags) == 4) {
+        m <- as.integer(tags[1:3])
+        if (m[3] != 0) {
+            m[3] <- m[3] - 1
+        } else if (m[2] != 0) {
+            m[2] <- m[2] - 1
+            m[3] <- 9999
+        } else {
+            m[1] <- m[1] - 1
+            m[2:3] <- 9999
+        }
+        paste0(m[1:3], collapse = ".")
+    } else {
+        paste0(tags[1:3], collapse = ".")
+    }
+}
+
+
 compare_version <- function(a, b) {
-    a <- paste0(strsplit(a, "\\.")[[1]][1:3], collapse = ".")
-    b <- paste0(strsplit(b, "\\.")[[1]][1:3], collapse = ".")
-    utils::compareVersion(a, b)
+    utils::compareVersion(normalize_version(a), normalize_version(b))
 }
 
 assign(

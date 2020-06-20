@@ -23,22 +23,8 @@ except ImportError:
     pass
 
 
-RETICULATE_MESSAGE = """
-The host python environment is {}
-and `radian` is forcing `reticulate` to use this version of python.
-Any python packages needed, e.g., `tensorflow` and `keras`,
-have to be available to the current python environment.
-
-File an issue at https://github.com/randy3k/radian if you encounter any
-difficulties in loading `reticulate`.
-""".format(sys.executable).strip()
-
-
 def configure():
     set_hook(package_event("reticulate", "onLoad"), reticulate_config_hook)
-
-    # if not roption("radian.suppress_reticulate_message", False):
-    #     set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
     if package_is_installed("reticulate") and roption("radian.enable_reticulate_prompt", True):
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt_hook)
@@ -56,11 +42,6 @@ def configure():
 
 def reticulate_config_hook(*args):
     source_file(os.path.join(os.path.dirname(__file__), "config.R"))
-
-
-def reticulate_message_hook(*args):
-    if not roption("radian.suppress_reticulate_message", False):
-        rcall("packageStartupMessage", RETICULATE_MESSAGE)
 
 
 def reticulate_prompt_hook(*args):
