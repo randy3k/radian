@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import os
-import sys
 from code import compile_command
 
 from prompt_toolkit.completion import Completion
