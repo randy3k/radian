@@ -98,8 +98,9 @@ assign(
                 if (is.null(target_ver)) {
                     stop("error in installing radian in the target")
                 }
+
+                args <- sys$argv[-1]
                 if (.Platform$OS.type == "windows") {
-                    args <- sys$argv[-1]
                     is_powershell <- length(strsplit(Sys.getenv("PSModulePath"), ";")[[1]]) >= 3
 
                     # os.execv doesn't work well on windows
@@ -115,7 +116,6 @@ assign(
                     quit(save = "no")
                 } else {
                     message("radian: switch to v", target_ver, " at ", config$python)
-                    args <- c(sys$argv[-1], "--quiet")
                     os$execv(config$python, c(config$python, "-m", "radian", args))
                 }
             } else {
