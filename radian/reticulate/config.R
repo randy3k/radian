@@ -2,9 +2,9 @@ getOption("rchitect.py_tools")$attach()
 ns <- getNamespace("reticulate")
 
 rchitect <- import("rchitect")
+radian <- import("radian")
 sys <- import("sys")
 os <- import("os")
-radian <- import("radian")
 
 unlockBinding("initialize_python", ns)
 
@@ -14,7 +14,7 @@ discover_radian <- function(python) {
     res <- suppressWarnings(system2(
         python, shQuote(c("-c", "import radian; print(radian.__version__)")),
         stdout = TRUE, stderr = TRUE))
-    if (!(is.null(attr(res, "status"))) && attr(res, "status") == 0) {
+    if (!(is.null(attr(res, "status"))) && attr(res, "status") != 0) {
         NULL
     } else {
         res
@@ -54,16 +54,16 @@ assign(
         config <- reticulate::py_discover_config(required_module, use_environment)
         sys_python <- reticulate:::canonical_path(sys$executable)
         if (config$python != sys_python) {
-            message("radian: Python version used by reticulate is ",
+            message("Python version used by reticulate is ",
                 "different to the current python runtime")
             message("current: ", sys_python)
             message("target: ", config$python)
-            ans <- utils::askYesNo("Do you want to switch to radian in target python environment?")
+            message("Switch to radian in target python environment? ")
+            ans <- utils::askYesNo("The current workspace will be lost. Confirm?")
 
             if (is.na(ans)) {
                 stop("action aborted", call. = FALSE)
             } else if (isTRUE(ans)) {
-                args <- c(sys$argv[-1], "--quiet")
                 target_ver <- discover_radian(config$python)
                 current_ver <- radian$`__version__`
                 if (is.null(target_ver)) {
@@ -75,11 +75,29 @@ assign(
                 if (is.null(target_ver)) {
                     stop("error in installing radian in the target")
                 }
-                message("radian: switch to v", target_ver, " at ", config$python)
-                os$execv(config$python, c(config$python, "-m", "radian", args))
+                if (.Platform$OS.type == "windows") {
+                    args <- sys$argv[-1]
+                    is_powershell <- length(strsplit(Sys.getenv("PSModulePath"), ";")[[1]]) >= 3
+
+                    # os.execv doesn't work well on windows
+                    # so we just instruct user how to open the other radian
+                    cmd <- paste(c(shQuote(config$python), "-m", "radian", args), collapse = " ")
+                    if (is_powershell) {
+                        cmd <- paste("&", cmd)
+                    }
+                    utils::writeClipboard(cmd)
+                    message("the target radian cannot be launched automatically")
+                    message("please run the following command manually (copied to clipboard)")
+                    message(cmd)
+                    quit(save = "no")
+                } else {
+                    message("radian: switch to v", target_ver, " at ", config$python)
+                    args <- c(sys$argv[-1], "--quiet")
+                    os$execv(config$python, c(config$python, "-m", "radian", args))
+                }
             } else {
                 message("radian: ignore python discovered by reticulate")
-                message("radian: force reticulate to use ", sys_python)
+                message("force reticulate to use ", sys_python)
             }
         }
         rchitect$reticulate$configure()
