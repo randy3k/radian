@@ -86,6 +86,11 @@ class RadianApplication(object):
         if options.restore_data is not True:
             args.append("--no-restore-data")
 
+        # disable the code injection of rchitect to reticulate::py_discover_config
+        os.environ["RCHITECT_RETICULATE_CONFIG"] = "0"
+        # enable signal handlers
+        os.environ["RCHITECT_REGISTER_SIGNAL_HANDLERS"] = "1"
+
         rchitect.init(args=args, register_signal_handlers=True)
 
         try:

@@ -35,8 +35,10 @@ difficulties in loading `reticulate`.
 
 
 def configure():
-    if not roption("radian.suppress_reticulate_message", False):
-        set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
+    set_hook(package_event("reticulate", "onLoad"), reticulate_config_hook)
+
+    # if not roption("radian.suppress_reticulate_message", False):
+    #     set_hook(package_event("reticulate", "onLoad"), reticulate_message_hook)
 
     if package_is_installed("reticulate") and roption("radian.enable_reticulate_prompt", True):
         set_hook(package_event("reticulate", "onLoad"), reticulate_prompt_hook)
@@ -50,6 +52,10 @@ def configure():
         def _(event):
             setoption("radian.suppress_reticulate_message", True)
             commit_text(event, "reticulate::repl_python()", False)
+
+
+def reticulate_config_hook(*args):
+    source_file(os.path.join(os.path.dirname(__file__), "config.R"))
 
 
 def reticulate_message_hook(*args):
