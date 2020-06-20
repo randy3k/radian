@@ -73,12 +73,16 @@ assign(
         config <- reticulate::py_discover_config(required_module, use_environment)
         sys_python <- reticulate:::canonical_path(sys$executable)
         if (config$python != sys_python) {
-            message("Python version used by reticulate is ",
-                "different to the current python runtime")
-            message("current: ", sys_python)
-            message("target: ", config$python)
-            message("Switch to radian in target python environment? ")
-            ans <- utils::askYesNo("The current workspace will be lost. Confirm?")
+            if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
+                ans <- FALSE
+            } else {
+                message("Python version used by reticulate is ",
+                    "different to the current python runtime")
+                message("current: ", sys_python)
+                message("target: ", config$python)
+                message("Switch to radian in target python environment? ")
+                ans <- utils::askYesNo("The current workspace will be lost. Confirm?")
+            }
 
             if (is.na(ans)) {
                 stop("action aborted", call. = FALSE)
@@ -115,8 +119,7 @@ assign(
                     os$execv(config$python, c(config$python, "-m", "radian", args))
                 }
             } else {
-                message("radian: ignore python discovered by reticulate")
-                message("force reticulate to use ", sys_python)
+                message("radian: force reticulate to use ", sys_python)
             }
         }
         rchitect$reticulate$configure()

@@ -146,8 +146,8 @@ options(radian.vi_mode_prompt = "\033[0;34m[{}]\033[0m ")
 # stderr color format
 options(radian.stderr_format = "\033[0;31m{}\033[0m")
 
-# suppress the loading message for reticulate
-options(radian.suppress_reticulate_message = FALSE)
+# force reticulate to use current python runtime
+options(radian.force_reticulate_python = FALSE)
 # enable reticulate prompt and trigger `~`
 options(radian.enable_reticulate_prompt = TRUE)
 ```
