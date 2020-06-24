@@ -6,6 +6,7 @@ import threading
 from contextlib import contextmanager
 import six
 import time
+import os
 
 if sys.platform.startswith("win"):
     import winpty
@@ -112,7 +113,9 @@ class Terminal(object):
     @contextmanager
     def open(cls, cmd):
         # github actions windows-2019 doesn't like (24, 80)
-        process = PtyProcess.spawn(cmd, dimensions=(40, 80))
+        env = os.environ.copy()
+        env["RADIAN_FORCE_RETICULATE_PYTHON"] = "1"
+        process = PtyProcess.spawn(cmd, dimensions=(40, 80), env=env)
         screen = Screen(process, 80, 40)
         stream = ByteStream(screen)
         stream.start_feeding()
