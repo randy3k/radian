@@ -1,4 +1,9 @@
-# v0.5.6.dev0
+# v0.5.7
+
+  - actually fix the XDG_CONFIG_HOME
+  - suggest user to switch radian for reticulate
+
+# v0.5.6
 
   - profile is now loaded from XDG_CONFIG_HOME instead of XDG_DATA_HOME
 
