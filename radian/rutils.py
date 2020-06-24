@@ -55,7 +55,7 @@ def source_radian_profile(path):
         if "XDG_CONFIG_HOME" in os.environ:
             xdg_profile = make_path(os.environ["XDG_CONFIG_HOME"], "radian", "profile")
         elif not sys.platform.startswith("win"):
-            xdg_profile = make_path("~", ".local", "share", "radian", "profile")
+            xdg_profile = make_path("~", ".config", "radian", "profile")
         else:
             xdg_profile = make_path("~", "radian", "profile")
 
