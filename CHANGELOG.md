@@ -1,3 +1,7 @@
+# v0.5.8
+
+  - better handling reticulate python environment
+
 # v0.5.7
 
   - actually fix the XDG_CONFIG_HOME
