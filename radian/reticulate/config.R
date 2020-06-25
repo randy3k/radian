@@ -90,7 +90,7 @@ assign(
             message("Switch radian to the target python environment? ")
             ans <- utils::askYesNo(
                 paste0(
-                    "Answer \"Yes\" to switch (the current workspace will be lost); ",
+                    "Answer \"Yes\" to switch (the current workspace will be lost);\n",
                     "\"No\" to force reticulate to use the current python."
                 ))
 
