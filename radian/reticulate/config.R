@@ -6,6 +6,16 @@ radian <- import("radian")
 sys <- import("sys")
 os <- import("os")
 
+force_reticulate <- function() {
+    message("radian: force reticulate to use ", sys$executable)
+    Sys.setenv(RETICULATE_PYTHON = sys$executable)
+}
+
+
+if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
+    force_reticulate()
+}
+
 unlockBinding("initialize_python", ns)
 
 old_initialize_python <- ns$initialize_python
@@ -73,20 +83,18 @@ assign(
         config <- reticulate::py_discover_config(required_module, use_environment)
         sys_python <- reticulate:::canonical_path(sys$executable)
         if (config$python != sys_python) {
-            if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
-                ans <- FALSE
-            } else {
-                message("Python version used by reticulate is ",
-                    "different to the current python runtime")
-                message("current: ", sys_python)
-                message("target: ", config$python)
-                message("Switch to radian in target python environment? ")
-                ans <- utils::askYesNo("The current workspace will be lost. Confirm?")
-            }
+            message("Python version used by reticulate is ",
+                "different to the current python runtime")
+            message("current: ", sys_python)
+            message("reticulate: ", config$python)
+            message("Switch radian to the target python environment? ")
+            ans <- utils::askYesNo(
+                paste0(
+                    "Answer \"Yes\" to switch (the current workspace will be lost); ",
+                    "\"No\" to force reticulate to use the current python."
+                ))
 
-            if (is.na(ans)) {
-                stop("action aborted", call. = FALSE)
-            } else if (isTRUE(ans)) {
+            if (isTRUE(ans)) {
                 target_ver <- discover_radian(config$python)
                 current_ver <- radian$`__version__`
                 if (is.null(target_ver)) {
@@ -118,8 +126,10 @@ assign(
                     message("radian: switch to v", target_ver, " at ", config$python)
                     os$execv(config$python, c(config$python, "-m", "radian", args))
                 }
+            } else if (is.na(ans)) {
+                stop("action aborted", call. = FALSE)
             } else {
-                message("radian: force reticulate to use ", sys_python)
+                force_reticulate()
             }
         }
         rchitect$reticulate$configure()
