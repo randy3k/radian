@@ -114,7 +114,9 @@ class Terminal(object):
     def open(cls, cmd):
         # github actions windows-2019 doesn't like (24, 80)
         env = os.environ.copy()
-        env["RADIAN_FORCE_RETICULATE_PYTHON"] = "1"
+        env["RETICULATE_PYTHON"] = sys.executable
+        # don't not prompt to install miniconda
+        env["RETICULATE_MINICONDA_ENABLED"] = "0"
         process = PtyProcess.spawn(cmd, dimensions=(40, 80), env=env)
         screen = Screen(process, 80, 40)
         stream = ByteStream(screen)

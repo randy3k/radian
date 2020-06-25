@@ -73,8 +73,7 @@ assign(
         config <- reticulate::py_discover_config(required_module, use_environment)
         sys_python <- reticulate:::canonical_path(sys$executable)
         if (config$python != sys_python) {
-            if (isTRUE(getOption("radian.force_reticulate_python", FALSE)) ||
-                    Sys.getenv("RADIAN_FORCE_RETICULATE_PYTHON", "0") == "1") {
+            if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
                 ans <- FALSE
             } else {
                 message("Python version used by reticulate is ",
