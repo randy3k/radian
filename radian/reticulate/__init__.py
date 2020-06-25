@@ -5,7 +5,7 @@ from code import compile_command
 from prompt_toolkit.completion import Completion
 
 from rchitect import rcall, rcopy
-from rchitect.interface import roption, setoption, set_hook, package_event
+from rchitect.interface import roption, set_hook, package_event
 
 from radian.rutils import package_is_installed, source_file
 
@@ -15,6 +15,7 @@ from radian import get_app
 from radian.settings import radian_settings as settings
 
 from six import text_type
+import sys
 
 try:
     import jedi
@@ -35,8 +36,10 @@ def configure():
         @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
         @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
         def _(event):
-            setoption("radian.suppress_reticulate_message", True)
             commit_text(event, "reticulate::repl_python()", False)
+
+    if roption("radian.force_reticulate_python", False):
+        rcall(("base", "Sys.setenv"), RETICULATE_PYTHON=sys.executable)
 
 
 def reticulate_config_hook(*args):
