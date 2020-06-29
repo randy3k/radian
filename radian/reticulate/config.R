@@ -46,7 +46,7 @@ offer_upgrade_radian <- function(python, target_ver, current_ver) {
         " is older than the current version (v", current_ver, ")")
     ans2 <- utils::askYesNo("Upgrade it via pip?")
     if (isTRUE(ans2)) {
-        system2(python, c("-m", "pip", "install", "-U", "radian"))
+        system2(python, c("-m", "pip", "install", "-U", paste0("radian==", current_ver)))
     }
     discover_radian(python)
 }
