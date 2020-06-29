@@ -94,7 +94,7 @@ assign(
                     "or \"n\" to force reticulate to use the current python (y/n): "
                 ))
 
-            if (!nzchar(ans) || tolower(ans) == "y") {
+            if (tolower(ans) == "y") {
                 target_ver <- discover_radian(config$python)
                 current_ver <- radian$`__version__`
                 if (is.null(target_ver)) {
