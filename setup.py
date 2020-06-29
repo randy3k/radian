@@ -43,7 +43,7 @@ setup(
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
         # 'rchitect@git+https://github.com/randy3k/rchitect',
-        'rchitect>=0.3.27,<0.4.0',
+        'rchitect>=0.3.28,<0.4.0',
         'lineedit>=0.1.5,<0.2.0',
         'six>=1.9.0',
         'pygments>=2.5.0'
