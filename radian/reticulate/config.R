@@ -88,13 +88,13 @@ assign(
             message("current: ", sys_python)
             message("reticulate: ", config$python)
             message("Switch radian to the target python environment? ")
-            ans <- utils::askYesNo(
+            ans <- readline(
                 paste0(
-                    "Answer \"Yes\" to switch (the current workspace will be lost);\n",
-                    "\"No\" to force reticulate to use the current python."
+                    "Answer \"y\" to switch (the current workspace will be lost)\n",
+                    "or \"n\" to force reticulate to use the current python (y/n): "
                 ))
 
-            if (isTRUE(ans)) {
+            if (!nzchar(ans) || tolower(ans) == "y") {
                 target_ver <- discover_radian(config$python)
                 current_ver <- radian$`__version__`
                 if (is.null(target_ver)) {
@@ -126,8 +126,6 @@ assign(
                     message("radian: switch to v", target_ver, " at ", config$python)
                     os$execv(config$python, c(config$python, "-m", "radian", args))
                 }
-            } else if (is.na(ans)) {
-                stop("action aborted", call. = FALSE)
             } else {
                 force_reticulate()
             }
