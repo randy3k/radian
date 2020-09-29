@@ -13,6 +13,8 @@ from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.application.current import get_app
+from prompt_toolkit.key_binding.vi_state import InputMode, ViState
 
 from pygments.styles import get_style_by_name
 
@@ -70,6 +72,32 @@ def apply_settings(session, settings):
     # enables completion of installed package names
     if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
         rcall(("utils", "rc.settings"), ipck=True)
+
+    def get_input_mode(self):
+        if sys.version_info[0] == 3:
+            app = get_app()
+            app.ttimeoutlen = settings.ttimeoutlen
+            app.timeoutlen = settings.timeoutlen
+
+        return self._input_mode
+
+    def set_input_mode(self, mode):
+        shape = {InputMode.NAVIGATION: 2, InputMode.REPLACE: 4}.get(mode, 6)
+        cursor = "\x1b[{} q".format(shape)
+
+        if hasattr(sys.stdout, "_cli"):
+            write = sys.stdout._cli.output.write_raw
+        else:
+            write = sys.stdout.write
+
+        write(cursor)
+        sys.stdout.flush()
+
+        self._input_mode = mode
+
+    if session.editing_mode.lower() == "vi" and settings.modal_cursor:
+        ViState._input_mode = InputMode.INSERT
+        ViState.input_mode = property(get_input_mode, set_input_mode)
 
 
 def create_radian_prompt_session(options, settings):
