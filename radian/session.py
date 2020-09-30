@@ -12,6 +12,7 @@ from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 from pygments.styles import get_style_by_name
 
@@ -158,7 +159,8 @@ def create_radian_prompt_session(options, settings):
         input=CustomInput(sys.stdin),
         output=output,
         inputhook=get_inputhook(),
-        mode_class=RadianMode
+        mode_class=RadianMode,
+        auto_suggest=AutoSuggestFromHistory()
     )
 
     apply_settings(session, settings)
