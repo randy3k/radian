@@ -160,7 +160,7 @@ def create_radian_prompt_session(options, settings):
         output=output,
         inputhook=get_inputhook(),
         mode_class=RadianMode,
-        auto_suggest=AutoSuggestFromHistory() if  settings.auto_suggest else None
+        auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None
     )
 
     apply_settings(session, settings)

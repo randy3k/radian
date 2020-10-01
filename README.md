@@ -100,6 +100,9 @@ options(radian.indent_lines = TRUE)
 # auto match brackets and quotes
 options(radian.auto_match = TRUE)
 
+# disable the [prompt_toolkit](https://python-prompt-toolkit.readthedocs.io/en/master/index.html) [`auto_suggest` feature](https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#auto-suggestion)
+options(radian.auto_suggest = FALSE)
+
 # highlight matching bracket
 options(radian.highlight_matching_bracket = FALSE)
 
