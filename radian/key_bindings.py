@@ -413,8 +413,8 @@ def create_key_bindings(editor=""):
             return False
 
     @Condition
-    def tac():
-        return settings.tab_apply_completion
+    def accot():
+        return settings.auto_complete_commit_on_tab
 
     insert_mode = vi_insert_mode | emacs_insert_mode
     focused_insert =  insert_mode & has_focus(DEFAULT_BUFFER)
@@ -422,8 +422,8 @@ def create_key_bindings(editor=""):
     alt_enter = [KeyPress(Keys.Escape), KeyPress(Keys.Enter)]
 
     # apply selected completion
-    @handle('c-j', filter=focused_insert & completion_is_selected & tac)
-    @handle("enter", filter=focused_insert & completion_is_selected & tac)
+    @handle('c-j', filter=focused_insert & completion_is_selected & accot)
+    @handle("enter", filter=focused_insert & completion_is_selected & accot)
     def _(event):
         b = event.current_buffer
         text = b.text
@@ -435,8 +435,8 @@ def create_key_bindings(editor=""):
             event.cli.key_processor.feed_multiple(alt_enter)
 
     # apply first completion option when completion menu is showing
-    @handle('c-j', filter=focused_insert & shown_not_selected & tac)
-    @handle("enter", filter=focused_insert & shown_not_selected & tac)
+    @handle('c-j', filter=focused_insert & shown_not_selected & accot)
+    @handle("enter", filter=focused_insert & shown_not_selected & accot)
     def _(event):
         b = event.current_buffer
         text = b.text
@@ -449,8 +449,8 @@ def create_key_bindings(editor=""):
             event.cli.key_processor.feed_multiple(alt_enter)
 
     # apply completion if there is only one option, otherwise start completion
-    @handle("tab", filter=focused_insert & ~has_completions & tac)
-    @handle("c-space", filter=focused_insert & ~has_completions & tac)
+    @handle("tab", filter=focused_insert & ~has_completions & accot)
+    @handle("c-space", filter=focused_insert & ~has_completions & accot)
     def _(event):
         b = event.current_buffer
         complete_event = CompleteEvent(completion_requested=True)
@@ -465,8 +465,8 @@ def create_key_bindings(editor=""):
             b.start_completion(insert_common_part=True)
 
     # apply first completion option if completion menu is showing
-    @handle("tab", filter=focused_insert & shown_not_selected & tac)
-    @handle("c-space", filter=focused_insert & shown_not_selected & tac)
+    @handle("tab", filter=focused_insert & shown_not_selected & accot)
+    @handle("c-space", filter=focused_insert & shown_not_selected & accot)
     def _(event):
         b = event.current_buffer
         b.complete_next()
@@ -476,8 +476,8 @@ def create_key_bindings(editor=""):
             b.cursor_left()
 
     # apply selected completion option
-    @handle("tab", filter=focused_insert & completion_is_selected & tac)
-    @handle("c-space", filter=focused_insert & completion_is_selected & tac)
+    @handle("tab", filter=focused_insert & completion_is_selected & accot)
+    @handle("c-space", filter=focused_insert & completion_is_selected & accot)
     def _(event):
         b = event.current_buffer
         completion = b.complete_state.current_completion
