@@ -38,7 +38,11 @@ class RadianSettings(object):
     def load(self):
         self._load_setting("auto_suggest", True, bool)
         self._load_setting("emacs_bindings_in_vi_insert_mode", True, bool)
-        self._load_setting("auto_complete_commit_on_tab", False, bool)
+        self._load_setting("auto_complete_selected_option_on_tab", False, bool)
+        self._load_setting("auto_complete_top_option_on_tab", False, bool)
+        self._load_setting("auto_complete_only_option_on_tab", False, bool)
+        self._load_setting("auto_complete_top_option_on_enter", False, bool)
+        self._load_setting("auto_complete_function_parentheses", False, bool)
         self._load_setting("editing_mode", "emacs")
         self._load_setting("color_scheme", "native")
         self._load_setting("auto_match", True, bool)
