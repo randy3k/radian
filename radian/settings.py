@@ -36,7 +36,7 @@ class RadianSettings(object):
         self._settings["prompt"] = prompt
 
     def load(self):
-        self._load_setting("auto_suggest", True, bool)
+        self._load_setting("auto_suggest", False, bool)
         self._load_setting("emacs_bindings_in_vi_insert_mode", True, bool)
         self._load_setting("editing_mode", "emacs")
         self._load_setting("color_scheme", "native")
