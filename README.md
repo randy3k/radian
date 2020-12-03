@@ -40,7 +40,7 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
 Requirements:
 
 - An installation of R (version 3.4.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
-- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://conda.io/en/latest/miniconda.html. Python 2.7 or 3.5+ are supported, though 3.5+ are recommended.
+- `python` is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://www.python.org/downloads/ or https://conda.io/en/latest/miniconda.html. Python 2.7 or 3.5+ are supported, though 3.5+ are recommended.
 - `pip` is optional but it makes the installation a bit easier.
 
 ```sh
