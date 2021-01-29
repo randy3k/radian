@@ -39,7 +39,7 @@ jobs:
         run: |
           source activate myenv
           python -m pip install -e .[test]
-          python -m pip install jedi
+          python -m pip install jedi==0.17.2
           pytest -s
 
   macos:
@@ -81,7 +81,7 @@ jobs:
         run: |
           source activate myenv
           python -m pip install -e .[test]
-          python -m pip install jedi
+          python -m pip install jedi==0.17.2
           pytest -s
 
   windows:
@@ -124,5 +124,5 @@ jobs:
         run: |
           conda activate myenv
           python -m pip install -e .[test]
-          python -m pip install jedi
+          python -m pip install jedi==0.17.2
           pytest -s
