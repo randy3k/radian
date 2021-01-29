@@ -214,8 +214,10 @@ in your vim config.
 To enable reticulate prompt completions, make sure that `jedi` is installed.
 
 ```sh
-pip install jedi
+pip install jedi==0.17.2
 ```
+
+PS: it is known that radian is not compatible with jedi>=0.18.
 
 #### Prompt not shown inside a docker container
 
