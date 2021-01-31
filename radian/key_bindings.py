@@ -6,6 +6,7 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
 from prompt_toolkit.eventloop import From, ensure_future
 from prompt_toolkit.keys import Keys
+from prompt_toolkit.key_binding.key_processor import KeyPress
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.bindings import named_commands as nc
 from prompt_toolkit.filters import Condition, has_focus, \
@@ -20,7 +21,7 @@ from radian.settings import radian_settings as settings
 from radian.document import cursor_in_string
 from radian import get_app as get_radian_app
 from rchitect.interface import roption
-
+from rchitect import rcopy, rcall, reval
 
 from six import text_type
 
@@ -403,11 +404,97 @@ def create_key_bindings(editor=""):
     kb = KeyBindings()
     handle = kb.add
 
-    # emit completion
-    @handle('c-j', filter=insert_mode & default_focused & completion_is_selected)
-    @handle('enter', filter=insert_mode & default_focused & completion_is_selected)
+
+    def is_callable(text=""):
+        try:
+            return rcopy(rcall("class", reval(text))) == "function"
+        except:
+            return False
+
+    @Condition
+    def auto_complete_selected_option_on_tab():
+        return settings.auto_complete_selected_option_on_tab
+
+    @Condition
+    def auto_complete_top_option_on_enter():
+        return settings.auto_complete_top_option_on_enter
+
+    @Condition
+    def auto_complete_top_option_on_tab():
+        return settings.auto_complete_top_option_on_tab
+
+    @Condition
+    def auto_complete_only_option_on_tab():
+        return settings.auto_complete_only_option_on_tab
+
+    insert_mode = vi_insert_mode | emacs_insert_mode
+    focused_insert =  insert_mode & has_focus(DEFAULT_BUFFER)
+    shown_not_selected = has_completions & ~completion_is_selected
+
+    # apply selected completion option with enter
+    @handle('c-j', filter=focused_insert & completion_is_selected)
+    @handle("enter", filter=focused_insert & completion_is_selected)
     def _(event):
-        event.current_buffer.complete_state = None
+        b = event.current_buffer
+        completion = b.complete_state.current_completion
+        b.apply_completion(completion)
+        if settings.auto_complete_function_parentheses:
+            if is_callable(completion.text) or is_callable(b.document.get_word_under_cursor()):
+                b.insert_text("()")
+                b.cursor_left()
+
+    # apply selected completion option with tab
+    @handle("tab", filter=focused_insert & completion_is_selected & auto_complete_selected_option_on_tab)
+    @handle("c-space", filter=focused_insert & completion_is_selected & auto_complete_selected_option_on_tab)
+    def _(event):
+        b = event.current_buffer
+        completion = b.complete_state.current_completion
+        b.apply_completion(completion)
+        if settings.auto_complete_function_parentheses:
+            if is_callable(completion.text) or is_callable(b.document.get_word_under_cursor()):
+                b.insert_text("()")
+                b.cursor_left()
+
+    # apply first completion option with enter when completion menu is showing
+    @handle('c-j', filter=focused_insert & shown_not_selected & auto_complete_top_option_on_enter)
+    @handle("enter", filter=focused_insert & shown_not_selected & auto_complete_top_option_on_enter)
+    def _(event):
+        b = event.current_buffer
+        completion = b.complete_state.completions[0]
+        b.apply_completion(completion)
+        if settings.auto_complete_function_parentheses:
+            if is_callable(completion.text) or is_callable(b.document.get_word_under_cursor()):
+                b.insert_text("()")
+                b.cursor_left()
+
+    # apply first completion option with tab if completion menu is showing
+    @handle("tab", filter=focused_insert & shown_not_selected & auto_complete_top_option_on_tab)
+    @handle("c-space", filter=focused_insert & shown_not_selected & auto_complete_top_option_on_tab)
+    def _(event):
+        b = event.current_buffer
+        completion = b.complete_state.completions[0]
+        b.apply_completion(completion)
+        if settings.auto_complete_function_parentheses:
+            if is_callable(completion.text) or is_callable(b.document.get_word_under_cursor()):
+                b.insert_text("()")
+                b.cursor_left()
+
+    # apply completion if there is only one option, otherwise start completion
+    @handle("tab", filter=focused_insert & ~has_completions & auto_complete_only_option_on_tab)
+    @handle("c-space", filter=focused_insert & ~has_completions & auto_complete_only_option_on_tab)
+    def _(event):
+        b = event.current_buffer
+        b.start_completion()
+        completions = b.complete_state.completions
+        if len(completions) == 1:
+            completion = completions[0]
+            b.apply_completion(completion)
+            if settings.auto_complete_function_parentheses:
+                if is_callable(completion.text) or is_callable(b.document.get_word_under_cursor()):
+                    b.insert_text("()")
+                    b.cursor_left()
+        else:
+            b.start_completion(insert_common_part=True)
 
     # cancel completion
     @handle('c-c', filter=default_focused & has_completions)
