@@ -38,6 +38,9 @@ class RadianSettings(object):
     def load(self):
         self._load_setting("auto_suggest", False, bool)
         self._load_setting("emacs_bindings_in_vi_insert_mode", True, bool)
+        self._load_setting("modal_cursor", True, bool)
+        self._load_setting("ttimeoutlen", 0.01, float)
+        self._load_setting("timeoutlen", 0.5, float)
         self._load_setting("editing_mode", "emacs")
         self._load_setting("color_scheme", "native")
         self._load_setting("auto_match", True, bool)
