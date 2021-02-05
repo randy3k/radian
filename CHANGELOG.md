@@ -1,3 +1,10 @@
+# v0.5.10
+
+ - enable autosuggestion
+ - enable toggling of autosuggestion feature via radian.auto_suggest
+ - add emacs keybindings to vi insert mode
+ - fix multiline raw string detection
+
 # v0.5.8
 
   - better handling reticulate python environment
