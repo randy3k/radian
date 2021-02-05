@@ -37,7 +37,7 @@ install:
   - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
   - python -m pip install --upgrade setuptools pip
   - python -m pip install -e .[test]
-  - python -m pip install jedi
+  - python -m pip install jedi==0.17.2
 
 build_script:
   - pytest --coverage

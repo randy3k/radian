@@ -117,7 +117,7 @@ jobs:
           command: |
             source activate myenv
             python -m pip install -e .[test]
-            python -m pip install jedi
+            python -m pip install jedi==0.17.2
             pytest --coverage
             coverage combine
             python -m pip install codecov
@@ -144,7 +144,7 @@ jobs:
           command: |
             source activate myenv
             python -m pip install -e .[test]
-            python -m pip install jedi
+            python -m pip install jedi==0.17.2
             pytest --coverage
             coverage combine
             python -m pip install codecov
@@ -170,7 +170,7 @@ jobs:
           command: |
             conda activate myenv
             python -m pip install -e .[test]
-            python -m pip install jedi
+            python -m pip install jedi==0.17.2
             pytest --coverage
             coverage combine
             python -m pip install codecov
