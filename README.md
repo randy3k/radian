@@ -100,7 +100,7 @@ options(radian.indent_lines = TRUE)
 # auto match brackets and quotes
 options(radian.auto_match = TRUE)
 
-# disable the [prompt_toolkit](https://python-prompt-toolkit.readthedocs.io/en/master/index.html) [`auto_suggest` feature](https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#auto-suggestion)
+# enable the [prompt_toolkit](https://python-prompt-toolkit.readthedocs.io/en/master/index.html) [`auto_suggest` feature](https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#auto-suggestion)
 # this option is experimental and is known to break python prompt, use it with caution
 options(radian.auto_suggest = FALSE)
 
