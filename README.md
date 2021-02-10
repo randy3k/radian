@@ -55,6 +55,11 @@ radian
 pip install -U git+https://github.com/randy3k/radian
 ```
 
+Alternatively, if you use conda or miniconda,
+```sh
+conda install -c conda-forge radian
+```
+
 ## Alias on unix system
 
 You could alias `r` to _radian_ by putting
