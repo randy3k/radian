@@ -5,6 +5,7 @@
 [![Github Action](https://github.com/randy3k/radian/workflows/build/badge.svg)](https://github.com/randy3k/radian/actions)
 [![codecov](https://codecov.io/gh/randy3k/radian/branch/master/graph/badge.svg)](https://codecov.io/gh/randy3k/radian)
 [![](https://img.shields.io/pypi/v/radian.svg)](https://pypi.org/project/radian/)
+[![Conda version](https://img.shields.io/conda/vn/conda-forge/radian.svg)](https://anaconda.org/conda-forge/radian)
 <a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
 <a href="https://liberapay.com/randy3k/donate"><img src="http://img.shields.io/liberapay/receives/randy3k.svg?logo=liberapay"></a>
 
