@@ -222,6 +222,11 @@ To enable reticulate prompt completions, make sure that `jedi` is installed.
 pip install jedi==0.17.2
 ```
 
+Alternatively, if you use conda,
+```sh
+conda install -c conda-forge jedi==0.17.2
+```
+
 PS: it is known that radian is not compatible with jedi>=0.18.
 
 #### Prompt not shown inside a docker container
