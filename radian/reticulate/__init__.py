@@ -39,7 +39,6 @@ def configure():
 
 
 def reticulate_config_hook(*args):
-    # only needed for reticulate <1.18.9008
     source_file(os.path.join(os.path.dirname(__file__), "config.R"))
 
 
