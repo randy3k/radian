@@ -16,8 +16,6 @@ if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
     force_reticulate()
 }
 
-unlockBinding("initialize_python", ns)
-
 old_initialize_python <- ns$initialize_python
 
 discover_radian <- function(python) {
@@ -76,7 +74,12 @@ compare_version <- function(a, b) {
     utils::compareVersion(normalize_version(a), normalize_version(b))
 }
 
-assign(
+
+if (compareVersion(as.character(packageVersion("reticulate")), "1.18.9008") == -1) {
+    # new version of reticulate doesn't require this
+    # https://github.com/rstudio/reticulate/pull/279
+    unlockBinding("initialize_python", ns)
+    assign(
     "initialize_python",
     function(required_module = NULL, use_environment = NULL, ...) {
         "patched by radian"
@@ -136,4 +139,7 @@ assign(
     },
     ns)
 
-lockBinding("initialize_python", ns)
+    lockBinding("initialize_python", ns)
+} else {
+    rchitect$reticulate$configure()
+}
