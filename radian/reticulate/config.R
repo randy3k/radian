@@ -11,13 +11,6 @@ force_reticulate <- function() {
     Sys.setenv(RETICULATE_PYTHON = sys$executable)
 }
 
-
-if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
-    force_reticulate()
-}
-
-old_initialize_python <- ns$initialize_python
-
 discover_radian <- function(python) {
     res <- suppressWarnings(system2(
         python, shQuote(c("-c", "import radian; print(radian.__version__)")),
@@ -75,9 +68,16 @@ compare_version <- function(a, b) {
 }
 
 
+old_initialize_python <- ns$initialize_python
+
 if (compareVersion(as.character(packageVersion("reticulate")), "1.18.9008") == -1) {
     # new version of reticulate doesn't require this
     # https://github.com/rstudio/reticulate/pull/279
+
+    if (isTRUE(getOption("radian.force_reticulate_python", FALSE))) {
+        force_reticulate()
+    }
+
     unlockBinding("initialize_python", ns)
     assign(
     "initialize_python",
