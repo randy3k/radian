@@ -64,7 +64,7 @@ def prase_text_complete(code):
                 return True
 
 
-if tuple(int(x) for x in jedi.__version__.split(".")) >= (0, 18, 0):
+if tuple(int(x) for x in jedi.__version__.split(".")[0:2]) >= (0, 18):
     def get_reticulate_completions(document, complete_event):
         word = document.get_word_before_cursor()
         prefix_length = settings.completion_prefix_length
