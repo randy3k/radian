@@ -48,8 +48,7 @@ commands:
           name: Install R
           command: |
             if [ "<<parameters.r>>" == "devel" ]; then
-              R_FILE=$(curl -sL http://mac.r-project.org/ | sed -nE 's|.*href="?(.*/R-[^/]*\.pkg)"?>.*|\1|p' | tail -n1)
-              URL="http://mac.r-project.org/$R_FILE"
+              URL="https://mac.r-project.org/high-sierra/R-devel/R-devel.pkg"
             else
               R_FILE=$(curl -sL https://cran.r-project.org/bin/macosx/el-capitan/base/ | grep -o 'R-<<parameters.r>>[0-9\.]*.pkg' | tail -n1)
               URL="https://cran.r-project.org/bin/macosx/el-capitan/base/$R_FILE"
