@@ -64,28 +64,54 @@ def prase_text_complete(code):
                 return True
 
 
-def get_reticulate_completions(document, complete_event):
-    word = document.get_word_before_cursor()
-    prefix_length = settings.completion_prefix_length
-    if len(word) < prefix_length and not complete_event.completion_requested:
-        return []
+if tuple(int(x) for x in jedi.__version__.split(".")) >= (0, 18, 0):
+    def get_reticulate_completions(document, complete_event):
+        word = document.get_word_before_cursor()
+        prefix_length = settings.completion_prefix_length
+        if len(word) < prefix_length and not complete_event.completion_requested:
+            return []
 
-    glo = rcopy(rcall(("reticulate", "py_run_string"), "globals()"))
-    loc = rcopy(rcall(("reticulate", "py_run_string"), "locals()"))
-    try:
-        script = jedi.Interpreter(
-            document.text,
-            column=document.cursor_position_col,
-            line=document.cursor_position_row + 1,
-            path="input-text",
-            namespaces=[glo, loc]
-        )
-        return [
-            Completion(
-                text_type(c.name_with_symbols),
-                len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
-            for c in script.completions()
-        ]
+        glo = rcopy(rcall(("reticulate", "py_run_string"), "globals()"))
+        loc = rcopy(rcall(("reticulate", "py_run_string"), "locals()"))
+        try:
+            script = jedi.Interpreter(
+                document.text,
+                path="input-text",
+                namespaces=[glo, loc]
+            )
+            return [
+                Completion(
+                    text_type(c.name_with_symbols),
+                    len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
+                for c in script.complete(
+                    line=document.cursor_position_row + 1, column=document.cursor_position_col)
+            ]
 
-    except Exception:
-        return []
+        except Exception:
+            return []
+else:
+    def get_reticulate_completions(document, complete_event):
+        word = document.get_word_before_cursor()
+        prefix_length = settings.completion_prefix_length
+        if len(word) < prefix_length and not complete_event.completion_requested:
+            return []
+
+        glo = rcopy(rcall(("reticulate", "py_run_string"), "globals()"))
+        loc = rcopy(rcall(("reticulate", "py_run_string"), "locals()"))
+        try:
+            script = jedi.Interpreter(
+                document.text,
+                column=document.cursor_position_col,
+                line=document.cursor_position_row + 1,
+                path="input-text",
+                namespaces=[glo, loc]
+            )
+            return [
+                Completion(
+                    text_type(c.name_with_symbols),
+                    len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
+                for c in script.completions()
+            ]
+
+        except Exception:
+            return []
