@@ -193,6 +193,20 @@ $ env R_HOME=/usr/local/lib/R radian
 Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed to install R from the source.
 
 
+#### Outdated setuptools
+
+If you encounter
+
+> The package setup script has attempted to modify files on your system that are not within the EasyInstall build area.
+
+Please update your setuptools by
+
+```
+pip install -U setuptools
+
+```
+
+
 #### How to use local history file
 
 _radian_ maintains its own history file `.radian_history` and doesn't use the `.Rhistory` file. A local `.radian_history` is used if it is found in the launch directory. Otherwise, the global history file `~/.radian_history` would be used. To override the default behavior, you could launch _radian_ with the options: `radian --local-history`, `radian --global-history` or `radian --no-history`.
