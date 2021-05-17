@@ -80,7 +80,9 @@ class RadianApplication(object):
         if options.no_init_file:
             args.append("--no-init-file")
 
-        if options.ask_save is not True:
+        if options.save:
+            args.append("--save")
+        elif options.ask_save is not True:
             args.append("--no-save")
 
         if options.restore_data is not True:
