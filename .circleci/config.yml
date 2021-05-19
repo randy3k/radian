@@ -47,15 +47,19 @@ commands:
       - run:
           name: Install R
           command: |
-            if [ "<<parameters.r>>" == "devel" ]; then
+            if [ "<<parameters.r>>" == "latest" ]; then
+              URL="https://cran.r-project.org/bin/macosx/base/R-release.pkg"
+            elif [ "<<parameters.r>>" == "devel" ]; then
               URL="https://mac.r-project.org/high-sierra/R-devel/R-devel.pkg"
             else
-              R_FILE=$(curl -sL https://cran.r-project.org/bin/macosx/el-capitan/base/ | grep -o 'R-<<parameters.r>>[0-9\.]*.pkg' | tail -n1)
-              URL="https://cran.r-project.org/bin/macosx/el-capitan/base/$R_FILE"
+              R_FILE=$(curl -sL https://cran.r-project.org/bin/macosx/base/ | grep -o 'R-<<parameters.r>>[0-9\.]*.pkg' | tail -n1)
+              URL="https://cran.r-project.org/bin/macosx/base/$R_FILE"
             fi
             echo downloading "$URL"
             curl -L "$URL" -o R.pkg
             sudo installer -pkg R.pkg -target /
+            sudo ln -sf /Library/Frameworks/R.framework/Resources/bin/R /usr/local/bin/R
+            sudo ln -sf /Library/Frameworks/R.framework/Resources/bin/Rscript /usr/local/bin/Rscript
   install-r-windows:
     parameters:
       r:
@@ -110,7 +114,7 @@ jobs:
       - checkout
       - setup-conda:
           python: <<parameters.python>>
-      - run: Rscript --slave -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+      - run: Rscript --quiet -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - run:
           name: Install and test
           command: |
@@ -137,7 +141,7 @@ jobs:
           r: <<parameters.r>>
       - setup-conda:
           python: <<parameters.python>>
-      - run: Rscript --slave -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+      - run: Rscript --quiet -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - run:
           name: Install and test
           command: |
@@ -163,7 +167,7 @@ jobs:
           r: <<parameters.r>>
       - setup-conda-windows:
           python: <<parameters.python>>
-      - run: Rscript --slave -e "install.packages('reticulate', repo = 'https://cloud.r-project.org', type = 'win.binary')"
+      - run: Rscript --quiet -e "install.packages('reticulate', repo = 'https://cloud.r-project.org', type = 'win.binary')"
       - run:
           name: Install and test
           command: |
