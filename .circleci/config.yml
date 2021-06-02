@@ -128,6 +128,7 @@ jobs:
   macos-test:
     environment:
       RADIAN_NO_INPUTHOOK: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
     parameters:
       r:
         type: string
@@ -144,7 +145,6 @@ jobs:
       - run:
           command: |
             if [ "<<parameters.r>>" == "devel" ]; then
-              brew update
               brew install libpng
             fi
             Rscript --quiet -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
