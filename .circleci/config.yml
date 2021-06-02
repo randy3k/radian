@@ -141,7 +141,13 @@ jobs:
           r: <<parameters.r>>
       - setup-conda:
           python: <<parameters.python>>
-      - run: Rscript --quiet -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
+      - run:
+          command: |
+            if [ "<<parameters.r>>" == "devel" ]; then
+              brew update
+              brew install libpng
+            fi
+            Rscript --quiet -e "install.packages('reticulate', repo = 'https://cloud.r-project.org')"
       - run:
           name: Install and test
           command: |
