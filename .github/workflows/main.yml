@@ -67,8 +67,3 @@ jobs:
       - run: python setup.py sdist
       - run: python -m pip install dist/*
       - run: python -m twine upload dist/*
-      - uses: actions/download-artifact@v1
-        with:
-          name: wheels
-          path: ./wheelhouse
-      - run: python -m twine upload ./wheelhouse/*.whl
