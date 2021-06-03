@@ -317,27 +317,27 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - upload-tarball:
-          requires:
-            - linux-r35-py27
-            - linux-r35-py37
-            - linux-rlatest-py27
-            - linux-rlatest-py35
-            - linux-rlatest-py36
-            - linux-rlatest-py37
-            - linux-rlatest-py38
-            - linux-rdevel-py27
-            - linux-rdevel-py37
-            - macos-rlatest-py27
-            - macos-rlatest-py37
-            - macos-rdevel-py27
-            - macos-rdevel-py37
-            - windows-rlatest-py27
-            - windows-rlatest-py37
-            - windows-rdevel-py27
-            - windows-rdevel-py37
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+      # - upload-tarball:
+      #     requires:
+      #       - linux-r35-py27
+      #       - linux-r35-py37
+      #       - linux-rlatest-py27
+      #       - linux-rlatest-py35
+      #       - linux-rlatest-py36
+      #       - linux-rlatest-py37
+      #       - linux-rlatest-py38
+      #       - linux-rdevel-py27
+      #       - linux-rdevel-py37
+      #       - macos-rlatest-py27
+      #       - macos-rlatest-py37
+      #       - macos-rdevel-py27
+      #       - macos-rdevel-py37
+      #       - windows-rlatest-py27
+      #       - windows-rlatest-py37
+      #       - windows-rdevel-py27
+      #       - windows-rdevel-py37
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /^v.*/
