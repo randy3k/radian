@@ -18,8 +18,9 @@ from six import text_type
 
 try:
     import jedi
+    has_jedi = True
 except ImportError:
-    pass
+    has_jedi = False
 
 
 def configure():
@@ -64,7 +65,7 @@ def prase_text_complete(code):
                 return True
 
 
-if tuple(int(x) for x in jedi.__version__.split(".")[0:2]) >= (0, 18):
+if has_jedi and tuple(int(x) for x in jedi.__version__.split(".")[0:2]) >= (0, 18):
     def get_reticulate_completions(document, complete_event):
         word = document.get_word_before_cursor()
         prefix_length = settings.completion_prefix_length

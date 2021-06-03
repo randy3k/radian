@@ -8,6 +8,7 @@ env:
 jobs:
   linux:
     strategy:
+      fail-fast: false
       matrix:
         r: [latest]
         # r: [3.5, latest, devel]
@@ -44,6 +45,7 @@ jobs:
 
   macos:
     strategy:
+      fail-fast: false
       matrix:
         r: [latest]
         # r: [3.5, latest, devel]
@@ -87,6 +89,7 @@ jobs:
 
   windows:
     strategy:
+      fail-fast: false
       matrix:
         r: [latest]
         # r: [3.5, latest, devel]
