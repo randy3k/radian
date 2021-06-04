@@ -189,7 +189,7 @@ $ env R_HOME=/usr/local/lib/R radian
 
 #### Cannot find shared library
 
-Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the flag `--enable-R-shlib` may be needed to install R from the source.
+Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the configure flag `./configure --enable-R-shlib` may be needed to install R from the source. Do not forget to `make clean` to force the recompilation of the files with the correct compiler options.
 
 
 #### Outdated setuptools
