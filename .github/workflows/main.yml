@@ -15,7 +15,7 @@ jobs:
           access_token: ${{ github.token }}
 
   pytest:
-    name: Running tests on ${{ matrix.os }}
+    name: Testing on ${{ matrix.os }} r-${{ matrix.r }}
     strategy:
       fail-fast: false
       matrix:
