@@ -1,4 +1,4 @@
-__version__ = '0.5.11'
+__version__ = '0.5.12.dev0'
 
 __all__ = ["get_app", "main"]
 
@@ -9,6 +9,12 @@ def main():
     import sys
     import subprocess
     from rchitect.utils import Rhome, rversion
+
+    try:
+        # failed to import jedi on demand in some edge cases.
+        import jedi
+    except ImportError:
+        pass
 
     parser = optparse.OptionParser("usage: radian")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Get version")
