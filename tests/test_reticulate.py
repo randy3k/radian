@@ -1,12 +1,16 @@
 from __future__ import unicode_literals
 import time
 
+def exit_reticulate_prompt(t):
+    t.sendintr()
+    t.write("exit\n")
+
 
 def test_reticulate(terminal):
     terminal.current_line().assert_startswith("r$>")
     terminal.write("~")
-    terminal.previous_line(3).assert_startswith("Python", timeout=60)
-    terminal.previous_line(2).assert_startswith("Reticulate")
+    terminal.previous_line(4).assert_startswith("Python", timeout=60)
+    terminal.previous_line(3).assert_startswith("Reticulate")
     terminal.current_line().strip().assert_equal(">>>")
     terminal.write("a = 1\n")
     terminal.current_line().strip().assert_equal(">>>")
@@ -17,6 +21,7 @@ def test_reticulate(terminal):
     terminal.current_line().assert_startswith(" ")
     terminal.write("pass\n")
     terminal.current_line().strip().assert_equal(">>>")
+    exit_reticulate_prompt(terminal)
 
 
 def test_multiline(terminal):
@@ -35,9 +40,10 @@ def test_multiline(terminal):
     terminal.current_line().strip().assert_equal(">>>")
     terminal.write("c\n")
     terminal.previous_line(2).strip().assert_equal("3")
+    exit_reticulate_prompt(terminal)
 
 
-def test_exit(terminal):
+def test_ctrl_d(terminal):
     terminal.current_line().assert_startswith("r$>")
     terminal.write("~")
     terminal.current_line().strip().assert_equal(">>>")
@@ -60,3 +66,4 @@ def test_completion(terminal):
     terminal.write("\t")
     terminal.current_line().assert_contains("import")
     terminal.write(" os\n")
+    exit_reticulate_prompt(terminal)
