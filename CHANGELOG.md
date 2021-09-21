@@ -1,3 +1,7 @@
+# v0.5.12
+
+- a workaround when jedi crashes
+
 # v0.5.11
 
  - support jedi 0.18 in reticulate prompt
