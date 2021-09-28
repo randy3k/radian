@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import time
 
+
 def exit_reticulate_prompt(t):
     t.sendintr()
     t.write("exit\n")

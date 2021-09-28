@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
 import signal
-from six.moves import input as six_input
 from contextlib import contextmanager
 
-from radian.settings import radian_settings as settings
+from .settings import radian_settings as settings
 from rchitect import console
 
 
@@ -37,56 +36,50 @@ def ask_input(s):
     # allow Ctrl+C to throw KeyboardInterrupt in callback
     signal.signal(signal.SIGINT, sigint_handler)
     try:
-        return six_input(s)
+        return input(s)
     finally:
         signal.signal(signal.SIGINT, orig_handler)
+
+
+def native_prompt(app, message):
+    # c.f. run_coroutine_in_terminal of prompt_toolkit
+    with suppress_stderr(False):
+        console.flush()
+        app.output.flush()
+        app._running_in_terminal = True
+        try:
+            with app.input.detach():
+                with app.input.cooked_mode():
+                    return ask_input(message)
+        except KeyboardInterrupt:
+            app.output.write_raw("\n")
+            raise
+        finally:
+            app._running_in_terminal = False
+            app.renderer.reset()
+            app._request_absolute_cursor_position()
+            app._redraw()
 
 
 def create_read_console(session):
     interrupted = [False]
 
     def read_console(message, add_history=1):
-
         app = session.app
 
         if app.is_running:
             # fallback to `input` if `read_console` is called nestedly
-            # c.f. run_coroutine_in_terminal of prompt_toolkit
-            with suppress_stderr(False):
-                console.flush()
-                app.output.flush()
-                app._running_in_terminal = True
-                try:
-                    with app.input.detach():
-                        with app.input.cooked_mode():
-                            return ask_input(message)
-                except KeyboardInterrupt:
-                    app.output.write_raw("\n")
-                    raise
-                finally:
-                    app._running_in_terminal = False
-                    app.renderer.reset()
-                    app._request_absolute_cursor_position()
-                    app._redraw()
+            return native_prompt(app, message)
 
-        session.prompt_text = message
-
-        activated = False
-        for name in reversed(session.modes):
-            mode = session.modes[name]
-            if mode.activator and mode.activator(session):
-                session.activate_mode(name)
-                activated = True
-                break
-        if not activated:
-            session.activate_mode("unknown")
-
-        current_mode = session.current_mode
+        session._prompt_message = message
+        current_mode_spec = session.current_mode_spec
 
         if interrupted[0]:
             interrupted[0] = False
+            if current_mode_spec.insert_new_line_on_sigint:
+                app.output.write_raw("\n")
         elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
-                (settings.insert_new_line and current_mode.insert_new_line):
+                (settings.insert_new_line and current_mode_spec.insert_new_line):
             app.output.write_raw("\n")
 
         text = None
@@ -112,15 +105,8 @@ def create_read_console(session):
                     import os
                     os._exit(1)
 
-            current_mode = session.current_mode
-
-            if current_mode.on_post_accept:
-                result = current_mode.on_post_accept(session)
-                if result is not None:
-                    return result
-                if settings.insert_new_line and current_mode.insert_new_line:
-                    app.output.write_raw("\n")
-                text = None
+            if text is None and settings.insert_new_line and current_mode_spec.insert_new_line:
+                app.output.write_raw("\n")
 
         return text
 

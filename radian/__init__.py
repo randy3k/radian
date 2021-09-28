@@ -1,4 +1,4 @@
-__version__ = '0.5.12'
+__version__ = '1.0.0.dev0'
 
 __all__ = ["get_app", "main"]
 
@@ -12,7 +12,7 @@ def main():
 
     try:
         # failed to import jedi on demand in some edge cases.
-        import jedi
+        import jedi  # noqa
     except ImportError:
         pass
 

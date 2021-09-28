@@ -1,10 +1,8 @@
-from __future__ import unicode_literals
 import re
 import os
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.application.run_in_terminal import run_in_terminal
-from prompt_toolkit.eventloop import From, ensure_future
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.bindings import named_commands as nc
@@ -22,11 +20,9 @@ from radian import get_app as get_radian_app
 from rchitect.interface import roption
 
 
-from six import text_type
-
-
 default_focused = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
+vi_focused_insert = vi_insert_mode & default_focused
 
 _prompt_mode_cache = {}
 
@@ -37,7 +33,7 @@ def prompt_mode(mode):
     except KeyError:
         pass
     app = get_radian_app()
-    condition = Condition(lambda: app.session.current_mode_name == mode)
+    condition = Condition(lambda: app.session.current_mode == mode)
     _prompt_mode_cache[mode] = condition
     return condition
 
@@ -116,6 +112,11 @@ def has_complete_index():
     app = get_app()
     cs = app.current_buffer.complete_state
     return cs and cs.complete_index is not None
+
+
+@Condition
+def ebivim():
+    return settings.emacs_bindings_in_vi_insert_mode
 
 
 def if_no_repeat(event):
@@ -308,73 +309,6 @@ def create_r_key_bindings(prase_text_complete):
         app = get_radian_app()
         app.session.change_mode("shell")
 
-    @Condition
-    def ebivim():
-        return settings.emacs_bindings_in_vi_insert_mode
-
-    focused_insert = vi_insert_mode & default_focused
-
-    # Needed for to accept autosuggestions in vi insert mode
-    @handle("c-e", filter=focused_insert & ebivim)
-    def _(event):
-        b = event.current_buffer
-        suggestion = b.suggestion
-        if suggestion:
-            b.insert_text(suggestion.text)
-        else:
-            nc.end_of_line(event)
-
-    @handle("c-f", filter=focused_insert & ebivim)
-    def _(event):
-        b = event.current_buffer
-        suggestion = b.suggestion
-        if suggestion:
-            b.insert_text(suggestion.text)
-        else:
-            nc.forward_char(event)
-
-    @handle("escape", "f", filter=focused_insert & ebivim)
-    def _(event):
-        b = event.current_buffer
-        suggestion = b.suggestion
-        if suggestion:
-            t = re.split(r"(\S+\s+)", suggestion.text)
-            b.insert_text(next((x for x in t if x), ""))
-        else:
-            nc.forward_word(event)
-
-    # Simple Control keybindings
-    key_cmd_dict = {
-        "c-a": nc.beginning_of_line,
-        "c-b": nc.backward_char,
-        "c-k": nc.kill_line,
-        "c-w": nc.backward_kill_word,
-        "c-y": nc.yank,
-        "c-_": nc.undo,
-    }
-
-    for key, cmd in key_cmd_dict.items():
-        handle(key, filter=focused_insert & ebivim)(cmd)
-
-    # Alt and Combo Control keybindings
-    keys_cmd_dict = {
-        # Control Combos
-        ("c-x", "c-e"): nc.edit_and_execute,
-        ("c-x", "e"): nc.edit_and_execute,
-        # Alt
-        ("escape", "b"): nc.backward_word,
-        ("escape", "c"): nc.capitalize_word,
-        ("escape", "d"): nc.kill_word,
-        ("escape", "h"): nc.backward_kill_word,
-        ("escape", "l"): nc.downcase_word,
-        ("escape", "u"): nc.uppercase_word,
-        ("escape", "y"): nc.yank_pop,
-        ("escape", "."): nc.yank_last_arg,
-    }
-
-    for keys, cmd in keys_cmd_dict.items():
-        handle(*keys, filter=focused_insert & ebivim)(cmd)
-
     return kb
 
 
@@ -389,7 +323,8 @@ def create_shell_key_bindings():
         save_before=if_no_repeat)
     def _(event):
         app = get_radian_app()
-        app.session.change_mode("r")
+        mode = app.session.mode_to_be_activated()
+        app.session.change_mode(mode)
 
     @handle('c-j', filter=insert_mode & default_focused)
     @handle('enter', filter=insert_mode & default_focused)
@@ -399,7 +334,7 @@ def create_shell_key_bindings():
     return kb
 
 
-def create_key_bindings(editor=""):
+def create_key_bindings():
     kb = KeyBindings()
     handle = kb.add
 
@@ -421,11 +356,72 @@ def create_key_bindings(editor=""):
             copy_margin = not in_paste_mode() and settings.auto_indentation
             event.current_buffer.newline(copy_margin=copy_margin)
 
+    # Needed for to accept autosuggestions in vi insert mode
+    @handle("c-e", filter=vi_focused_insert & ebivim)
+    def _(event):
+        b = event.current_buffer
+        suggestion = b.suggestion
+        if suggestion:
+            b.insert_text(suggestion.text)
+        else:
+            nc.end_of_line(event)
+
+    @handle("c-f", filter=vi_focused_insert & ebivim)
+    def _(event):
+        b = event.current_buffer
+        suggestion = b.suggestion
+        if suggestion:
+            b.insert_text(suggestion.text)
+        else:
+            nc.forward_char(event)
+
+    @handle("escape", "f", filter=vi_focused_insert & ebivim)
+    def _(event):
+        b = event.current_buffer
+        suggestion = b.suggestion
+        if suggestion:
+            t = re.split(r"(\S+\s+)", suggestion.text)
+            b.insert_text(next((x for x in t if x), ""))
+        else:
+            nc.forward_word(event)
+
+    # Simple Control keybindings
+    key_cmd_dict = {
+        "c-a": nc.beginning_of_line,
+        "c-b": nc.backward_char,
+        "c-k": nc.kill_line,
+        "c-w": nc.backward_kill_word,
+        "c-y": nc.yank,
+        "c-_": nc.undo,
+    }
+
+    for key, cmd in key_cmd_dict.items():
+        handle(key, filter=vi_focused_insert & ebivim)(cmd)
+
+    # Alt and Combo Control keybindings
+    keys_cmd_dict = {
+        # Control Combos
+        ("c-x", "c-e"): nc.edit_and_execute,
+        ("c-x", "e"): nc.edit_and_execute,
+        # Alt
+        ("escape", "b"): nc.backward_word,
+        ("escape", "c"): nc.capitalize_word,
+        ("escape", "d"): nc.kill_word,
+        ("escape", "h"): nc.backward_kill_word,
+        ("escape", "l"): nc.downcase_word,
+        ("escape", "u"): nc.uppercase_word,
+        ("escape", "y"): nc.yank_pop,
+        ("escape", "."): nc.yank_last_arg,
+    }
+
+    for keys, cmd in keys_cmd_dict.items():
+        handle(*keys, filter=vi_focused_insert & ebivim)(cmd)
+
     @handle('c-x', 'c-e', filter=emacs_mode & ~has_selection)
     def _(event):
         # match R behavior
         editor = roption("editor")
-        if not editor or not isinstance(editor, text_type):
+        if not editor or not isinstance(editor, str):
             if 'VISUAL' in os.environ:
                 editor = os.environ['VISUAL']
             elif 'EDITOR' in os.environ:
@@ -441,23 +437,24 @@ def create_key_bindings(editor=""):
         buff.open_in_editor()
 
         if editor:
-            def run():
+            # queue the clean up in thread executor as open_in_editor.
+            async def run():
                 def cleanup():
                     if orig_visual:
                         os.environ['VISUAL'] = orig_visual
                     else:
                         del os.environ['VISUAL']
 
-                yield From(run_in_terminal(cleanup, in_executor=True))
+                await run_in_terminal(cleanup, in_executor=True)
 
-            ensure_future(run())
+            get_app().create_background_task(run())
 
     return kb
 
 
 def map_key(key, value, mode="r", filter_str=""):
     app = get_radian_app()
-    kb = app.session.modes[mode].prompt_key_bindings
+    kb = app.session.specs[mode].prompt_key_bindings
     @kb.add(*key, filter=insert_mode & default_focused, eager=True)
     def _(event):
         event.current_buffer.insert_text(value)

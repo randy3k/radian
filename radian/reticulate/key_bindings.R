@@ -13,7 +13,6 @@ len <- builtins$len
 KeyBindings <- prompt_toolkit$key_binding$key_bindings$KeyBindings
 HighlightMatchingBracketProcessor <- prompt_toolkit$layout$processors$HighlightMatchingBracketProcessor
 
-
 settings <- radian$settings$radian_settings
 insert_mode <- radian$key_bindings$insert_mode
 default_focused <- radian$key_bindings$default_focused
@@ -141,15 +140,17 @@ if (is.null(tryCatch(import("jedi"), error = function(e) NULL))) {
     python_completer <- PythonCompleter()
 }
 
+RadianModeSpec <-radian$prompt$RadianModeSpec
 
 app <- radian$get_app()
-app$session$register_mode(
+app$session$register_mode(RadianModeSpec(
     "reticulate",
-    activator = function(session) reticulate:::py_repl_active(),
-    on_post_accept = function(session) handle_code(session$default_buffer$text),
-    get_message = function() app$session$prompt_text,
+    is_activated = function(session) reticulate:::py_repl_active(),
+    prompt_message = function(x) x,
+    callback = function(session) handle_code(session$default_buffer$text),
     multiline = TRUE,
     insert_new_line = TRUE,
+    insert_new_line_on_sigint = TRUE,
     lexer = prompt_toolkit$lexers$PygmentsLexer(pygments$lexers$python$PythonLexer),
     key_bindings = kb,
     prompt_key_bindings = pkb,
@@ -157,4 +158,4 @@ app$session$register_mode(
     input_processors = if (settings$highlight_matching_bracket)
             list(HighlightMatchingBracketProcessor()) else NULL,
     completer = python_completer
-)
+))
