@@ -1,25 +1,23 @@
-from __future__ import unicode_literals
-
 import os
 import re
 import sys
 import time
 
-from lineedit import Mode, ModalPromptSession, ModalInMemoryHistory, ModalFileHistory
+from .lineedit.prompt import ModalPromptSession, ModeSpec
+from .lineedit.history import ModalInMemoryHistory, ModalFileHistory
+from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
-from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.eventloop.inputhook import set_eventloop_with_inputhook
 
 from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, rcall
 from rchitect.interface import setoption, process_events, peek_event, polled_events
-
-from six import string_types
 
 from . import shell
 from .rutils import prase_text_complete
@@ -36,18 +34,47 @@ BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 VI_MODE_PROMPT = "\x1b[34m[{}]\x1b[0m "
 
 
-class RadianMode(Mode):
+class RadianModeSpec(ModeSpec):
     def __init__(
             self,
             name,
-            activator=None,
-            on_post_accept=None,
+            prompt_message=None,
+            is_activated=None,
+            callback=None,
+            sticky=False,
             insert_new_line=False,
+            insert_new_line_on_sigint=False,
             **kwargs):
-        self.activator = activator
-        self.on_post_accept = on_post_accept
+        self.prompt_message = prompt_message
+        self.is_activated = is_activated
+        self.callback = callback
+        self.sticky = sticky
         self.insert_new_line = insert_new_line
-        super(RadianMode, self).__init__(name, **kwargs)
+        self.insert_new_line_on_sigint = insert_new_line_on_sigint
+        super().__init__(name, **kwargs)
+
+
+class RadianPromptSession(ModalPromptSession):
+    _prompt_message = ""
+
+    def mode_to_be_activated(self):
+        for name in reversed(self.specs):
+            spec = self.specs[name]
+            if spec.is_activated and spec.is_activated(self):
+                return name
+        return "unknown"
+
+    def prompt(self, *args, **kwargs):
+        if not self.current_mode_spec.sticky:
+            self.activate_mode(self.mode_to_be_activated())
+
+        text = super().prompt(*args, **kwargs)
+
+        current_mode_spec = self.current_mode_spec
+        if current_mode_spec.callback:
+            text = current_mode_spec.callback(self)
+
+        return text
 
 
 def apply_settings(session, settings):
@@ -76,6 +103,7 @@ def create_radian_prompt_session(options, settings):
 
     local_history_file = settings.local_history_file
     global_history_file = settings.global_history_file
+
     if options.no_history:
         history = ModalInMemoryHistory()
     elif not options.global_history and os.path.exists(local_history_file):
@@ -94,10 +122,6 @@ def create_radian_prompt_session(options, settings):
         output = CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
 
     def get_inputhook():
-        # make testing more robust
-        if "RADIAN_NO_INPUTHOOK" in os.environ:
-            return None
-
         terminal_width = [None]
 
         def _(context):
@@ -124,120 +148,125 @@ def create_radian_prompt_session(options, settings):
         return _
 
     def vi_mode_prompt():
-        if session.editing_mode.lower() == "vi" and settings.show_vi_mode_prompt:
+        if str(session.editing_mode).lower() == "vi" and settings.show_vi_mode_prompt:
             im = session.app.vi_state.input_mode
             vi_mode_prompt = settings.vi_mode_prompt
-            if isinstance(vi_mode_prompt, string_types):
+            if isinstance(vi_mode_prompt, str):
                 return vi_mode_prompt.format(str(im)[3:6])
             else:
                 return vi_mode_prompt[str(im)[3:6]]
         return ""
 
     def message():
-        if hasattr(session.current_mode, "get_message"):
-            return ANSI(vi_mode_prompt() + session.current_mode.get_message())
-        elif hasattr(session.current_mode, "message"):
-            message = session.current_mode.message
-            if callable(message):
-                return ANSI(vi_mode_prompt() + message())
-            else:
-                return ANSI(vi_mode_prompt() + message)
+        if session.current_mode_spec.prompt_message:
+            return ANSI(
+                vi_mode_prompt() + session.current_mode_spec.prompt_message(session._prompt_message)
+                )
         else:
-            return ""
+            return session._prompt_message
 
-    session = ModalPromptSession(
+    if settings.editing_mode in ["vim", "vi"]:
+        editing_mode = EditingMode.Vi
+    else:
+        editing_mode = EditingMode.EMACS
+
+    session = RadianPromptSession(
         message=message,
-        color_depth=ColorDepth.default(term=os.environ.get("TERM")),
         style=style_from_pygments_cls(get_style_by_name(settings.color_scheme)),
-        editing_mode="VI" if settings.editing_mode in ["vim", "vi"] else "EMACS",
+        editing_mode=editing_mode,
         history=history,
         enable_history_search=True,
-        history_search_no_duplicates=settings.history_search_no_duplicates,
+        search_no_duplicates=settings.history_search_no_duplicates,
         search_ignore_case=settings.history_search_ignore_case,
         enable_suspend=True,
-        tempfile_suffix=".R",
         input=CustomInput(sys.stdin),
         output=output,
-        inputhook=get_inputhook(),
-        mode_class=RadianMode,
         auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None
     )
-
-    apply_settings(session, settings)
-
-    def browse_activator(session):
-        message = session.prompt_text
-        if BROWSE_PATTERN.match(message):
-            session.browse_level = BROWSE_PATTERN.match(message).group(1)
-            return True
-        else:
-            return False
-
-    def browse_on_pre_accept(session):
-        if session.default_buffer.text.strip() in [
-                "n", "s", "f", "c", "cont", "Q", "where", "help"]:
-            session.add_history = False
-
-    def shell_process_text(session):
-        text = session.default_buffer.text
-        shell.run_command(text)
 
     input_processors = []
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
 
-    session.register_mode(
-        "r",
-        activator=lambda session: session.prompt_text == settings.prompt,
-        insert_new_line=True,
+    session.register_mode(RadianModeSpec(
+        name="r",
+        prompt_message=lambda x: x,
+        is_activated=lambda session: session._prompt_message == settings.prompt,
         history_share_with="browse",
-        get_message=lambda: settings.prompt,
+        insert_new_line=True,
         multiline=settings.indent_lines,
+        completer=RCompleter(timeout=settings.completion_timeout),
         complete_while_typing=settings.complete_while_typing,
         lexer=PygmentsLexer(SLexer),
-        completer=RCompleter(timeout=settings.completion_timeout),
-        key_bindings=create_key_bindings(),
+        tempfile_suffix=".R",
         input_processors=input_processors,
+        key_bindings=create_key_bindings(),
         prompt_key_bindings=create_r_key_bindings(prase_text_complete)
-    )
-    session.register_mode(
-        "shell",
-        on_post_accept=shell_process_text,
-        insert_new_line=True,
-        get_message=lambda: settings.shell_prompt,
-        multiline=settings.indent_lines,
-        complete_while_typing=settings.complete_while_typing,
-        lexer=None,
-        completer=SmartPathCompleter(),
-        prompt_key_bindings=create_shell_key_bindings()
-    )
-    session.register_mode(
-        "browse",
-        activator=browse_activator,
-        # on_pre_accept=browse_on_pre_accept,  # disable
-        insert_new_line=True,
+    ))
+
+    browse_level = [""]
+
+    def browse_activator(session):
+        message = session._prompt_message
+        if BROWSE_PATTERN.match(message):
+            browse_level[0] = BROWSE_PATTERN.match(message).group(1)
+            return True
+        else:
+            return False
+
+    session.register_mode(RadianModeSpec(
+        name="browse",
+        is_activated=browse_activator,
+        prompt_message=lambda _: settings.browse_prompt.format(browse_level[0]),
         history_share_with="r",
-        get_message=lambda: settings.browse_prompt.format(session.browse_level),
+        insert_new_line=True,
         multiline=settings.indent_lines,
-        complete_while_typing=True,
-        lexer=PygmentsLexer(SLexer),
         completer=RCompleter(timeout=settings.completion_timeout),
+        complete_while_typing=settings.complete_while_typing,
+        lexer=PygmentsLexer(SLexer),
+        tempfile_suffix=".R",
         input_processors=input_processors,
         prompt_key_bindings=create_r_key_bindings(prase_text_complete),
-        switchable_from=False,
-        switchable_to=False
-    )
-    session.register_mode(
+        switchable_from="shell",
+        switchable_to="shell"
+    ))
+
+    def shell_process_text(session):
+        text = session.default_buffer.text
+        shell.run_command(text)
+
+    session.register_mode(RadianModeSpec(
+        name="shell",
+        prompt_message=lambda _: settings.shell_prompt,
+        callback=shell_process_text,
+        sticky=True,
+        insert_new_line=True,
+        multiline=settings.indent_lines,
+        completer=SmartPathCompleter(),
+        complete_while_typing=settings.complete_while_typing,
+        lexer=None,
+        input_processors=input_processors,
+        prompt_key_bindings=create_shell_key_bindings()
+    ))
+
+    session.register_mode(RadianModeSpec(
         "unknown",
+        prompt_message=lambda x: x,
         insert_new_line=False,
-        get_message=lambda: session.prompt_text,
         complete_while_typing=False,
+        keep_history=False,
         lexer=None,
         completer=None,
         prompt_key_bindings=None,
         switchable_from=False,
         switchable_to=False,
         input_processors=[]
-    )
+    ))
+
+    # make testing more robust
+    if "RADIAN_NO_INPUTHOOK" not in os.environ:
+        set_eventloop_with_inputhook(get_inputhook())
+
+    apply_settings(session, settings)
 
     return session

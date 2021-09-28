@@ -1,10 +1,9 @@
-from __future__ import unicode_literals
 import os
 import sys
 import subprocess
 
 
-class RadianApplication(object):
+class RadianApplication():
     instance = None
     r_home = None
 
@@ -59,7 +58,7 @@ class RadianApplication(object):
                 os.environ["CMDER_ROOT"] = "NA"
 
     def run(self, options, cleanup=None):
-        from .session import create_radian_prompt_session
+        from .prompt import create_radian_prompt_session
         from .console import create_read_console, create_write_console_ex
         import rchitect
         from . import rutils, settings
@@ -119,16 +118,14 @@ class RadianApplication(object):
         reticulate.configure()
 
         # run user on load hooks
-        rutils.run_on_load_hooks()
+        try:
+            rutils.run_on_load_hooks()
+        except Exception as e:
+            print("Error in running user hooks")
+            print(e)
 
         # print welcome message
         if options.quiet is not True:
             self.session.app.output.write(rchitect.interface.greeting())
-
-        # if sys.platform.startswith("darwin"):
-        #     # a workaround to suppress quartz error message
-        #     # see https://bugs.r-project.org/bugzilla/show_bug.cgi?id=17734
-        #     devnull = os.open(os.devnull, os.O_WRONLY)
-        #     os.dup2(devnull, 2)
 
         rchitect.loop()
