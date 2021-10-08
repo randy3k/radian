@@ -54,6 +54,7 @@ class ModeSpec():
 
 
 class ModalPromptSession(PromptSession):
+    _spec_class = ModeSpec
     _current_mode = None
     _default_settings = {}
     _specs = OrderedDict()
@@ -105,9 +106,8 @@ class ModalPromptSession(PromptSession):
     def main_mode_spec(self):
         return self.specs[self.main_mode]
 
-    def register_mode(self, spec):
-        assert isinstance(spec, ModeSpec)
-
+    def register_mode(self, name, **kwargs):
+        spec = self._spec_class(name, **kwargs)
         self.specs[spec.name] = spec
         if len(self.specs) == 1:
             self.activate_mode(spec.name)
@@ -156,9 +156,7 @@ class ModalPromptSession(PromptSession):
                     setattr(self, name, getattr(spec, name))
 
         self.key_bindings = merge_key_bindings(
-            [
-                DynamicKeyBindings(lambda: self.specs[self.current_mode].prompt_key_bindings)
-            ] +
+            [DynamicKeyBindings(lambda: self.specs[self.current_mode].prompt_key_bindings)] +
             [
                 m.key_bindings for m in self.specs.values()
                 if hasattr(m, "key_bindings") and m.key_bindings

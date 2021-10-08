@@ -48,7 +48,7 @@ unindent <- function(lines) {
 
 
 kb <- KeyBindings()
-kb$add("~", filter = insert_mode & default_focused & cursor_at_begin & text_is_empty & main_mode)(
+kb$add("~", filter = main_mode & insert_mode & default_focused & cursor_at_begin & text_is_empty)(
     function(event) {
         commit_text(event, "reticulate::repl_python(quiet = TRUE)", FALSE)
     })
@@ -140,10 +140,8 @@ if (is.null(tryCatch(import("jedi"), error = function(e) NULL))) {
     python_completer <- PythonCompleter()
 }
 
-RadianModeSpec <-radian$prompt$RadianModeSpec
-
 app <- radian$get_app()
-app$session$register_mode(RadianModeSpec(
+app$session$register_mode(
     "reticulate",
     is_activated = function(session) reticulate:::py_repl_active(),
     prompt_message = function(x) x,
@@ -158,4 +156,4 @@ app$session$register_mode(RadianModeSpec(
     input_processors = if (settings$highlight_matching_bracket)
             list(HighlightMatchingBracketProcessor()) else NULL,
     completer = python_completer
-))
+)

@@ -55,6 +55,7 @@ class RadianModeSpec(ModeSpec):
 
 
 class RadianPromptSession(ModalPromptSession):
+    _spec_class = RadianModeSpec
     _prompt_message = ""
 
     def mode_to_be_activated(self):
@@ -188,7 +189,9 @@ def create_radian_prompt_session(options, settings):
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
 
-    session.register_mode(RadianModeSpec(
+    r_key_bindings = create_r_key_bindings(prase_text_complete)
+
+    session.register_mode(
         name="r",
         prompt_message=lambda x: x,
         is_activated=lambda session: session._prompt_message == settings.prompt,
@@ -201,8 +204,8 @@ def create_radian_prompt_session(options, settings):
         tempfile_suffix=".R",
         input_processors=input_processors,
         key_bindings=create_key_bindings(),
-        prompt_key_bindings=create_r_key_bindings(prase_text_complete)
-    ))
+        prompt_key_bindings=r_key_bindings
+    )
 
     browse_level = [""]
 
@@ -214,7 +217,7 @@ def create_radian_prompt_session(options, settings):
         else:
             return False
 
-    session.register_mode(RadianModeSpec(
+    session.register_mode(
         name="browse",
         is_activated=browse_activator,
         prompt_message=lambda _: settings.browse_prompt.format(browse_level[0]),
@@ -226,16 +229,16 @@ def create_radian_prompt_session(options, settings):
         lexer=PygmentsLexer(SLexer),
         tempfile_suffix=".R",
         input_processors=input_processors,
-        prompt_key_bindings=create_r_key_bindings(prase_text_complete),
+        prompt_key_bindings=r_key_bindings,
         switchable_from="shell",
         switchable_to="shell"
-    ))
+    )
 
     def shell_process_text(session):
         text = session.default_buffer.text
         shell.run_command(text)
 
-    session.register_mode(RadianModeSpec(
+    session.register_mode(
         name="shell",
         prompt_message=lambda _: settings.shell_prompt,
         callback=shell_process_text,
@@ -247,9 +250,9 @@ def create_radian_prompt_session(options, settings):
         lexer=None,
         input_processors=input_processors,
         prompt_key_bindings=create_shell_key_bindings()
-    ))
+    )
 
-    session.register_mode(RadianModeSpec(
+    session.register_mode(
         "unknown",
         prompt_message=lambda x: x,
         insert_new_line=False,
@@ -261,7 +264,7 @@ def create_radian_prompt_session(options, settings):
         switchable_from=False,
         switchable_to=False,
         input_processors=[]
-    ))
+    )
 
     # make testing more robust
     if "RADIAN_NO_INPUTHOOK" not in os.environ:
