@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 def test_startup(terminal):
     try:
         # the first line sometimes disappear for no reasons on circleci

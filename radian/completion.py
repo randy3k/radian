@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from prompt_toolkit.completion import Completer, Completion
 import os
 import sys
@@ -12,9 +11,6 @@ from .latex import get_latex_completions
 from .rutils import installed_packages
 from .console import suppress_stderr
 from .document import cursor_in_string
-
-
-from six import text_type
 
 
 TOKEN_PATTERN = re.compile(r".*?([a-zA-Z0-9._]+)$")
@@ -155,9 +151,9 @@ class SmartPathCompleter(Completer):
                     continue
                 if c.lower().startswith(basename.lower()):
                     if sys.platform.startswith('win') or quoted:
-                        yield Completion(text_type(c), -len(basename))
+                        yield Completion(str(c), -len(basename))
                     else:
-                        yield Completion(text_type(c.replace(" ", "\\ ")), -len(basename))
+                        yield Completion(str(c.replace(" ", "\\ ")), -len(basename))
 
         except Exception:
             pass

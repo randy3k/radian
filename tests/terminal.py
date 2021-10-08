@@ -1,10 +1,8 @@
-from __future__ import unicode_literals
 import sys
 import pyte
 import operator
 import threading
 from contextlib import contextmanager
-import six
 import time
 import os
 
@@ -90,10 +88,10 @@ class Var(object):
             raise Exception("value is {}".format(value))
 
     def assert_startswith(self, operand, timeout=5):
-        self._assert(six.text_type.startswith, operand, timeout)
+        self._assert(str.startswith, operand, timeout)
 
     def assert_endswith(self, operand, timeout=5):
-        self._assert(six.text_type.endswith, operand, timeout)
+        self._assert(str.endswith, operand, timeout)
 
     def assert_equal(self, operand, timeout=5):
         self._assert(operator.eq, operand, timeout)
