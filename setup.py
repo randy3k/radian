@@ -45,7 +45,6 @@ setup(
         # 'rchitect@git+https://github.com/randy3k/rchitect',
         'rchitect>=0.3.30,<0.4.0',
         'prompt_toolkit>=3.0,<3.1',
-        'six>=1.9.0',
         'pygments>=2.5.0'
     ],
     entry_points={

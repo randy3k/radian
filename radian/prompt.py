@@ -122,32 +122,6 @@ def create_radian_prompt_session(options, settings):
     else:
         output = CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
 
-    def get_inputhook():
-        terminal_width = [None]
-
-        def _(context):
-            output_width = session.app.output.get_size().columns
-            if output_width and terminal_width[0] != output_width:
-                terminal_width[0] = output_width
-                setoption("width", max(terminal_width[0], 20))
-
-            while True:
-                if context.input_is_ready():
-                    break
-                try:
-                    if peek_event():
-                        with session.app.input.detach():
-                            with session.app.input.rare_mode():
-                                process_events()
-                    else:
-                        polled_events()
-
-                except Exception:
-                    pass
-                time.sleep(1.0 / 30)
-
-        return _
-
     def vi_mode_prompt():
         if str(session.editing_mode).lower() == "vi" and settings.show_vi_mode_prompt:
             im = session.app.vi_state.input_mode
@@ -265,6 +239,32 @@ def create_radian_prompt_session(options, settings):
         switchable_to=False,
         input_processors=[]
     )
+
+    def get_inputhook():
+        terminal_width = [None]
+
+        def _(context):
+            output_width = session.app.output.get_size().columns
+            if output_width and terminal_width[0] != output_width:
+                terminal_width[0] = output_width
+                setoption("width", max(terminal_width[0], 20))
+
+            while True:
+                if context.input_is_ready():
+                    break
+                try:
+                    if peek_event():
+                        with session.app.input.detach():
+                            with session.app.input.rare_mode():
+                                process_events()
+                    else:
+                        polled_events()
+
+                except Exception:
+                    pass
+                time.sleep(1.0 / 30)
+
+        return _
 
     # make testing more robust
     if "RADIAN_NO_INPUTHOOK" not in os.environ:

@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-
 def test_readline(terminal):
     # issue #106
     terminal.current_line().assert_startswith("r$>")

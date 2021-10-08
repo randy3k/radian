@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import os
 from code import compile_command
 
@@ -14,7 +13,6 @@ from radian.key_bindings import commit_text
 from radian import get_app
 from radian.settings import radian_settings as settings
 
-from six import text_type
 
 try:
     import jedi
@@ -82,8 +80,8 @@ if has_jedi and tuple(int(x) for x in jedi.__version__.split(".")[0:2]) >= (0, 1
             )
             return [
                 Completion(
-                    text_type(c.name_with_symbols),
-                    len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
+                    str(c.name_with_symbols),
+                    len(str(c.complete)) - len(str(c.name_with_symbols)))
                 for c in script.complete(
                     line=document.cursor_position_row + 1, column=document.cursor_position_col)
             ]
@@ -109,8 +107,8 @@ else:
             )
             return [
                 Completion(
-                    text_type(c.name_with_symbols),
-                    len(text_type(c.complete)) - len(text_type(c.name_with_symbols)))
+                    str(c.name_with_symbols),
+                    len(str(c.complete)) - len(str(c.name_with_symbols)))
                 for c in script.completions()
             ]
 
