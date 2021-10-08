@@ -10,7 +10,6 @@ def test_shell(terminal):
     terminal.current_line().assert_startswith("#!>")
     terminal.write("\b")
     terminal.current_line().assert_startswith("r$>")
-    terminal.write("\n")
 
 
 def test_cd(terminal):
@@ -30,9 +29,6 @@ def test_cd(terminal):
     terminal.write("cd -\n")
     terminal.previous_line(2).strip().assert_equal(os.getcwd())
     terminal.current_line().assert_startswith("#!>")
-    terminal.write("\b")
-    terminal.current_line().assert_startswith("r$>")
-    terminal.write("\n")
 
 
 def test_cd2(terminal):
@@ -52,6 +48,3 @@ def test_cd2(terminal):
     terminal.write("cd -\n")
     terminal.previous_line(2).strip().assert_equal(os.getcwd())
     terminal.current_line().assert_startswith("#!>")
-    terminal.write("\b")
-    terminal.current_line().assert_startswith("r$>")
-    terminal.write("\n")

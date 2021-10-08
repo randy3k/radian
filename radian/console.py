@@ -75,6 +75,8 @@ def create_read_console(session):
 
         if interrupted[0]:
             interrupted[0] = False
+            if not session.current_mode_spec.sticky_on_sigint:
+                session.activate_mode(session.mode_to_be_activated())
             if current_mode_spec.insert_new_line_on_sigint:
                 app.output.write_raw("\n")
         elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
@@ -84,6 +86,9 @@ def create_read_console(session):
         text = None
 
         while text is None:
+            if not session.current_mode_spec.sticky:
+                session.activate_mode(session.mode_to_be_activated())
+
             try:
                 text = session.prompt(add_history=add_history)
 
