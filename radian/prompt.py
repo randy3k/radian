@@ -42,6 +42,7 @@ class RadianModeSpec(ModeSpec):
             is_activated=None,
             callback=None,
             sticky=False,
+            sticky_on_sigint=False,
             insert_new_line=False,
             insert_new_line_on_sigint=False,
             **kwargs):
@@ -49,6 +50,7 @@ class RadianModeSpec(ModeSpec):
         self.is_activated = is_activated
         self.callback = callback
         self.sticky = sticky
+        self.sticky_on_sigint = sticky_on_sigint
         self.insert_new_line = insert_new_line
         self.insert_new_line_on_sigint = insert_new_line_on_sigint
         super().__init__(name, **kwargs)
@@ -66,11 +68,7 @@ class RadianPromptSession(ModalPromptSession):
         return "unknown"
 
     def prompt(self, *args, **kwargs):
-        if not self.current_mode_spec.sticky:
-            self.activate_mode(self.mode_to_be_activated())
-
         text = super().prompt(*args, **kwargs)
-
         current_mode_spec = self.current_mode_spec
         if current_mode_spec.callback:
             text = current_mode_spec.callback(self)
@@ -217,6 +215,7 @@ def create_radian_prompt_session(options, settings):
         prompt_message=lambda _: settings.shell_prompt,
         callback=shell_process_text,
         sticky=True,
+        sticky_on_sigint=False,
         insert_new_line=True,
         multiline=settings.indent_lines,
         completer=SmartPathCompleter(),
