@@ -40,7 +40,7 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages('.', exclude=["tests"]),
     package_data={'radian': ['reticulate/*.R']},
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     install_requires=[
         # 'rchitect@git+https://github.com/randy3k/rchitect',
         'rchitect>=0.3.30,<0.4.0',
