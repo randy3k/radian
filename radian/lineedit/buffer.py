@@ -134,6 +134,12 @@ class BetterBuffer(Buffer):
             self._search_history.append(self._last_search_history)
         self._in_search = False
 
+    def go_to_next_history(self, i):
+        self.go_to_history(i)
+        self.history_search_text = ""
+        self.history_forward()
+        self.cursor_position = len(self.text)
+
     def auto_up(self, *args, **kwargs):
         if not self.complete_state and not self.selection_state and \
                 not self._is_last_history() and self._is_end_of_buffer():
@@ -151,8 +157,7 @@ class BetterBuffer(Buffer):
                 self._is_last_history() and len(self.text) == 0 and self.last_working_index >= 0 \
                 and self.last_working_index < len(self._working_lines) - 1:
             # down arrow after commiting a history line
-            self.go_to_history(self.last_working_index + 1)
-            self.history_search_text = ""
+            self.go_to_next_history(self.last_working_index)
             self.last_working_index = -1
         else:
             super().auto_down(*args, **kwargs)
@@ -200,13 +205,7 @@ class ModalBuffer(BetterBuffer):
         return False
 
     def _history_matches(self, i):
-        if self.history_search_text is None or self.history_search_text == "":
-            return True
-        elif self._history_mode_matches(i) and \
-                self._working_lines[i].startswith(self.history_search_text):
-            return True
-        else:
-            return False
+        return super()._history_matches(i) and self._history_mode_matches(i)
 
     def load_history_if_not_yet_loaded(self):
         # use _reset_history instead

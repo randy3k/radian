@@ -6,8 +6,9 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import DynamicAutoSuggest
 from prompt_toolkit.completion import DynamicCompleter, ThreadedCompleter
 from prompt_toolkit.enums import DEFAULT_BUFFER
-from prompt_toolkit.filters import Condition
-from prompt_toolkit.key_binding.key_bindings import DynamicKeyBindings, merge_key_bindings
+from prompt_toolkit.filters import Condition, emacs_mode
+from prompt_toolkit.key_binding.key_bindings import \
+    KeyBindings, DynamicKeyBindings, merge_key_bindings
 from prompt_toolkit.validation import DynamicValidator
 from prompt_toolkit.shortcuts.prompt import is_true, CompleteStyle
 from prompt_toolkit.utils import to_str
@@ -218,6 +219,27 @@ class ModalPromptSession(PromptSession):
             session=self,
             search_no_duplicates=self.search_no_duplicates
         )
+
+    def _create_application(self, *args, **kwargs):
+        app = super()._create_application(*args, **kwargs)
+
+        kb = KeyBindings()
+
+        # operate-and-get-next
+        @kb.add('c-o', filter=emacs_mode)
+        def _(event):
+            buff = event.current_buffer
+            working_index = buff.working_index
+            buff.validate_and_handle()
+
+            def set_working_index() -> None:
+                buff.go_to_next_history(working_index)
+
+            event.app.pre_run_callables.append(set_working_index)
+
+        app._default_bindings = merge_key_bindings([app._default_bindings, kb])
+
+        return app
 
     def prompt(self, *args, **kwargs):
         self._check_args(kwargs)

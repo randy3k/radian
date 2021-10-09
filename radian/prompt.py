@@ -201,9 +201,7 @@ def create_radian_prompt_session(options, settings):
         lexer=PygmentsLexer(SLexer),
         tempfile_suffix=".R",
         input_processors=input_processors,
-        prompt_key_bindings=r_key_bindings,
-        switchable_from="shell",
-        switchable_to="shell"
+        prompt_key_bindings=r_key_bindings
     )
 
     def shell_process_text(session):
