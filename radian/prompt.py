@@ -190,6 +190,16 @@ def create_radian_prompt_session(options, settings):
         else:
             return False
 
+    class BrowseValidator(Validator):
+        """
+        As a pre-accept processor.
+        """
+        def validate(self, document):
+            text = document.text
+            if settings.history_ignore_browser_commands:
+                if text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
+                    session.add_history = False
+
     session.register_mode(
         name="browse",
         is_activated=browse_activator,
@@ -199,6 +209,7 @@ def create_radian_prompt_session(options, settings):
         multiline=settings.indent_lines,
         completer=RCompleter(timeout=settings.completion_timeout),
         complete_while_typing=settings.complete_while_typing,
+        validator=BrowseValidator(),
         lexer=PygmentsLexer(SLexer),
         tempfile_suffix=".R",
         input_processors=input_processors,
