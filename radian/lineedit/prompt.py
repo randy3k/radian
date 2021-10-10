@@ -17,6 +17,9 @@ from collections import OrderedDict
 from typing import cast
 
 
+# TODO: allow lines from different modes when replying history
+# TODO: improve history_share_with
+
 class ModeSpec():
     def __init__(
             self,
@@ -25,8 +28,6 @@ class ModeSpec():
             on_dectivated=None,
             keep_history=True,
             history_share_with=False,
-            switchable_to=True,
-            switchable_from=True,
             prompt_key_bindings=None,
             **kwargs):
 
@@ -45,8 +46,6 @@ class ModeSpec():
         self.on_dectivated = on_dectivated
         self.keep_history = keep_history
         self.history_share_with = _ensure_func(history_share_with)
-        self.switchable_to = _ensure_func(switchable_to)
-        self.switchable_from = _ensure_func(switchable_from)
         self.prompt_key_bindings = prompt_key_bindings
         for key in kwargs:
             if key not in PromptSession._fields:
@@ -120,19 +119,6 @@ class ModalPromptSession(PromptSession):
             del self.specs[spec_or_name]
         else:
             del self.specs[next(iter(k for k, v in self.specs.items() if v == spec_or_name))]
-
-    def change_mode(self, mode, force=False):
-        if mode not in self.specs:
-            raise Exception("no such mode")
-
-        spec = self.specs[self.current_mode]
-        newspec = self.specs[mode]
-
-        if self.current_mode == mode and not force:
-            return
-
-        if spec.switchable_to(newspec.name) and newspec.switchable_from(spec.name):
-            self.activate_mode(mode, force)
 
     def activate_mode(self, name, force=False):
         if name not in self.specs:

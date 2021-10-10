@@ -11,6 +11,7 @@ from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
+from prompt_toolkit.validation import Validator
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.eventloop.inputhook import set_eventloop_with_inputhook
 
@@ -232,8 +233,6 @@ def create_radian_prompt_session(options, settings):
         lexer=None,
         completer=None,
         prompt_key_bindings=None,
-        switchable_from=False,
-        switchable_to=False,
         input_processors=[]
     )
 
