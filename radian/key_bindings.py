@@ -307,7 +307,7 @@ def create_r_key_bindings(prase_text_complete):
     @handle(';', filter=insert_mode & default_focused & cursor_at_begin)
     def _(event):
         app = get_radian_app()
-        app.session.change_mode("shell")
+        app.session.activate_mode("shell")
 
     return kb
 
@@ -324,7 +324,7 @@ def create_shell_key_bindings():
     def _(event):
         app = get_radian_app()
         mode = app.session.mode_to_be_activated()
-        app.session.change_mode(mode)
+        app.session.activate_mode(mode)
 
     @handle('c-j', filter=insert_mode & default_focused)
     @handle('enter', filter=insert_mode & default_focused)

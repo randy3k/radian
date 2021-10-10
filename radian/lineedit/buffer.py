@@ -181,16 +181,16 @@ class ModalBuffer(BetterBuffer):
         # https://github.com/prompt-toolkit/python-prompt-toolkit
         self._reset_history()
 
-    def _set_working_mode(self):
-        if not self._in_search and self._is_last_history():
-            self.working_mode = self.session.current_mode
+    # def _set_working_mode(self):
+    #     if not self._in_search and self._is_last_history():
+    #         self.working_mode = self.session.current_mode
 
-    def _change_working_mode(self, index):
-        if index < len(self._working_lines_mode) - 1:
-            mode = self._working_lines_mode[index]
-            self.session.change_mode(mode)
-        elif self.working_mode:
-            self.session.change_mode(self.working_mode)
+    # def _change_working_mode(self, index):
+    #     if index < len(self._working_lines_mode) - 1:
+    #         mode = self._working_lines_mode[index]
+    #         self.session.activate_mode(mode)
+    #     elif self.working_mode:
+    #         self.session.activate_mode(self.working_mode)
 
     def _history_mode_matches(self, i):
         if i == len(self._working_lines) - 1:
@@ -215,21 +215,21 @@ class ModalBuffer(BetterBuffer):
         return super()._search_matches(i) and self._history_mode_matches(i)
 
     def _search(self, *args, **kwargs):
-        self._set_working_mode()
+        # self._set_working_mode()
         res = super()._search(*args, **kwargs)
-        if res:
-            self._change_working_mode(res[0])
+        # if res:
+        #     self._change_working_mode(res[0])
         return res
 
     def auto_up(self, *args, **kwargs):
-        self._set_working_mode()
+        # self._set_working_mode()
         super().auto_up(*args, **kwargs)
-        self._change_working_mode(self.working_index)
+        # self._change_working_mode(self.working_index)
 
     def auto_down(self, *args, **kwargs):
-        self._set_working_mode()
+        # self._set_working_mode()
         super().auto_down(*args, **kwargs)
-        self._change_working_mode(self.working_index)
+        # self._change_working_mode(self.working_index)
 
     def append_to_history(self) -> None:
         if not self.session.add_history:
