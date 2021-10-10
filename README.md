@@ -96,6 +96,11 @@ options(radian.color_scheme = "native")
 
 # either  `"emacs"` (default) or `"vi"`.
 options(radian.editing_mode = "emacs")
+# enable various emacs bindings in vi insert mode
+options(radian.emacs_bindings_in_vi_insert_mode = FALSE)
+# show vi mode state when radian.editing_mode is `vi`
+options(radian.show_vi_mode_prompt = TRUE)
+options(radian.vi_mode_prompt = "\033[0;34m[{}]\033[0m ")
 
 # indent continuation lines
 # turn this off if you want to copy code without the extra indentation;
@@ -142,21 +147,17 @@ options(radian.local_history_file = ".radian_history")
 options(radian.history_search_no_duplicates = FALSE)
 # ignore case in history search
 options(radian.history_search_ignore_case = FALSE)
+# do not save debug browser commands such as `Q` in history
+options(radian.history_ignore_browser_commands = TRUE)
 
 # custom prompt for different modes
 options(radian.prompt = "\033[0;34mr$>\033[0m ")
 options(radian.shell_prompt = "\033[0;31m#!>\033[0m ")
 options(radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ")
 
-# show vi mode state when radian.editing_mode is `vi`
-options(radian.show_vi_mode_prompt = TRUE)
-options(radian.vi_mode_prompt = "\033[0;34m[{}]\033[0m ")
-
 # stderr color format
 options(radian.stderr_format = "\033[0;31m{}\033[0m")
 
-# force reticulate to use current python runtime
-options(radian.force_reticulate_python = FALSE)
 # enable reticulate prompt and trigger `~`
 options(radian.enable_reticulate_prompt = TRUE)
 ```
