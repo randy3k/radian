@@ -1,20 +1,11 @@
 environment:
   USE_RTOOLS: true
   matrix:
-    - PYTHON: "C:\\Python27-x64"
-      R_VERSION: "3.5.3"
-
     - PYTHON: "C:\\Python37-x64"
-      R_VERSION: "3.5.3"
-
-    - PYTHON: "C:\\Python27-x64"
-      R_VERSION: "release"
+      R_VERSION: "3.6.3"
 
     - PYTHON: "C:\\Python37-x64"
       R_VERSION: "release"
-
-    - PYTHON: "C:\\Python27-x64"
-      R_VERSION: "devel"
 
     - PYTHON: "C:\\Python37-x64"
       R_VERSION: "devel"
