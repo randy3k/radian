@@ -29,17 +29,6 @@ class ModeSpec():
             history_book=None,
             prompt_key_bindings=None,
             **kwargs):
-
-        def _ensure_func(x):
-            if isinstance(x, bool):
-                return lambda m: x
-            elif isinstance(x, list):
-                return lambda m: m in x
-            elif isinstance(x, str):
-                return lambda m: m == x
-            else:
-                return x
-
         self.name = name
         self.on_activated = on_activated
         self.on_dectivated = on_dectivated
@@ -99,14 +88,6 @@ class ModalPromptSession(PromptSession):
     @property
     def current_mode_spec(self):
         return self.specs[self.current_mode]
-
-    @property
-    def main_mode(self):
-        return next(iter(self.specs.keys())) if len(self.specs) > 0 else None
-
-    @property
-    def main_mode_spec(self):
-        return self.specs[self.main_mode]
 
     def register_mode(self, name, **kwargs):
         spec = self._spec_class(name, **kwargs)
