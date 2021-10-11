@@ -13,14 +13,20 @@ class BetterBuffer(Buffer):
     def __init__(self, *args, search_no_duplicates, **kwargs):
         self.search_no_duplicates = search_no_duplicates
 
-        self.last_working_index = -1
+        self._last_working_index = -1
 
         self._in_search = False
         self._last_search_direction = None
         self._last_search_history = None
         self._search_history = []
-
         super().__init__(*args, **kwargs)
+        original_accept_handler = self.accept_handler
+
+        def _handler(*args, **kwargs):
+            self._last_working_index = self.working_index
+            return original_accept_handler(*args, **kwargs)
+
+        self.accept_handler = _handler
 
     def _is_end_of_buffer(self):
         return self.cursor_position == len(self.text)
@@ -154,11 +160,11 @@ class BetterBuffer(Buffer):
             self.history_forward()
             self.cursor_position = len(self.text)
         elif not self.complete_state and not self.selection_state and \
-                self._is_last_history() and len(self.text) == 0 and self.last_working_index >= 0 \
-                and self.last_working_index < len(self._working_lines) - 1:
+                self._is_last_history() and len(self.text) == 0 and self._last_working_index >= 0 \
+                and self._last_working_index < len(self._working_lines) - 1:
             # down arrow after commiting a history line
-            self.go_to_next_history(self.last_working_index)
-            self.last_working_index = -1
+            self.go_to_next_history(self._last_working_index)
+            self._last_working_index = -1
         else:
             super().auto_down(*args, **kwargs)
 
