@@ -89,8 +89,13 @@ def apply_settings(session, settings):
     setoption("menu.graphics", False)
 
     def askpass(message):
-        from prompt_toolkit import prompt
-        return prompt(message, is_password=True)
+        app = session.app
+        if app.is_running:
+            from getpass import getpass
+            return getpass(message)
+        else:
+            from prompt_toolkit import prompt
+            return prompt(message, is_password=True)
 
     setoption("askpass", askpass)
 
