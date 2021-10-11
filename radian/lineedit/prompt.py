@@ -172,8 +172,6 @@ class ModalPromptSession(PromptSession):
 
         # Create buffers list.
         def accept(buff) -> bool:
-            # remember the last working index for history_forward
-            buff.last_working_index = buff.working_index
             """Accept the content of the default buffer. This is called when
             the validation succeeds."""
             cast(Application[str], get_app()).exit(result=buff.document.text)
