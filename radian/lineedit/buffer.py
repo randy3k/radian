@@ -206,7 +206,8 @@ class ModalBuffer(BetterBuffer):
             next_mode = self._working_lines_mode[i]
             if next_mode == spec.name:
                 return True
-            elif spec.history_share_with and spec.history_share_with(next_mode):
+            elif next_mode in self.session.specs and \
+                    spec.history_book == self.session.specs[next_mode].history_book:
                 return True
         return False
 

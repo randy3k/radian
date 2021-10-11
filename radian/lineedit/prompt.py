@@ -18,7 +18,6 @@ from typing import cast
 
 
 # TODO: allow lines from different modes when replying history
-# TODO: improve history_share_with
 
 class ModeSpec():
     def __init__(
@@ -27,7 +26,7 @@ class ModeSpec():
             on_activated=None,
             on_dectivated=None,
             keep_history=True,
-            history_share_with=False,
+            history_book=None,
             prompt_key_bindings=None,
             **kwargs):
 
@@ -45,7 +44,10 @@ class ModeSpec():
         self.on_activated = on_activated
         self.on_dectivated = on_dectivated
         self.keep_history = keep_history
-        self.history_share_with = _ensure_func(history_share_with)
+        if history_book:
+            self.history_book = history_book
+        else:
+            self.history_book = name
         self.prompt_key_bindings = prompt_key_bindings
         for key in kwargs:
             if key not in PromptSession._fields:
