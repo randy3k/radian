@@ -61,6 +61,7 @@ class RadianApplication():
         from .prompt import create_radian_prompt_session
         from .console import create_read_console, create_write_console_ex
         import rchitect
+        from . import dispatch  # noqa
         from . import rutils, settings
 
         self.set_env_vars(options)
