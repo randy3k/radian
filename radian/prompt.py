@@ -112,14 +112,14 @@ def create_radian_prompt_session(options, settings):
     if options.no_history:
         history = ModalInMemoryHistory()
     elif not options.global_history and os.path.exists(local_history_file):
-        history = ModalFileHistory(os.path.abspath(local_history_file))
+        history = ModalFileHistory(os.path.abspath(local_history_file), settings.history_size)
     else:
         history_file = os.path.join(os.path.expanduser(global_history_file))
         history_file = os.path.expandvars(history_file)
         history_file_dir = os.path.dirname(history_file)
         if not os.path.exists(history_file_dir):
             os.makedirs(history_file_dir, 0o700)
-        history = ModalFileHistory(history_file)
+        history = ModalFileHistory(history_file, settings.history_size)
 
     if is_windows():
         output = None

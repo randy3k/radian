@@ -29,10 +29,15 @@ class ModalInMemoryHistory(ModelHistory, InMemoryHistory):
 
 
 class ModalFileHistory(ModelHistory, FileHistory):
+    def __init__(self, history_file, max_history_size):
+        self.max_history_size = max_history_size
+        super().__init__(history_file)
+
     def load_history_strings(self):
         strings = []
         lines = []
         mode = [None]
+        breaks = []
 
         def add() -> None:
             if lines:
@@ -42,7 +47,7 @@ class ModalFileHistory(ModelHistory, FileHistory):
 
         if os.path.exists(self.filename):
             with open(self.filename, "rb") as f:
-                for line_bytes in f:
+                for i, line_bytes in enumerate(f):
                     line = line_bytes.decode("utf-8", errors="replace")
 
                     if line.startswith('# mode: '):
@@ -51,9 +56,19 @@ class ModalFileHistory(ModelHistory, FileHistory):
                         lines.append(line[1:])
                     else:
                         add()
+                        breaks.append(i)
                         lines = []
 
                 add()
+
+            if len(breaks) > self.max_history_size:
+                # trim history if it is too big
+                with open(self.filename, "r+") as f:
+                    backup = f.readlines()
+                    f.seek(0)
+                    f.truncate()
+                    trimed = backup[breaks[-round(self.max_history_size * 0.9)]+1:]
+                    f.writelines(trimed)
 
         # Reverse the order, because newest items have to go first.
         return reversed(strings)

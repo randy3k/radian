@@ -46,6 +46,7 @@ class RadianSettings(object):
         self._load_setting("completion_timeout", 0.15)
         self._load_setting("completion_prefix_length", 2, int)
         self._load_setting("completion_adding_spaces_around_equals", True, bool)
+        self._load_setting("history_size", 20000, int)
         self._load_setting("global_history_file", "~/.radian_history")
         self._load_setting("local_history_file", ".radian_history")
         self._load_setting("history_search_no_duplicates", False, bool)

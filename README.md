@@ -135,6 +135,8 @@ options(radian.auto_width = TRUE)
 # insert new line between prompts
 options(radian.insert_new_line = TRUE)
 
+# max number of history records
+options(radian.history_size = 20000)
 # where the global history is stored, environmental variables will be expanded
 # note that "~" is expanded to %USERPROFILE% or %HOME% in Windows
 options(radian.global_history_file = "~/.radian_history")
