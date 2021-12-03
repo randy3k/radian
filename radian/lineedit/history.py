@@ -56,7 +56,8 @@ class ModalFileHistory(ModelHistory, FileHistory):
                         lines.append(line[1:])
                     else:
                         add()
-                        breaks.append(i)
+                        if lines:
+                            breaks.append(i)
                         lines = []
 
                 add()
