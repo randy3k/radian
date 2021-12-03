@@ -127,8 +127,8 @@ def create_radian_prompt_session(options, settings):
         output = CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
 
     def vi_mode_prompt():
-        if str(session.editing_mode).lower() == "vi" and settings.show_vi_mode_prompt:
-            im = session.app.vi_state.input_mode
+        if session.editing_mode == EditingMode.VI and settings.show_vi_mode_prompt:
+            im = session.app.vi_state.input_mode.value
             vi_mode_prompt = settings.vi_mode_prompt
             if isinstance(vi_mode_prompt, str):
                 return vi_mode_prompt.format(str(im)[3:6])
@@ -145,7 +145,7 @@ def create_radian_prompt_session(options, settings):
             return session._prompt_message
 
     if settings.editing_mode in ["vim", "vi"]:
-        editing_mode = EditingMode.Vi
+        editing_mode = EditingMode.VI
     else:
         editing_mode = EditingMode.EMACS
 
