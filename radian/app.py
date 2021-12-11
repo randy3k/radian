@@ -204,6 +204,8 @@ class RadianApplication():
 
         rchitect.init(args=args, register_signal_handlers=True)
 
+        rutils.source_init()
+
         try:
             rutils.source_radian_profile(options.profile)
         except RuntimeError as e:

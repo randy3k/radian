@@ -37,6 +37,10 @@ def source_file(path):
     rcall(("base", "source"), path, rcall(("base", "new.env")))
 
 
+def source_init():
+    source_file(os.path.join(os.path.dirname(__file__), "init", 'init.R'))
+
+
 def make_path(*p):
     return os.path.realpath(os.path.normpath(os.path.expanduser(os.path.join(*p))))
 

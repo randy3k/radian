@@ -60,10 +60,17 @@ def native_prompt(app, message):
             app._redraw()
 
 
+user_read_console = [None]
+
+
+def set_user_read_console(func):
+    user_read_console[0] = func
+
+
 def create_read_console(session):
     interrupted = [False]
 
-    def _read_console(message, add_history=1):
+    def default_read_console(message, add_history=1):
         app = session.app
 
         if app.is_running:
@@ -115,7 +122,12 @@ def create_read_console(session):
         return text
 
     def read_console(message, add_history):
-        return _read_console(message, add_history)
+        if user_read_console[0]:
+            try:
+                return user_read_console[0](message, add_history)
+            finally:
+                user_read_console[0] = None
+        return default_read_console(message, add_history)
 
     return read_console
 
