@@ -131,6 +131,7 @@ def create_read_console(session):
                 return user_read_console[0](message, add_history)
             except Exception as e:
                 print("Error: ", e)
+                unset_user_read_console()
         return default_read_console(message, add_history)
 
     return read_console
