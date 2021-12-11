@@ -63,7 +63,7 @@ def native_prompt(app, message):
 def create_read_console(session):
     interrupted = [False]
 
-    def read_console(message, add_history=1):
+    def _read_console(message, add_history=1):
         app = session.app
 
         if app.is_running:
@@ -113,6 +113,9 @@ def create_read_console(session):
                 app.output.write_raw("\n")
 
         return text
+
+    def read_console(message, add_history):
+        return _read_console(message, add_history)
 
     return read_console
 

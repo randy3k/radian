@@ -1,7 +1,10 @@
 from radian import main
 import sys
 
+# this file is used when radian is called with `python -m radian`
+
 if __name__ == '__main__':
+
     if "--coverage" in sys.argv:
         import coverage
         cov = coverage.Coverage()
@@ -11,9 +14,7 @@ if __name__ == '__main__':
             cov.stop()
             cov.save()
 
-        main.cleanup = cleanup
-
-    if "--cprofile" in sys.argv:
+    elif "--cprofile" in sys.argv:
         import cProfile
         import pstats
         pr = cProfile.Profile()
@@ -24,6 +25,7 @@ if __name__ == '__main__':
             ps = pstats.Stats(pr).sort_stats('cumulative')
             ps.print_stats(10)
 
-        main.cleanup = cleanup
+    else:
+        cleanup = None
 
-    main()
+    main(cleanup=cleanup)
