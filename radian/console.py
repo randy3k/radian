@@ -67,6 +67,10 @@ def set_user_read_console(func):
     user_read_console[0] = func
 
 
+def unset_user_read_console():
+    user_read_console[0] = None
+
+
 def create_read_console(session):
     interrupted = [False]
 
@@ -125,8 +129,8 @@ def create_read_console(session):
         if user_read_console[0]:
             try:
                 return user_read_console[0](message, add_history)
-            finally:
-                user_read_console[0] = None
+            except Exception as e:
+                print("Error: ", e)
         return default_read_console(message, add_history)
 
     return read_console
