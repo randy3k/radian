@@ -43,14 +43,14 @@ Requirements:
 
 ```sh
 # install released version
-pip install -U radian
+pip3 install -U radian
 # to run radian
 radian
 ```
 
 ```sh
 # or the development version
-pip install -U git+https://github.com/randy3k/radian
+pip3 install -U git+https://github.com/randy3k/radian
 ```
 
 Alternatively, if you use conda or miniconda,
@@ -175,6 +175,19 @@ options(radian.escape_key_map = list(
 ```
 
 ## FAQ
+
+
+#### I can't specify python runtime in reticulate.
+
+It is expected. `radian` runs on python and the python runtime used by radian is forced in 
+reticulate. `reticulate::py_config()` gives the note:
+```
+NOTE: Python version was forced by the current process
+```
+
+In order to use radian with another python runtime, you will need to install `radian` on
+that python environment.
+
 
 #### How to switch to a different R or specify the version of R.
 
