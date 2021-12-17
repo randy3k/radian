@@ -115,8 +115,8 @@ class Terminal(object):
         env["RETICULATE_PYTHON"] = sys.executable
         # don't not prompt to install miniconda
         env["RETICULATE_MINICONDA_ENABLED"] = "0"
-        process = PtyProcess.spawn(cmd, dimensions=(40, 80), env=env)
-        screen = Screen(process, 80, 40)
+        process = PtyProcess.spawn(cmd, dimensions=(40, 120), env=env)
+        screen = Screen(process, 120, 40)
         stream = ByteStream(screen)
         stream.start_feeding()
         try:
