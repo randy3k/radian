@@ -3,7 +3,6 @@ ns <- getNamespace("reticulate")
 
 rchitect <- import("rchitect")
 sys <- import("sys")
-os <- import("os")
 
 force_reticulate <- function() {
     message("radian: force reticulate to use ", sys$executable)
