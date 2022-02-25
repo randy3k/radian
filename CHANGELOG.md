@@ -1,3 +1,7 @@
+# v0.6.0
+   - python 3 only
+   - require prompt_toolkit 3.0
+
 # v0.5.12
 
 - a workaround when jedi crashes
