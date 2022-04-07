@@ -1,4 +1,5 @@
 import signal
+import re
 from contextlib import contextmanager
 
 from .settings import radian_settings as settings
@@ -9,6 +10,11 @@ TERMINAL_CURSOR_AT_BEGINNING = [True]
 
 SUPPRESS_STDOUT = False
 SUPPRESS_STDERR = False
+ANSI_ESCAPE_RE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+
+
+def normalize(string):
+    return ANSI_ESCAPE_RE.sub('', string.replace('\r\n', '\n').replace('\r', '\n'))
 
 
 @contextmanager
@@ -155,7 +161,7 @@ def create_write_console_ex(session, stderr_format):
                             if i < len(sbuf) - 1:
                                 output.write("\r")
                         output.flush()
-                        TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+                        TERMINAL_CURSOR_AT_BEGINNING[0] = normalize(buf).endswith("\n")
 
     if not write_console_ex:
         def write_console_ex(buf, otype):
@@ -163,11 +169,11 @@ def create_write_console_ex(session, stderr_format):
                 if not SUPPRESS_STDOUT:
                     output.write_raw(buf)
                     output.flush()
-                    TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+                    TERMINAL_CURSOR_AT_BEGINNING[0] = normalize(buf).endswith("\n")
             else:
                 if not SUPPRESS_STDERR:
                     output.write_raw(stderr_format.format(buf))
                     output.flush()
-                    TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+                    TERMINAL_CURSOR_AT_BEGINNING[0] = normalize(buf).endswith("\n")
 
     return write_console_ex
