@@ -223,7 +223,8 @@ def create_radian_prompt_session(options, settings):
 
     def shell_process_text(session):
         text = session.default_buffer.text
-        shell.run_command(text)
+        if text.strip():
+            shell.run_command(text)
 
     session.register_mode(
         name="shell",
