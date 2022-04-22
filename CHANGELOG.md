@@ -1,3 +1,8 @@
+# v0.6.1
+   - strip ansi sequence
+   - check if text is empty in shell mode
+   - require at least prompt_toolkit 3.0.15
+
 # v0.6.0
    - python 3 only
    - require prompt_toolkit 3.0
