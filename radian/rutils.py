@@ -1,6 +1,6 @@
 import os
 import sys
-from rchitect import rcopy, rcall
+from rchitect import rcopy, reval, rcall
 from rchitect._cffi import ffi, lib
 from rchitect.interface import roption, protected, rstring_p
 from .key_bindings import map_key
@@ -87,6 +87,14 @@ def register_cleanup(cleanup):
           rcall(("base", "getOption"), "rchitect.py_tools"),
           cleanup,
           onexit=True)
+
+
+def set_lang():
+    if sys.platform.startswith("win"):
+        if not os.environ.get("LANG", ""):
+            if rcopy(reval(
+                   'compareVersion(paste0(R.version$major, ".", R.version$minor), "4.2.0") >= 0')):
+                os.environ["LANG"] = "en_US.UTF-8"
 
 
 def run_on_load_hooks():
