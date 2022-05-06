@@ -17,7 +17,7 @@ from prompt_toolkit.eventloop.inputhook import set_eventloop_with_inputhook
 
 from pygments.styles import get_style_by_name
 
-from rchitect import rcopy, rcall
+from rchitect import rcopy, rcall, robject
 from rchitect.interface import setoption, process_events, peek_event, polled_events
 
 from . import shell
@@ -97,7 +97,7 @@ def apply_settings(session, settings):
             from prompt_toolkit import prompt
             return prompt(message, is_password=True)
 
-    setoption("askpass", askpass)
+    setoption("askpass", robject(askpass, convert=True))
 
     # enables completion of installed package names
     if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
