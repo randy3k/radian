@@ -1,3 +1,6 @@
+# v0.6.3
+  - fix a bug related askpass
+
 # v0.6.2
 
  - set LANG to en_US.UTF-8 if not set for R 4.2 windows
