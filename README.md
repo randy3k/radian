@@ -176,6 +176,10 @@ options(radian.escape_key_map = list(
 
 ## FAQ
 
+#### Unicode doesn't work in Windows and R 4.2+.
+
+The latest version of R supports Unicode codepage directly. However, radian relies on Python and Python doesn't support Unicode in the way that R supports it. A workaround could be found here: https://github.com/randy3k/radian/issues/269#issuecomment-1169663251
+
 
 #### I can't specify python runtime in reticulate.
 
