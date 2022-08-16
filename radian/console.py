@@ -120,8 +120,23 @@ def create_read_console(session):
 
         return text
 
+    _text = [""]
+
     def read_console(message, add_history):
-        return _read_console(message, add_history)
+        if _text[0]:
+            text = _text[0]
+        else:
+            text = _read_console(message, add_history)
+
+        if text:
+            index = text.find("\n")
+            if index >= 0:
+                _text[0] = text[(index + 1):]
+                text = text[:(index + 1)]
+            else:
+                _text[0] = ""
+
+        return text
 
     return read_console
 
