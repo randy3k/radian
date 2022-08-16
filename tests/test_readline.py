@@ -45,15 +45,15 @@ def test_strings_bracketed(terminal):
     terminal.write("nchar(x)\n")
     terminal.previous_line(2).assert_startswith("[1] 4001")
 
-    s = '中'*2000 + '\n' + '文'*2000 + '\n' + '中'*2000 + '\n' + '文'*2000
+    s = '中'*1000 + '\n' + '文'*1000 + '\n' + '中'*1000 + '\n' + '文'*1000
 
     terminal.write("\x1b[200~x <- '" + s + "'\x1b[201~\n")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(x)\n")
-    terminal.previous_line(2).assert_startswith("[1] 8003")
+    terminal.previous_line(2).assert_startswith("[1] 4003")
 
     # different padding
     terminal.write("\x1b[200~xy <- '" + s + "'\x1b[201~\n")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(xy)\n")
-    terminal.previous_line(2).assert_startswith("[1] 8003")
+    terminal.previous_line(2).assert_startswith("[1] 4003")

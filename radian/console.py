@@ -138,18 +138,11 @@ def create_read_console(session):
                 raise
 
         if text:
-            found = False
-            # find new line that breaks incompletely
-            for m in re.finditer(r"\n", text):
-                index = m.start()
-                text_pre = _text[0][:startpos[0]] + text[:index]
-                if prase_text_incomplete(text_pre):
-                    startpos[0] += index + 1
-                    text = text[:index]
-                    found = True
-                    break
-
-            if not found:
+            index = text.find('\n')
+            if index >= 0:
+                startpos[0] += index + 1
+                text = text[:index]
+            else:
                 _text[0] = ""
                 startpos[0] = 0
 
