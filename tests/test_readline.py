@@ -1,6 +1,3 @@
-import time
-
-
 def test_readline(terminal):
     # issue #106
     terminal.current_line().assert_startswith("r$>")

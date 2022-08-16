@@ -153,8 +153,6 @@ def create_read_console(session):
                 _text[0] = ""
                 startpos[0] = 0
 
-            with open("/tmp/radian", "a+") as f:
-                f.write("###\n{}\n###\n".format(text))
         return text
 
     return read_console
