@@ -4,7 +4,6 @@ from rchitect import rcopy, reval, rcall
 from rchitect._cffi import ffi, lib
 from rchitect.interface import roption, protected, rstring_p
 from .key_bindings import map_key
-from . import console
 from .console import suppress_stderr
 
 
@@ -21,9 +20,6 @@ def prase_text_complete(text):
 
 def prase_text_incomplete(text):
     return not prase_text_complete(text)
-
-
-console.prase_text_incomplete = prase_text_incomplete
 
 
 def package_is_loaded(pkg):

@@ -5,8 +5,6 @@ from contextlib import contextmanager
 from .settings import radian_settings as settings
 from rchitect import console
 
-prase_text_incomplete = None  # to be injected by .rutils
-
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
 SUPPRESS_STDOUT = False
@@ -129,13 +127,9 @@ def create_read_console(session):
         if _text[0]:
             text = _text[0][startpos[0]:]
         else:
-            try:
-                text = _read_console(message, add_history)
-                _text[0] = text
-                startpos[0] = 0
-            except (KeyboardInterrupt, Exception):
-                _text[0] = ""
-                raise
+            text = _read_console(message, add_history)
+            _text[0] = text
+            startpos[0] = 0
 
         if text:
             index = text.find('\n')
