@@ -41,7 +41,15 @@ def test_strings(terminal):
     terminal.write("nchar(x)\n")
     terminal.previous_line(2).assert_startswith("[1] 4001")
 
-    terminal.write("\x1b[200~x <- '" + '中'*1000 + '\n' + '文'*1000 + "'\x1b[201~\n")
+    s = '中'*2000 + '\n' + '文'*2000 + '\n' + '中'*2000 + '\n' + '文'*2000
+
+    terminal.write("\x1b[200~x <- '" + s + "'\x1b[201~\n")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(x)\n")
-    terminal.previous_line(2).assert_startswith("[1] 2001")
+    terminal.previous_line(2).assert_startswith("[1] 8003")
+
+    # different padding
+    terminal.write("\x1b[200~xyz <- '" + s + "'\x1b[201~\n")
+    terminal.current_line().strip().assert_equal("r$>")
+    terminal.write("nchar(xyz)\n")
+    terminal.previous_line(2).assert_startswith("[1] 8003")
