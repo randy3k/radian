@@ -1,3 +1,7 @@
+import sys
+import pytest
+
+
 def test_readline(terminal):
     # issue #106
     terminal.current_line().assert_startswith("r$>")
@@ -23,6 +27,9 @@ def test_strings(terminal):
     terminal.write("nchar(x)\n")
     terminal.previous_line(2).assert_startswith("[1] 1")
 
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="windows doesn't support bpm.")
+def test_strings_bracketed(terminal):
     terminal.write("\x1b[200~x <- '" + 'a'*10 + "'\x1b[201~\n")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(x)\n")
