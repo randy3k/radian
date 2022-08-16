@@ -53,7 +53,7 @@ def test_strings_bracketed(terminal):
     terminal.previous_line(2).assert_startswith("[1] 8003")
 
     # different padding
-    terminal.write("\x1b[200~xyz <- '" + s + "'\x1b[201~\n")
+    terminal.write("\x1b[200~xy <- '" + s + "'\x1b[201~\n")
     terminal.current_line().strip().assert_equal("r$>")
-    terminal.write("nchar(xyz)\n")
+    terminal.write("nchar(xy)\n")
     terminal.previous_line(2).assert_startswith("[1] 8003")
