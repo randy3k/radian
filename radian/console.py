@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from .settings import radian_settings as settings
 from rchitect import console
 
+prase_text_incomplete = None  # to be injected by .rutils
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
@@ -121,21 +122,39 @@ def create_read_console(session):
         return text
 
     _text = [""]
+    startpos = [0]
 
     def read_console(message, add_history):
+        # this code is needed to allow new line breaks with strings, see #377
         if _text[0]:
-            text = _text[0]
+            text = _text[0][startpos[0]:]
         else:
-            text = _read_console(message, add_history)
+            try:
+                text = _read_console(message, add_history)
+                _text[0] = text
+                startpos[0] = 0
+            except (KeyboardInterrupt, Exception):
+                _text[0] = ""
+                raise
 
         if text:
-            index = text.find("\n")
-            if index >= 0:
-                _text[0] = text[(index + 1):]
-                text = text[:(index + 1)]
-            else:
-                _text[0] = ""
+            found = False
+            # find new line that breaks incompletely
+            for m in re.finditer(r"\n", text):
+                index = m.start()
+                text_pre = _text[0][:startpos[0]] + text[:index]
+                if prase_text_incomplete(text_pre):
+                    startpos[0] += index + 1
+                    text = text[:index]
+                    found = True
+                    break
 
+            if not found:
+                _text[0] = ""
+                startpos[0] = 0
+
+            with open("/tmp/radian", "a+") as f:
+                f.write("###\n{}\n###\n".format(text))
         return text
 
     return read_console
