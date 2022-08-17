@@ -42,8 +42,8 @@ setup(
     package_data={'radian': ['reticulate/*.R']},
     python_requires='>=3.6',
     install_requires=[
-        # 'rchitect@git+https://github.com/randy3k/rchitect',
-        'rchitect>=0.3.37,<0.4.0',
+        'rchitect@git+https://github.com/randy3k/rchitect',
+        # 'rchitect>=0.3.38,<0.4.0',
         'prompt_toolkit>=3.0.15,<3.1',
         'pygments>=2.5.0'
     ],

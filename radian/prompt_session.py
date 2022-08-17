@@ -18,10 +18,10 @@ from prompt_toolkit.eventloop.inputhook import set_eventloop_with_inputhook
 from pygments.styles import get_style_by_name
 
 from rchitect import rcopy, rcall, robject
-from rchitect.interface import roption, setoption, process_events, peek_event, polled_events
+from rchitect.interface import roption, setoption, parse_text_complete, \
+    process_events, peek_event, polled_events
 
 from . import shell
-from .rutils import prase_text_complete
 from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
 from .completion import RCompleter, SmartPathCompleter
 from .io import CustomInput, CustomOutput
@@ -168,7 +168,7 @@ def create_radian_prompt_session(options, settings):
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
 
-    r_key_bindings = create_r_key_bindings(prase_text_complete)
+    r_key_bindings = create_r_key_bindings(parse_text_complete)
 
     session.register_mode(
         name="r",

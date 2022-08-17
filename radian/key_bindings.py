@@ -140,14 +140,14 @@ def newline(event, chars=["{", "[", "("]):
         event.current_buffer.insert_text(" " * tab_size)
 
 
-def create_prompt_key_bindings(prase_text_complete):
+def create_prompt_key_bindings(parse_text_complete):
     kb = KeyBindings()
     handle = kb.add
 
     @Condition
     def prase_complete():
         app = get_app()
-        return prase_text_complete(app.current_buffer.text)
+        return parse_text_complete(app.current_buffer.text)
 
     @handle('c-j', filter=insert_mode & default_focused)
     @handle('enter', filter=insert_mode & default_focused)
@@ -288,7 +288,7 @@ def create_prompt_key_bindings(prase_text_complete):
         should_eval = data and data[-1] == "\n" and \
             len(event.current_buffer.document.text_after_cursor) == 0
         # todo: allow partial prase complete
-        if should_eval and prase_text_complete(data):
+        if should_eval and parse_text_complete(data):
             data = data.rstrip("\n")
             event.current_buffer.insert_text(data)
             event.current_buffer.validate_and_handle()
@@ -299,8 +299,8 @@ def create_prompt_key_bindings(prase_text_complete):
 
 
 # keybinds for both r mond and browse mode
-def create_r_key_bindings(prase_text_complete):
-    kb = create_prompt_key_bindings(prase_text_complete)
+def create_r_key_bindings(parse_text_complete):
+    kb = create_prompt_key_bindings(parse_text_complete)
     handle = kb.add
 
     # r mode
