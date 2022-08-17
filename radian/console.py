@@ -123,25 +123,28 @@ def create_read_console(session):
     startpos = [0]
 
     def read_console(message, add_history):
-        # this code is needed to allow new line breaks with strings, see #377
-        if _text[0]:
-            text = _text[0][startpos[0]:]
+        if session.current_mode == "r":
+            # this code is needed to allow new line breaks with strings, see #377
+            if _text[0]:
+                text = _text[0][startpos[0]:]
+            else:
+                text = _read_console(message, add_history)
+                if text and "\n" in text:
+                    # make sure the text is evaluated at once
+                    text = "{\n" + text + "\n}"
+                _text[0] = text
+                startpos[0] = 0
+
+            if text:
+                index = text.find('\n')
+                if index >= 0:
+                    startpos[0] += index + 1
+                    text = text[:index]
+                else:
+                    _text[0] = ""
+                    startpos[0] = 0
         else:
             text = _read_console(message, add_history)
-            if text and "\n" in text and session.current_mode == "r":
-                # make sure the text is evaluated at once
-                text = "{\n" + text + "\n}"
-            _text[0] = text
-            startpos[0] = 0
-
-        if text:
-            index = text.find('\n')
-            if index >= 0:
-                startpos[0] += index + 1
-                text = text[:index]
-            else:
-                _text[0] = ""
-                startpos[0] = 0
 
         return text
 
