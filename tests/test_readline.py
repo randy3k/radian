@@ -30,6 +30,7 @@ def test_strings(terminal):
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="windows doesn't support bpm.")
 def test_strings_bracketed(terminal):
+    terminal.current_line().assert_startswith("r$>")
     terminal.write("\x1b[200~x <- '" + 'a'*10 + "'\x1b[201~\n")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(x)\n")
@@ -57,3 +58,11 @@ def test_strings_bracketed(terminal):
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(xy)\n")
     terminal.previous_line(2).assert_startswith("[1] 4003")
+
+
+def test_early_termination(terminal):
+    terminal.current_line().assert_startswith("r$>")
+    terminal.write("stop('!')\x1b\rd = 1\n")
+    terminal.previous_line(2).assert_startswith("Error")
+    terminal.write("d\n")
+    terminal.previous_line(2).assert_startswith("Error: object 'd' not found")
