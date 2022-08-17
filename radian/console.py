@@ -128,7 +128,7 @@ def create_read_console(session):
             text = _text[0][startpos[0]:]
         else:
             text = _read_console(message, add_history)
-            if text and session.current_mode == "r":
+            if text and "\n" in text and session.current_mode == "r":
                 # make sure the text is evaluated at once
                 text = "{\n" + text + "\n}"
             _text[0] = text
