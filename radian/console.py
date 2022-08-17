@@ -123,7 +123,7 @@ def create_read_console(session):
     startpos = [0]
 
     def read_console(message, add_history):
-        if session.current_mode == "r":
+        if session.current_mode in ["r", "browse"]:
             # this code is needed to allow new line breaks with strings, see #377
             if _text[0]:
                 text = _text[0][startpos[0]:]
