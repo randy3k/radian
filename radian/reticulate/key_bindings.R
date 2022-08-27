@@ -54,8 +54,8 @@ kb$add("~", filter = main_mode & insert_mode & default_focused & cursor_at_begin
     })
 
 
-prase_text_complete <- radian$reticulate$prase_text_complete
-pkb <- radian$key_bindings$create_prompt_key_bindings(prase_text_complete)
+parse_text_complete <- radian$reticulate$parse_text_complete
+pkb <- radian$key_bindings$create_prompt_key_bindings(parse_text_complete)
 
 pkb$add("c-d", filter = insert_mode & default_focused & cursor_at_begin & text_is_empty)(
     function(event) commit_text(event, "exit", FALSE)

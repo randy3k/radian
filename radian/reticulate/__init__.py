@@ -45,7 +45,7 @@ def reticulate_prompt_hook(*args):
     source_file(os.path.join(os.path.dirname(__file__), "key_bindings.R"))
 
 
-def prase_text_complete(code):
+def parse_text_complete(code):
     if "\n" in code:
         try:
             return compile_command(code, "<input>", "exec") is not None

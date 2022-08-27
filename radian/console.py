@@ -5,7 +5,6 @@ from contextlib import contextmanager
 from .settings import radian_settings as settings
 from rchitect import console
 
-
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
 SUPPRESS_STDOUT = False
@@ -120,8 +119,34 @@ def create_read_console(session):
 
         return text
 
+    _text = [""]
+    startpos = [0]
+
     def read_console(message, add_history):
-        return _read_console(message, add_history)
+        if session.current_mode in ["r", "browse"]:
+            # this code is needed to allow new line breaks with strings, see #377
+            if _text[0]:
+                text = _text[0][startpos[0]:]
+            else:
+                text = _read_console(message, add_history)
+                if text and "\n" in text:
+                    # make sure the text is evaluated at once
+                    text = "{\n" + text + "\n}"
+                _text[0] = text
+                startpos[0] = 0
+
+            if text:
+                index = text.find('\n')
+                if index >= 0:
+                    startpos[0] += index + 1
+                    text = text[:index]
+                else:
+                    _text[0] = ""
+                    startpos[0] = 0
+        else:
+            text = _read_console(message, add_history)
+
+        return text
 
     return read_console
 
