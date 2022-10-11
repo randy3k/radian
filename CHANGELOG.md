@@ -1,3 +1,8 @@
+# v0.6.4
+ - require rchitect 0.3.39 to fix a readconsole bug
+ - move parse_text_complete to rchitect
+
+
 # v0.6.3
   - fix a bug related askpass
 
