@@ -5,6 +5,16 @@ from rchitect.interface import roption
 from .key_bindings import map_key
 
 
+def is_long_non_ascii_multiline(text):
+    if text.isascii():
+        return False
+    if "\n" not in text:
+        return False
+    if len(text) < 1000:
+        return False
+    return True
+
+
 def package_is_loaded(pkg):
     return pkg in rcopy(rcall(("base", "loadedNamespaces")))
 
