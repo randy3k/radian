@@ -3,6 +3,7 @@ import re
 from contextlib import contextmanager
 
 from .settings import radian_settings as settings
+from .rutils import is_long_non_ascii_multiline
 from rchitect import console
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
@@ -119,30 +120,34 @@ def create_read_console(session):
 
         return text
 
-    _text = [""]
-    startpos = [0]
+    _text_stored = ["", 0, False]  # text, startpos, sent_by_line
 
     def read_console(message, add_history):
         if session.current_mode in ["r", "browse"]:
             # this code is needed to allow new line breaks with strings, see #377
-            if _text[0]:
-                text = _text[0][startpos[0]:]
+            if _text_stored[0]:
+                text = _text_stored[0][_text_stored[1]:]
             else:
                 text = _read_console(message, add_history)
-                if text and "\n" in text:
+                if text and is_long_non_ascii_multiline(text):
                     # make sure the text is evaluated at once
+                    # in case it includes long multiline strings, see #379
                     text = "{\n" + text + "\n}"
-                _text[0] = text
-                startpos[0] = 0
+                    _text_stored[2] = True
+
+                _text_stored[0] = text
+                _text_stored[1] = 0
 
             if text:
+                sent_by_line = _text_stored[2]
                 index = text.find('\n')
-                if index >= 0:
-                    startpos[0] += index + 1
+                if sent_by_line and index >= 0:
+                    _text_stored[1] += index + 1
                     text = text[:index]
                 else:
-                    _text[0] = ""
-                    startpos[0] = 0
+                    _text_stored[0] = ""
+                    _text_stored[1] = 0
+                    _text_stored[1] = False
         else:
             text = _read_console(message, add_history)
 
