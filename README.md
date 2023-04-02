@@ -57,6 +57,7 @@ Alternatively, if you use conda or miniconda,
 ```sh
 conda install -c conda-forge radian
 ```
+In this case, it is also recommended that also installing R via conda to ensure consistency in C runtime libraries.
 
 ## Alias on unix system
 
