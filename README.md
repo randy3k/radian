@@ -167,12 +167,17 @@ options(radian.enable_reticulate_prompt = TRUE)
 
 ```r
 # allows user defined shortcuts, these keys should be escaped when send through the terminal.
-# In the following example, `esc` + `-` sends `<-` and `esc` + `m` sends `%>%`.
+# In the following example, `esc` + `-` sends `<-` and `ctrl` + `right` sends `%>%`.
 # Note that in some terminals, you could mark `alt` as `escape` so you could use `alt` + `-` instead.
-options(radian.escape_key_map = list(
-    list(key = "-", value = " <- "),
-    list(key = "m", value = " %>% ")
-))
+# Also, note that some ctrl mappings are reserved. You cannot remap m, i, h, d, or c
+options(
+    radian.escape_key_map = list(
+        list(key = "-", value = " <- "),
+    ),
+    radian.ctrl_key_map = list(
+        list(key = "right", value = " %>% ")
+    )
+)
 ```
 
 ## FAQ
