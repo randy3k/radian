@@ -81,7 +81,7 @@ def load_custom_key_bindings(*args):
     keymap = roption("radian.ctrl_key_map", [])
     for m in keymap:
         if m["key"] in "mihdc":
-            print("WARNING: Cannot remap c-" + m["key"] + ". Please remove this mapping from radian.ctrl_key_map in your .radian_profile")
+            print("WARNING: Cannot remap c-" + m["key"] + ". Please remove this mapping from radian.ctrl_key_map in your radian profile")
         else:
             map_key(("c-" + m["key"],), m["value"], mode=m["mode"] if "mode" in m else "r")
 
