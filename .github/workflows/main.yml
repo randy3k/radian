@@ -39,13 +39,10 @@ jobs:
           python -m pip install jedi==0.17.2
           python -m pip install -e .[test]
           pytest -s --coverage
-      - name: codecov
-        run: |
-          python -m pip install codecov
           coverage combine
-          codecov
-        env:
-          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   twine:
     name: Upload tarball
