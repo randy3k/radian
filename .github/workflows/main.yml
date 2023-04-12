@@ -40,7 +40,7 @@ jobs:
           python -m pip install -e .[test]
           pytest -s --coverage
           coverage combine
-          coverage xml -o coverage.xml
+          coverage xml -i -o coverage.xml
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
