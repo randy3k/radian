@@ -64,7 +64,7 @@ class ModalFileHistory(ModelHistory, FileHistory):
 
             if len(breaks) > max(self.max_history_size, 10):
                 # trim history if it is too big
-                with open(self.filename, "r+") as f:
+                with open(self.filename, "r+", encoding="utf-8") as f:
                     backup = f.readlines()
                     f.seek(0)
                     f.truncate()
