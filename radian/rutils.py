@@ -4,9 +4,11 @@ from rchitect import rcopy, reval, rcall
 from rchitect.interface import roption
 from .key_bindings import map_key
 
+def is_ascii(str):
+    return all(ord(c) < 128 for c in str)
 
 def is_long_non_ascii_multiline(text):
-    if text.isascii():
+    if is_ascii(text):
         return False
     if "\n" not in text:
         return False
