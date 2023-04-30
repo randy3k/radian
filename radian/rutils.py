@@ -5,12 +5,7 @@ from rchitect.interface import roption
 from .key_bindings import map_key
 
 def is_ascii(str):
-    try:
-        str.decode('ascii')
-    except UnicodeDecodeError:
-        return False
-    else:
-        return True
+    return all(ord(c) < 128 for c in str)
 
 def is_long_non_ascii_multiline(text):
     if is_ascii(text):
