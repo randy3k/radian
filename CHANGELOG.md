@@ -1,3 +1,8 @@
+# v0.6.6
+
+ - Use backported is_ascii (#415)
+ - Use simple ascii check instead (#416)
+
 # v0.6.5
  - only wrap text if the line length > 1000 (#389)
  - implement ctrl_key_map option (#409)
