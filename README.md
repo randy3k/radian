@@ -239,6 +239,8 @@ _radian_ maintains its own history file `.radian_history` and doesn't use the `.
 
 _radian_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
 
+However, it was reported that radian may be slower when using parallel computation, specifially when using forking. User should take extra care in those cases.
+
 #### Nvim-R support
 
 Put
