@@ -43,7 +43,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         # 'rchitect@git+https://github.com/randy3k/rchitect',
-        'rchitect>=0.3.39,<0.4.0',
+        'rchitect>=0.4.1,<0.5.0',
         'prompt_toolkit>=3.0.15,<3.1',
         'pygments>=2.5.0'
     ],
