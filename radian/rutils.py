@@ -98,12 +98,13 @@ def register_cleanup(cleanup):
 
 def set_locale(lc_ctype):
     if sys.platform.startswith("win"):
-        if not os.environ.get("LANG", ""):
-            if rcopy(reval(
-                   'compareVersion(paste0(R.version$major, ".", R.version$minor), "4.2.0") >= 0')):
-                os.environ["LANG"] = "en_US.UTF-8"
-        if lc_ctype:
-            reval("suppressWarnings(Sys.setlocale(locale = '{}'))".format(lc_ctype))
+        ucrt = rcopy(
+            reval('compareVersion(paste0(R.version$major, ".", R.version$minor), "4.2.0") >= 0'))
+        if ucrt:
+            if not os.environ.get("LANG", ""):
+                    os.environ["LANG"] = "en_US.UTF-8"
+            if lc_ctype:
+                reval("suppressWarnings(Sys.setlocale(locale = '{}'))".format(lc_ctype))
 
 
 def run_on_load_hooks():
