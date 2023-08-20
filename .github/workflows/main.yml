@@ -41,9 +41,12 @@ jobs:
           pytest -s --coverage
           coverage combine
           coverage xml -i -o coverage.xml
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: codecov
+        run: |
+          python -m pip install codecov
+          codecov
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
 
   twine:
     name: Upload tarball
