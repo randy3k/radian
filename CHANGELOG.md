@@ -1,3 +1,7 @@
+# v0.6.7
+ - set LC_CTYPE to en_US.UTF-8 if it is not set
+
+
 # v0.6.6
 
  - Use backported is_ascii (#415)
