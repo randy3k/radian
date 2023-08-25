@@ -75,35 +75,48 @@ def main(cleanup=None):
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
-    libPath = os.path.join(r_home, "lib")
-    ldpaths = os.path.join(r_home, "etc", "ldpaths")
-    if "R_LD_LIBRARY_PATH" not in os.environ or libPath not in os.environ["R_LD_LIBRARY_PATH"]:
-        if os.path.exists(ldpaths):
-            R_LD_LIBRARY_PATH = subprocess.check_output(
-                ". \"{}\"; echo $R_LD_LIBRARY_PATH".format(ldpaths),
-                shell=True
-            ).decode("utf-8").strip()
-        elif "R_LD_LIBRARY_PATH" in os.environ:
-            R_LD_LIBRARY_PATH = os.environ["R_LD_LIBRARY_PATH"]
-        else:
-            R_LD_LIBRARY_PATH = libPath
-        if libPath not in R_LD_LIBRARY_PATH:
-            R_LD_LIBRARY_PATH = "{}:{}".format(libPath, R_LD_LIBRARY_PATH)
-        os.environ['R_LD_LIBRARY_PATH'] = R_LD_LIBRARY_PATH
-        # respect R_ARCH variable?
-        if sys.platform == "darwin":
-            ld_library_var = "DYLD_FALLBACK_LIBRARY_PATH"
-        else:
-            ld_library_var = "LD_LIBRARY_PATH"
-        if ld_library_var in os.environ:
-            LD_LIBRARY_PATH = "{}:{}".format(R_LD_LIBRARY_PATH, os.environ[ld_library_var])
-        else:
-            LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
-        os.environ[ld_library_var] = LD_LIBRARY_PATH
-        if sys.argv[0].endswith("radian"):
-            os.execv(sys.argv[0], sys.argv)
-        else:
-            os.execv(sys.executable, [sys.executable, "-m", "radian"] + sys.argv[1:])
+    if not sys.platform.startswith("win"):
+        libPath = os.path.join(r_home, "lib")
+        ldpaths = os.path.join(r_home, "etc", "ldpaths")
+        if (
+            "R_LD_LIBRARY_PATH" not in os.environ
+            or libPath not in os.environ["R_LD_LIBRARY_PATH"]
+        ):
+            if os.path.exists(ldpaths):
+                R_LD_LIBRARY_PATH = (
+                    subprocess.check_output(
+                        '. "{}"; echo $R_LD_LIBRARY_PATH'.format(ldpaths),
+                        shell=True,
+                    )
+                    .decode("utf-8")
+                    .strip()
+                )
+            elif "R_LD_LIBRARY_PATH" in os.environ:
+                R_LD_LIBRARY_PATH = os.environ["R_LD_LIBRARY_PATH"]
+            else:
+                R_LD_LIBRARY_PATH = libPath
+            if libPath not in R_LD_LIBRARY_PATH:
+                R_LD_LIBRARY_PATH = "{}:{}".format(libPath, R_LD_LIBRARY_PATH)
+            os.environ["R_LD_LIBRARY_PATH"] = R_LD_LIBRARY_PATH
+            # respect R_ARCH variable?
+            if sys.platform == "darwin":
+                ld_library_var = "DYLD_FALLBACK_LIBRARY_PATH"
+            else:
+                ld_library_var = "LD_LIBRARY_PATH"
+            if ld_library_var in os.environ:
+                LD_LIBRARY_PATH = "{}:{}".format(
+                    R_LD_LIBRARY_PATH, os.environ[ld_library_var]
+                )
+            else:
+                LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
+            os.environ[ld_library_var] = LD_LIBRARY_PATH
+            if sys.argv[0].endswith("radian"):
+                os.execv(sys.argv[0], sys.argv)
+            else:
+                os.execv(
+                    sys.executable,
+                    [sys.executable, "-m", "radian"] + sys.argv[1:],
+                )
 
     RadianApplication(r_home, ver=__version__).run(options, cleanup=cleanup)
 
