@@ -89,7 +89,7 @@ it is not recommended because
 
 ```r
 # Do not copy the whole configuration, just specify what you need!
-# see https://help.farbox.com/pygments.html
+# see https://pygments.org/styles
 # for a list of supported color schemes, default scheme is "native"
 options(radian.color_scheme = "native")
 
