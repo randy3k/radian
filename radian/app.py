@@ -218,7 +218,7 @@ class RadianApplication():
         rchitect.init(args=args, register_signal_handlers=True)
 
         if sys.platform.startswith("win"):
-            rutils.set_lang()
+            rutils.set_utf8()
 
         try:
             rutils.source_radian_profile(options.profile)
