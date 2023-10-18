@@ -215,16 +215,10 @@ class RadianApplication():
         # enable signal handlers
         os.environ["RCHITECT_REGISTER_SIGNAL_HANDLERS"] = "1"
 
-        if sys.platform.startswith("win"):
-            # avoid "using locale code page other than 1252 may cause problems" warning
-            lc_ctype = os.environ.pop('LC_CTYPE', "en_US.UTF-8")
-        else:
-            lc_ctype = None
-
         rchitect.init(args=args, register_signal_handlers=True)
 
         if sys.platform.startswith("win"):
-            rutils.set_locale(lc_ctype = lc_ctype)
+            rutils.set_utf8()
 
         try:
             rutils.source_radian_profile(options.profile)
