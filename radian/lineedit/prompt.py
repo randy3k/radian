@@ -49,6 +49,7 @@ class ModalPromptSession(PromptSession):
     _current_mode = None
     _default_settings = {}
     _specs = OrderedDict()
+    _inputhook = None
 
     # new settings
     add_history = True
@@ -66,7 +67,8 @@ class ModalPromptSession(PromptSession):
                 setattr(self, key, kwargs[key])
                 del kwargs[key]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, inputhook=None, *args, **kwargs):
+        self._inputhook = inputhook
         self._check_args(kwargs)
         self._filter_args(kwargs)
         super().__init__(*args, **kwargs)
@@ -223,7 +225,7 @@ class ModalPromptSession(PromptSession):
 
         orig_mode = self.current_mode
         try:
-            result = super().prompt(**kwargs)
+            result = super().prompt(inputhook=self._inputhook, **kwargs)
         except KeyboardInterrupt:
             self._default_settings = backup.copy()
             self.activate_mode(orig_mode, force=True)

@@ -13,7 +13,6 @@ from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
 from prompt_toolkit.validation import Validator
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.eventloop.inputhook import set_eventloop_with_inputhook
 
 from pygments.styles import get_style_by_name
 
@@ -150,6 +149,36 @@ def create_radian_prompt_session(options, settings):
     else:
         editing_mode = EditingMode.EMACS
 
+    def get_inputhook():
+        # make testing more robust
+        if "RADIAN_NO_INPUTHOOK" in os.environ:
+            return None
+
+        terminal_width = [None]
+
+        def _(context):
+            output_width = session.app.output.get_size().columns
+            if output_width and terminal_width[0] != output_width:
+                terminal_width[0] = output_width
+                setoption("width", max(terminal_width[0], 20))
+
+            while True:
+                if context.input_is_ready():
+                    break
+                try:
+                    if peek_event():
+                        with session.app.input.detach():
+                            with session.app.input.rare_mode():
+                                process_events()
+                    else:
+                        polled_events()
+
+                except Exception:
+                    pass
+                time.sleep(1.0 / 30)
+
+        return _
+
     session = RadianPromptSession(
         message=message,
         style=style_from_pygments_cls(get_style_by_name(settings.color_scheme)),
@@ -161,7 +190,8 @@ def create_radian_prompt_session(options, settings):
         enable_suspend=True,
         input=CustomInput(sys.stdin),
         output=output,
-        auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None
+        auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None,
+        inputhook=get_inputhook()
     )
 
     input_processors = []
@@ -253,36 +283,6 @@ def create_radian_prompt_session(options, settings):
         prompt_key_bindings=None,
         input_processors=[]
     )
-
-    def get_inputhook():
-        terminal_width = [None]
-
-        def _(context):
-            output_width = session.app.output.get_size().columns
-            if output_width and terminal_width[0] != output_width:
-                terminal_width[0] = output_width
-                setoption("width", max(terminal_width[0], 20))
-
-            while True:
-                if context.input_is_ready():
-                    break
-                try:
-                    if peek_event():
-                        with session.app.input.detach():
-                            with session.app.input.rare_mode():
-                                process_events()
-                    else:
-                        polled_events()
-
-                except Exception:
-                    pass
-                time.sleep(1.0 / 30)
-
-        return _
-
-    # make testing more robust
-    if "RADIAN_NO_INPUTHOOK" not in os.environ:
-        set_eventloop_with_inputhook(get_inputhook())
 
     apply_settings(session, settings)
 
