@@ -1,3 +1,10 @@
+# v0.6.9
+ - require prompt-toolkit 3.0.41
+
+# v0.6.8
+ - set LC_CTYPE to en_US.UTF-8 if it is not set
+ - Add support for `ldpaths` detection on macOS via `DYLD_FALLBACK_LIBRARY_PATH` (#417)
+
 # v0.6.7
  - set LC_CTYPE to en_US.UTF-8 if it is not set
 
