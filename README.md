@@ -253,6 +253,10 @@ let R_bracketed_paste = 1
 ```
 in your vim config. 
 
+#### [vim-slime](https://github.com/jpalardy/vim-slime) support
+
+In case you use vim-slime or similar programs to send the code to radian REPL directly from the text editor, put `options(radian.auto_match = FALSE)` in [your profile file](https://github.com/randy3k/radian#settings) to avoid radian autocompletion of a code line that will be completed in the subsequent lines.
+
 
 #### `reticulate` Auto Completions
 
