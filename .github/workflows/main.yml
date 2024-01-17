@@ -1,6 +1,10 @@
 name: Main
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 env:
   RADIAN_NO_INPUTHOOK: 1
