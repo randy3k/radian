@@ -1,31 +1,31 @@
 name: Main
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   RADIAN_NO_INPUTHOOK: 1
 
 jobs:
-  cleanup:
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          access_token: ${{ github.token }}
-
   pytest:
     name: ${{ matrix.os }} r-${{ matrix.r }} py-${{ matrix.python }}
     strategy:
       fail-fast: false
       matrix:
         r: [4.1, latest, devel]
-        python: [3.8]
+        python: [3.8, 3.12]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: ${{ matrix.python }}
@@ -36,7 +36,7 @@ jobs:
         run: Rscript -e "install.packages(c('reticulate', 'askpass'))"
       - name: Install and run tests
         run: |
-          python -m pip install jedi==0.17.2
+          python -m pip install jedi
           python -m pip install -e .[test]
           pytest -s --coverage
           coverage combine
@@ -57,11 +57,11 @@ jobs:
       TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
       TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: 3.8
+          python-version: 3.11
       - run: python -m pip install twine
       - run: python setup.py sdist
       - run: python -m pip install dist/*

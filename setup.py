@@ -26,7 +26,7 @@ tests_deps = [
     "pytest",
     "pyte>=0.8.0",
     "pexpect",
-    "pywinpty==0.5.7" if sys.platform.startswith("win") else "ptyprocess"
+    "pywinpty" if sys.platform.startswith("win") else "ptyprocess"
 ]
 
 
@@ -40,10 +40,10 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages('.', exclude=["tests"]),
     package_data={'radian': ['reticulate/*.R']},
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=[
         # 'rchitect@git+https://github.com/randy3k/rchitect',
-        'rchitect>=0.4.3,<0.5.0',
+        'rchitect>=0.4.6,<0.5.0',
         'prompt_toolkit>=3.0.41,<3.1',
         'pygments>=2.5.0'
     ],
