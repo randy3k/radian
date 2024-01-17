@@ -213,7 +213,4 @@ def create_write_console_ex(session, stderr_format):
                     if buf:
                         TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
-            with open("/tmp/radian_test", "a+") as f:
-                f.write(str(TERMINAL_CURSOR_AT_BEGINNING[0]) + repr(normalize(buf)) + "\n")
-
     return write_console_ex
