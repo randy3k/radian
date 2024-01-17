@@ -1,3 +1,6 @@
+# v0.6.10
+ - require rchitect 0.4.6 and python 3.7
+
 # v0.6.9
  - require prompt-toolkit 3.0.41
 
