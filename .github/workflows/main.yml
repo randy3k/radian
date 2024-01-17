@@ -6,18 +6,14 @@ on:
   pull_request:
     branches: [main, master]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   RADIAN_NO_INPUTHOOK: 1
 
 jobs:
-  cleanup:
-    name: Cancel Previous Runs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: styfle/cancel-workflow-action@0.12.0
-        with:
-          access_token: ${{ github.token }}
-
   pytest:
     name: ${{ matrix.os }} r-${{ matrix.r }} py-${{ matrix.python }}
     strategy:
