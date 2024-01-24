@@ -1,3 +1,6 @@
+# v0.6.11
+ - do not insert new line for carrage return 
+
 # v0.6.10
  - require rchitect 0.4.6 and python 3.7
 
