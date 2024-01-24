@@ -14,7 +14,7 @@ ANSI_ESCAPE_RE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 
 def normalize(string):
-    return ANSI_ESCAPE_RE.sub('', string.replace('\r\n', '\n').replace('\r', '\n'))
+    return ANSI_ESCAPE_RE.sub('', string.replace('\r\n', '\n'))
 
 
 @contextmanager
