@@ -1,3 +1,6 @@
+# v0.6.12
+ - fix color printing issue https://github.com/randy3k/radian/issues/468
+
 # v0.6.11
  - do not insert new line for carrage return 
 
