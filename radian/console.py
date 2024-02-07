@@ -199,17 +199,18 @@ def create_write_console_ex(session, stderr_format):
 
     if not write_console_ex:
         def write_console_ex(buf, otype):
-            buf = normalize(buf)
             if otype == 0:
                 if not SUPPRESS_STDOUT:
                     output.write_raw(buf)
                     output.flush()
+                    buf = normalize(buf)
                     if buf:
                         TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
             else:
                 if not SUPPRESS_STDERR:
                     output.write_raw(stderr_format.format(buf))
                     output.flush()
+                    buf = normalize(buf)
                     if buf:
                         TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
