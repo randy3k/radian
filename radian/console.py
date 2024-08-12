@@ -201,6 +201,7 @@ def create_write_console_ex(session, stderr_format):
         def write_console_ex(buf, otype):
             if otype == 0:
                 if not SUPPRESS_STDOUT:
+                    output.enable_autowrap() #Patch for Windows10_Output
                     output.write_raw(buf)
                     output.flush()
                     buf = normalize(buf)
@@ -208,6 +209,7 @@ def create_write_console_ex(session, stderr_format):
                         TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
             else:
                 if not SUPPRESS_STDERR:
+                    output.enable_autowrap()
                     output.write_raw(stderr_format.format(buf))
                     output.flush()
                     buf = normalize(buf)
