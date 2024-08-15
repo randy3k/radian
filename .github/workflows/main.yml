@@ -20,8 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: [4.1, latest, devel]
-        python: [3.8, 3.12]
+        r: [4.3, latest, devel]
+        python: [3.9, 3.12]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
