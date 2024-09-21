@@ -1,3 +1,9 @@
+# v0.6.14
+
+
+# v0.6.13
+ - fix line wrapping for windows terminal (#484)
+
 # v0.6.12
  - fix color printing issue https://github.com/randy3k/radian/issues/468
 
