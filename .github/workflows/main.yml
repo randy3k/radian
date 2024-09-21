@@ -36,7 +36,7 @@ jobs:
       - name: Install required R packages for testing
         run: Rscript -e "install.packages(c('remotes', 'askpass'))"
       - name: Install required R packages for testing
-        run: Rscript -e "remotes::install_github('rstudio/reticulate#1670')"
+        run: Rscript -e "remotes::install_github('rstudio/reticulate')"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install and run tests
