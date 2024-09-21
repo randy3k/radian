@@ -96,9 +96,18 @@ def main(cleanup=None):
     if not sys.platform.startswith("win"):
         libPath = os.path.join(r_home, "lib")
         ldpaths = os.path.join(r_home, "etc", "ldpaths")
+        libRBlas = os.path.join(libPath, "libRblas.dylib")
 
-        if "DYLD_INSERT_LIBRARIES" in os.environ:
-            del os.environ['DYLD_INSERT_LIBRARIES']
+        if sys.platform == "darwin":
+            # avoid libRBlas to propagate downstream
+            if "DYLD_INSERT_LIBRARIES" in os.environ:
+                libs = [
+                    lib for lib in os.environ['DYLD_INSERT_LIBRARIES'].split(":") if lib != libRBlas
+                ]
+                if libs:
+                    os.environ['DYLD_INSERT_LIBRARIES'] = ":".join(libs)
+                else:
+                    del os.environ['DYLD_INSERT_LIBRARIES']
 
         if (
             "R_LD_LIBRARY_PATH" not in os.environ
@@ -134,9 +143,6 @@ def main(cleanup=None):
             os.environ[ld_library_var] = LD_LIBRARY_PATH
 
             if sys.platform == "darwin":
-                # macOS python injects Accelarate Blas automatically
-                # note that it may be ignored for SIP protected python.
-                libRBlas = os.path.join(libPath, "libRblas.dylib")
                 if "DYLD_INSERT_LIBRARIES" not in os.environ:
                     os.environ["DYLD_INSERT_LIBRARIES"] = libRBlas
                 else:
