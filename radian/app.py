@@ -20,29 +20,47 @@ def main(cleanup=None):
     parser = optparse.OptionParser("usage: radian")
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Get version")
     parser.add_option("--r-binary", dest="r", help="Path to R binary")
-    parser.add_option("--profile", dest="profile", help="Path to .radian_profile, ignore both global and local profiles")
-    parser.add_option("-q", "--quiet", "--silent", action="store_true", dest="quiet", help="Don't print startup message")
-    parser.add_option("--no-environ", action="store_true", dest="no_environ", help="Don't read the site and user environment files")
-    parser.add_option("--no-site-file", action="store_true", dest="no_site_file", help="Don't read the site-wide Rprofile")
-    parser.add_option("--no-init-file", action="store_true", dest="no_init_file", help="Don't read the user R profile")
-    parser.add_option("--local-history", action="store_true", dest="local_history", help="Force using local history file")
-    parser.add_option("--global-history", action="store_true", dest="global_history", help="Force using global history file")
-    parser.add_option("--no-history", action="store_true", dest="no_history", help="Don't load any history files")
-    parser.add_option("--vanilla", action="store_true", dest="vanilla", help="Combine --no-history --no-environ --no-site-file --no-init-file")
-    parser.add_option("--save", action="store_true", dest="save", help="Do save workspace at the end of the session")
+    parser.add_option("--profile", dest="profile",
+                      help="Path to .radian_profile, ignore both global and local profiles")
+    parser.add_option("-q", "--quiet", "--silent", action="store_true",
+                      dest="quiet", help="Don't print startup message")
+    parser.add_option("--no-environ", action="store_true", dest="no_environ",
+                      help="Don't read the site and user environment files")
+    parser.add_option("--no-site-file", action="store_true", dest="no_site_file",
+                      help="Don't read the site-wide Rprofile")
+    parser.add_option("--no-init-file", action="store_true",
+                      dest="no_init_file", help="Don't read the user R profile")
+    parser.add_option("--local-history", action="store_true",
+                      dest="local_history", help="Force using local history file")
+    parser.add_option("--global-history", action="store_true",
+                      dest="global_history", help="Force using global history file")
+    parser.add_option("--no-history", action="store_true",
+                      dest="no_history", help="Don't load any history files")
+    parser.add_option("--vanilla", action="store_true", dest="vanilla",
+                      help="Combine --no-history --no-environ --no-site-file --no-init-file")
+    parser.add_option("--save", action="store_true", dest="save",
+                      help="Do save workspace at the end of the session")
     parser.add_option("--ask-save", action="store_true", dest="ask_save", help="Ask to save R data")
-    parser.add_option("--restore-data", action="store_true", dest="restore_data", help="Restore previously saved objects")
+    parser.add_option("--restore-data", action="store_true", dest="restore_data",
+                      help="Restore previously saved objects")
     parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
-    parser.add_option("--coverage", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--cprofile", action="store_true", dest="cprofile", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--coverage", action="store_true",
+                      dest="coverage", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--cprofile", action="store_true",
+                      dest="cprofile", help=optparse.SUPPRESS_HELP)
 
     # we accept these options, but never check them
     parser.add_option("--no-save", action="store_true", dest="no_save", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-restore-data", action="store_true", dest="no_restore_data", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-restore-history", action="store_true", dest="no_restore_history", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-restore", action="store_true", dest="no_restore", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-readline", action="store_true", dest="no_readline", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--interactive", action="store_true", dest="interactive", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-restore-data", action="store_true",
+                      dest="no_restore_data", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-restore-history", action="store_true",
+                      dest="no_restore_history", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-restore", action="store_true",
+                      dest="no_restore", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--no-readline", action="store_true",
+                      dest="no_readline", help=optparse.SUPPRESS_HELP)
+    parser.add_option("--interactive", action="store_true",
+                      dest="interactive", help=optparse.SUPPRESS_HELP)
 
     options, args = parser.parse_args()
 
@@ -110,6 +128,17 @@ def main(cleanup=None):
             else:
                 LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
             os.environ[ld_library_var] = LD_LIBRARY_PATH
+
+            if sys.platform == "darwin":
+                # macOS python injects Accelarate Blas automatically
+                # note that it may be ignored for SIP protected python.
+                libRBlas = os.path.join(libPath, "libRblas.dylib")
+                if "DYLD_INSERT_LIBRARIES" not in os.environ:
+                    os.environ["DYLD_INSERT_LIBRARIES"] = libRBlas
+                else:
+                    os.environ["DYLD_INSERT_LIBRARIES"] = "{}:{}".format(
+                        os.environ["DYLD_INSERT_LIBRARIES"], libRBlas)
+
             if sys.argv[0].endswith("radian"):
                 os.execv(sys.argv[0], sys.argv)
             else:
