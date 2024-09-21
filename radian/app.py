@@ -96,6 +96,10 @@ def main(cleanup=None):
     if not sys.platform.startswith("win"):
         libPath = os.path.join(r_home, "lib")
         ldpaths = os.path.join(r_home, "etc", "ldpaths")
+
+        if "DYLD_INSERT_LIBRARIES" in os.environ:
+            del os.environ['DYLD_INSERT_LIBRARIES']
+
         if (
             "R_LD_LIBRARY_PATH" not in os.environ
             or libPath not in os.environ["R_LD_LIBRARY_PATH"]
