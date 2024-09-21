@@ -1,5 +1,5 @@
 # v0.6.14
-
+ - Force loading libRBlas in macOS
 
 # v0.6.13
  - fix line wrapping for windows terminal (#484)
