@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radian"
+dynamic = ["version"]
+authors = [{name="Randy Lai",email = "randy.cs.lai@gmail.com"}]
+description = "A 21 century R console"
+readme = "README.md"
+requires-python = ">=3.7"
+license = { file = "LICENSE" }
+
+dependencies = [
+    "rchitect>=0.4.7,<0.5.0",
+    "prompt_toolkit>=3.0.41,<3.1",
+    "pygments>=2.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/randy3k/radian"
+
+[project.scripts]
+radian = "radian:main"
+
+[project.optional-dependencies]
+dev = [
+    "coverage",
+    "pytest",
+    "pyte>=0.8.0",
+    "pexpect",
+    "pywinpty; sys_platform == 'win32'",
+    "ptyprocess; sys_platform != 'win32'",
+]
+
+[tool.setuptools]
+packages = { find = { where = ["."], exclude = ["tests*"] } }
+
+[tool.setuptools.dynamic]
+version = { attr = "radian.__version__" }
+
+[tool.setuptools.package-data]
+radian = ["reticulate/*.R"]
