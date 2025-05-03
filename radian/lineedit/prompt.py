@@ -198,6 +198,8 @@ class ModalPromptSession(PromptSession):
         @kb.add('c-o', filter=emacs_mode)
         def _(event):
             buff = event.current_buffer
+            if not isinstance(buff, ModalBuffer):
+                return
             working_index = buff.working_index
             buff.validate_and_handle()
 
