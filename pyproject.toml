@@ -12,7 +12,7 @@ requires-python = ">=3.7"
 license = { file = "LICENSE" }
 
 dependencies = [
-    "rchitect>=0.4.7,<0.5.0",
+    "rchitect>=0.4.8,<0.5.0",
     "prompt_toolkit>=3.0.41,<3.1",
     "pygments>=2.5.0",
 ]
