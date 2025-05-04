@@ -71,6 +71,6 @@ jobs:
         with:
           python-version: 3.11
       - run: python -m pip install twine build
-      - run: python -m build
+      - run: python -m build --sdist
       - run: python -m pip install dist/*
       - run: python -m twine upload dist/*
