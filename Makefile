@@ -8,5 +8,5 @@ clean:
 
 
 changelog:
-	git-changelog --convention angular --sections feat,fix,refactor,chore,docs,revert \
+	git-changelog --convention angular --sections feat,fix,refactor,chore,docs,revert,test \
 		--provider github --output CHANGELOG.md
