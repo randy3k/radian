@@ -7,5 +7,8 @@ clean:
 	find . -name '*.pyc' -not -path './.venv/*' -exec rm -rf {} \;
 
 
-changelog:
+dev-changelog:
 	git cliff -o
+
+changelog:
+	git cliff --bump -o
