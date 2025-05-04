@@ -6,7 +6,6 @@ clean:
 	find . -name '*.o' -not -path './.venv/*' -exec rm -rf {} \; &&\
 	find . -name '*.pyc' -not -path './.venv/*' -exec rm -rf {} \;
 
-
 dev-changelog:
 	git cliff -o
 
