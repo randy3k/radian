@@ -201,7 +201,7 @@ class RadianApplication():
         if not (os.path.isdir(doc_dir) and os.path.isdir(include_dir) and os.path.isdir(share_dir)):
             try:
                 paths = subprocess.check_output([
-                    os.path.join(self.r_home, "bin", "R"), "--slave", "--vanilla", "-e",
+                    os.path.join(self.r_home, "bin", "R"), "--no-echo", "--vanilla", "-e",
                     "cat(paste(R.home('doc'), R.home('include'), R.home('share'), sep=':'))"
                 ])
                 doc_dir, include_dir, share_dir = paths.decode().split(":")
