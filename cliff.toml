@@ -50,8 +50,8 @@ postprocessors = []
 conventional_commits = false
 commit_parsers = [
     { message = "^[f|F]eat[ :]", group = "Features" },
-    { message = "^[f|F]ix[ :]", group = "Bug Fixes" },
-    { message = "^[d|D]oc[ :]", group = "Documentation" },
+    { message = "^(?i)fix[ :]", group = "Bug Fixes" },
+    { message = "^[d|D]ocs[ :]", group = "Documentation" },
     { message = "^[p|P]erf[ :]", group = "Performance" },
     { message = "^[r|R]efactor[ :]", group = "Refactor" },
     { message = "^[s|S]tyle[ :]", group = "Styling" },

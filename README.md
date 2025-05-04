@@ -6,7 +6,6 @@
 [![Conda version](https://img.shields.io/conda/vn/conda-forge/radian.svg)](https://anaconda.org/conda-forge/radian)
 <a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
 
-
 <img src="radian.png"></img>
 
 _radian_ is an alternative console for the R program with multiline editing and rich syntax highlight.
@@ -14,16 +13,15 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
-
 ## Features
 
 - cross platform, runs on Windows, macOS and Linux
 - shell mode: hit `;` to enter and `<backspace>` to leave
 - reticulate python repl mode: hit `~` to enter
 - improved R prompt and reticulate python prompt
-    - multiline editing
-    - syntax highlight
-    - auto completion (reticulate autocompletion depends on `jedi`)
+  - multiline editing
+  - syntax highlight
+  - auto completion (reticulate autocompletion depends on `jedi`)
 - unicode support
 - latex completion
 - auto matching parens/quotes.
@@ -32,32 +30,22 @@ One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) c
 - automatically adjust to terminal width
 - read more than 4096 bytes per line
 
-
 ## Installation
 
 Requirements:
 
-- An installation of R (version 3.4.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from https://cran.r-project.org.
-- `python` (version 3.7 or above) is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from https://www.python.org/downloads/ or https://conda.io/en/latest/miniconda.html.
-- `pip` is optional but it makes the installation a bit easier.
+- An installation of R (version 3.4.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from <https://cran.r-project.org>.
+- `python` (version 3.8 or above) is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from <https://www.python.org/downloads/>.
+- Installing `radian` via [`pipx`](https://pipx.pypa.io/stable/installation/) would be the easiest option.
 
 ```sh
 # install released version
-pip3 install -U radian
+pipx install radian
+# or the dev version
+pipx install git+https://github.com/randy3k/radian
 # to run radian
 radian
 ```
-
-```sh
-# or the development version
-pip3 install -U git+https://github.com/randy3k/radian
-```
-
-Alternatively, if you use conda or miniconda,
-```sh
-conda install -c conda-forge radian
-```
-In this case, it is recommended to install R via conda to ensure consistency in C runtime libraries.
 
 ## Alias on unix system
 
@@ -66,9 +54,9 @@ You could alias `r` to _radian_ by putting
 ```bash
 alias r="radian"
 ```
+
 in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open the traditional R console.
 (`R` is still useful, e.g, running `R CMD BUILD`.)
-
 
 ## Settings
 
@@ -81,11 +69,10 @@ _radian_ can be customized by specifying the below options in various locations
 - `.radian_profile` in the working directory
 
 The options could be also specified in the `.Rprofile` files, however,
-it is not recommended because 
+it is not recommended because
 
 1. the settings are not persistent when vanilla mode is used;
 2. it doesn't work well with `packrat` or `renv`.
-
 
 ```r
 # Do not copy the whole configuration, just specify what you need!
@@ -182,15 +169,15 @@ options(
 
 ## FAQ
 
-#### Unicode doesn't work in Windows and R 4.2+.
+#### Unicode doesn't work in Windows and R 4.2+
 
-The latest version of R supports Unicode codepage directly. However, radian relies on Python and Python doesn't support Unicode in the way that R supports it. A workaround could be found here: https://github.com/randy3k/radian/issues/269#issuecomment-1169663251. Though it may break the ploting device (running `plot()` will kill radian).
+The latest version of R supports Unicode codepage directly. However, radian relies on Python and Python doesn't support Unicode in the way that R supports it. A workaround could be found here: <https://github.com/randy3k/radian/issues/269#issuecomment-1169663251>. Though it may break the ploting device (running `plot()` will kill radian).
 
+#### I can't specify python runtime in reticulate
 
-#### I can't specify python runtime in reticulate.
-
-It is expected. `radian` runs on python and the python runtime used by radian is forced in 
+It is expected. `radian` runs on python and the python runtime used by radian is forced in
 reticulate. `reticulate::py_config()` gives the note:
+
 ```
 NOTE: Python version was forced by the current process
 ```
@@ -198,8 +185,7 @@ NOTE: Python version was forced by the current process
 In order to use radian with another python runtime, you will need to install `radian` on
 that python environment.
 
-
-#### How to switch to a different R or specify the version of R.
+#### How to switch to a different R or specify the version of R
 
 There are serveral options.
 
@@ -207,14 +193,14 @@ There are serveral options.
 - Also, one could expose the path to the R binary in the `PATH` variable
 - The environment variable `R_BINARY` could also be used to specify the path to R.
 - The environment variable `R_HOME` could also be used to specify R home directory. Note that it is should be set as the result of `R.home()`, not the directory where `R` is located. For example, in Unix
+
 ```sh
-$ env R_HOME=/usr/local/lib/R radian
+env R_HOME=/usr/local/lib/R radian
 ```
 
 #### Cannot find shared library
 
 Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the configure flag `./configure --enable-R-shlib` may be needed to install R from the source. Do not forget to `make clean` to force the recompilation of the files with the correct compiler options.
-
 
 #### Outdated setuptools
 
@@ -229,21 +215,20 @@ pip install -U setuptools
 
 ```
 
-
 #### How to use local history file
 
 _radian_ maintains its own history file `.radian_history` and doesn't use the `.Rhistory` file. A local `.radian_history` is used if it is found in the launch directory. Otherwise, the global history file `~/.radian_history` would be used. To override the default behavior, you could launch _radian_ with the options: `radian --local-history`, `radian --global-history` or `radian --no-history`.
 
-
 #### Does it slow down my R program?
 
-_radian_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface. 
+_radian_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface.
 
 However, it was reported that radian may be slower when using parallel computation, specifially when using forking. User should take extra care in those cases.
 
 #### Nvim-R support
 
 Put
+
 ```vim
 let R_app = "radian"
 let R_cmd = "R"
@@ -251,8 +236,8 @@ let R_hl_term = 0
 let R_args = []  " if you had set any
 let R_bracketed_paste = 1
 ```
-in your vim config. 
 
+in your vim config.
 
 #### `reticulate` Auto Completions
 
@@ -263,10 +248,10 @@ pip install jedi
 ```
 
 Alternatively, if you use conda,
+
 ```sh
 conda install -c conda-forge jedi
 ```
-
 
 #### Prompt not shown inside a docker container
 

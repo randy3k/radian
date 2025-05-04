@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+
+* docs: update primary instruction to install radian
+
 ## 0.6.14 - 2025-05-04
 
 ### Bug Fixes
@@ -1301,10 +1307,6 @@
 
 ## 0.0.40 - 2017-12-30
 
-### Documentation
-
-* doc the settings
-
 ### Other
 
 * new option for not inserting new line
@@ -1315,6 +1317,7 @@
 * update insert auto match filters
 * only R args in Nvim-R
 * remote note to reticulate
+* doc the settings
 * remove the note for bracketed paste mode
 * restrict the auto match scope
 * update prompt toolkit code
