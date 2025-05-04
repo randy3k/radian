@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 <small>[Compare with latest](https://github.com/randy3k/radian/compare/v0.6.13...HEAD)</small>
 
+### Chore
+
+- update changelog ([78f0f7c](https://github.com/randy3k/radian/commit/78f0f7ccd849fc981b018a345b7d86566abd6644) by Randy Lai).
+
 <!-- insertion marker -->
 ## [v0.6.13](https://github.com/randy3k/radian/releases/tag/v0.6.13) - 2024-08-15
 
