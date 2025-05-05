@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.6.15 - 2025-05-05
+
+### Bug Fixes
+
+* fix libRblas issue on homebrew
 
 ### Documentation
 
@@ -9,6 +13,8 @@
 ### Other
 
 * Update message locale for `test_early_termination` ([#487](https://github.com/randy3k/radian/issues/487))
+
+**Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.14...v0.6.15
 
 ## 0.6.14 - 2025-05-04
 
