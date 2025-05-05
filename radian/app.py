@@ -18,49 +18,122 @@ def main(cleanup=None):
         pass
 
     parser = optparse.OptionParser("usage: radian")
-    parser.add_option("-v", "--version", action="store_true", dest="version", help="Get version")
+    parser.add_option(
+        "-v", "--version", action="store_true", dest="version", help="Get version"
+    )
     parser.add_option("--r-binary", dest="r", help="Path to R binary")
-    parser.add_option("--profile", dest="profile",
-                      help="Path to .radian_profile, ignore both global and local profiles")
-    parser.add_option("-q", "--quiet", "--silent", action="store_true",
-                      dest="quiet", help="Don't print startup message")
-    parser.add_option("--no-environ", action="store_true", dest="no_environ",
-                      help="Don't read the site and user environment files")
-    parser.add_option("--no-site-file", action="store_true", dest="no_site_file",
-                      help="Don't read the site-wide Rprofile")
-    parser.add_option("--no-init-file", action="store_true",
-                      dest="no_init_file", help="Don't read the user R profile")
-    parser.add_option("--local-history", action="store_true",
-                      dest="local_history", help="Force using local history file")
-    parser.add_option("--global-history", action="store_true",
-                      dest="global_history", help="Force using global history file")
-    parser.add_option("--no-history", action="store_true",
-                      dest="no_history", help="Don't load any history files")
-    parser.add_option("--vanilla", action="store_true", dest="vanilla",
-                      help="Combine --no-history --no-environ --no-site-file --no-init-file")
-    parser.add_option("--save", action="store_true", dest="save",
-                      help="Do save workspace at the end of the session")
-    parser.add_option("--ask-save", action="store_true", dest="ask_save", help="Ask to save R data")
-    parser.add_option("--restore-data", action="store_true", dest="restore_data",
-                      help="Restore previously saved objects")
+    parser.add_option(
+        "--profile",
+        dest="profile",
+        help="Path to .radian_profile, ignore both global and local profiles",
+    )
+    parser.add_option(
+        "-q",
+        "--quiet",
+        "--silent",
+        action="store_true",
+        dest="quiet",
+        help="Don't print startup message",
+    )
+    parser.add_option(
+        "--no-environ",
+        action="store_true",
+        dest="no_environ",
+        help="Don't read the site and user environment files",
+    )
+    parser.add_option(
+        "--no-site-file",
+        action="store_true",
+        dest="no_site_file",
+        help="Don't read the site-wide Rprofile",
+    )
+    parser.add_option(
+        "--no-init-file",
+        action="store_true",
+        dest="no_init_file",
+        help="Don't read the user R profile",
+    )
+    parser.add_option(
+        "--local-history",
+        action="store_true",
+        dest="local_history",
+        help="Force using local history file",
+    )
+    parser.add_option(
+        "--global-history",
+        action="store_true",
+        dest="global_history",
+        help="Force using global history file",
+    )
+    parser.add_option(
+        "--no-history",
+        action="store_true",
+        dest="no_history",
+        help="Don't load any history files",
+    )
+    parser.add_option(
+        "--vanilla",
+        action="store_true",
+        dest="vanilla",
+        help="Combine --no-history --no-environ --no-site-file --no-init-file",
+    )
+    parser.add_option(
+        "--save",
+        action="store_true",
+        dest="save",
+        help="Do save workspace at the end of the session",
+    )
+    parser.add_option(
+        "--ask-save", action="store_true", dest="ask_save", help="Ask to save R data"
+    )
+    parser.add_option(
+        "--restore-data",
+        action="store_true",
+        dest="restore_data",
+        help="Restore previously saved objects",
+    )
     parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
-    parser.add_option("--coverage", action="store_true",
-                      dest="coverage", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--cprofile", action="store_true",
-                      dest="cprofile", help=optparse.SUPPRESS_HELP)
+    parser.add_option(
+        "--coverage", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP
+    )
+    parser.add_option(
+        "--cprofile", action="store_true", dest="cprofile", help=optparse.SUPPRESS_HELP
+    )
 
     # we accept these options, but never check them
-    parser.add_option("--no-save", action="store_true", dest="no_save", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-restore-data", action="store_true",
-                      dest="no_restore_data", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-restore-history", action="store_true",
-                      dest="no_restore_history", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-restore", action="store_true",
-                      dest="no_restore", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--no-readline", action="store_true",
-                      dest="no_readline", help=optparse.SUPPRESS_HELP)
-    parser.add_option("--interactive", action="store_true",
-                      dest="interactive", help=optparse.SUPPRESS_HELP)
+    parser.add_option(
+        "--no-save", action="store_true", dest="no_save", help=optparse.SUPPRESS_HELP
+    )
+    parser.add_option(
+        "--no-restore-data",
+        action="store_true",
+        dest="no_restore_data",
+        help=optparse.SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "--no-restore-history",
+        action="store_true",
+        dest="no_restore_history",
+        help=optparse.SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "--no-restore",
+        action="store_true",
+        dest="no_restore",
+        help=optparse.SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "--no-readline",
+        action="store_true",
+        dest="no_readline",
+        help=optparse.SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "--interactive",
+        action="store_true",
+        dest="interactive",
+        help=optparse.SUPPRESS_HELP,
+    )
 
     options, args = parser.parse_args()
 
@@ -80,38 +153,42 @@ def main(cleanup=None):
         print("r executable: {}".format(r_binary))
         print("r version: {}".format(r_version))
         print("python executable: {}".format(sys.executable))
-        print("python version: {:d}.{:d}.{:d}".format(
-            sys.version_info.major,
-            sys.version_info.minor,
-            sys.version_info.micro))
+        print(
+            "python version: {:d}.{:d}.{:d}".format(
+                sys.version_info.major, sys.version_info.minor, sys.version_info.micro
+            )
+        )
         return
 
     os.environ["RADIAN_VERSION"] = __version__
     os.environ["RADIAN_COMMAND_ARGS"] = " ".join(
-        ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v])
+        ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v]
+    )
 
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
     if not sys.platform.startswith("win"):
-        libPath = os.path.join(r_home, "lib")
+        lib_path = os.path.join(r_home, "lib")
         ldpaths = os.path.join(r_home, "etc", "ldpaths")
-        libRBlas = os.path.join(libPath, "libRblas.dylib")
 
         if sys.platform == "darwin":
+            libr_blas_dylib = os.path.join(lib_path, "libRblas.dylib")
             # avoid libRBlas to propagate downstream
             if "DYLD_INSERT_LIBRARIES" in os.environ:
                 libs = [
-                    lib for lib in os.environ['DYLD_INSERT_LIBRARIES'].split(":") if lib != libRBlas
+                    lib
+                    for lib in os.environ["DYLD_INSERT_LIBRARIES"].split(":")
+                    if lib != libr_blas_dylib
                 ]
                 if libs:
-                    os.environ['DYLD_INSERT_LIBRARIES'] = ":".join(libs)
+                    os.environ["DYLD_INSERT_LIBRARIES"] = ":".join(libs)
                 else:
-                    del os.environ['DYLD_INSERT_LIBRARIES']
+                    del os.environ["DYLD_INSERT_LIBRARIES"]
 
         if (
             "R_LD_LIBRARY_PATH" not in os.environ
-            or libPath not in os.environ["R_LD_LIBRARY_PATH"]
+            or lib_path not in os.environ["R_LD_LIBRARY_PATH"]
         ):
             if os.path.exists(ldpaths):
                 R_LD_LIBRARY_PATH = (
@@ -125,9 +202,9 @@ def main(cleanup=None):
             elif "R_LD_LIBRARY_PATH" in os.environ:
                 R_LD_LIBRARY_PATH = os.environ["R_LD_LIBRARY_PATH"]
             else:
-                R_LD_LIBRARY_PATH = libPath
-            if libPath not in R_LD_LIBRARY_PATH:
-                R_LD_LIBRARY_PATH = "{}:{}".format(libPath, R_LD_LIBRARY_PATH)
+                R_LD_LIBRARY_PATH = lib_path
+            if lib_path not in R_LD_LIBRARY_PATH:
+                R_LD_LIBRARY_PATH = "{}:{}".format(lib_path, R_LD_LIBRARY_PATH)
             os.environ["R_LD_LIBRARY_PATH"] = R_LD_LIBRARY_PATH
             # respect R_ARCH variable?
             if sys.platform == "darwin":
@@ -143,11 +220,13 @@ def main(cleanup=None):
             os.environ[ld_library_var] = LD_LIBRARY_PATH
 
             if sys.platform == "darwin":
-                if "DYLD_INSERT_LIBRARIES" not in os.environ:
-                    os.environ["DYLD_INSERT_LIBRARIES"] = libRBlas
-                else:
-                    os.environ["DYLD_INSERT_LIBRARIES"] = "{}:{}".format(
-                        os.environ["DYLD_INSERT_LIBRARIES"], libRBlas)
+                if os.path.exists(libr_blas_dylib):
+                    if "DYLD_INSERT_LIBRARIES" not in os.environ:
+                        os.environ["DYLD_INSERT_LIBRARIES"] = libr_blas_dylib
+                    else:
+                        os.environ["DYLD_INSERT_LIBRARIES"] = "{}:{}".format(
+                            os.environ["DYLD_INSERT_LIBRARIES"], libr_blas_dylib
+                        )
 
             if sys.argv[0].endswith("radian"):
                 os.execv(sys.argv[0], sys.argv)
@@ -164,7 +243,7 @@ def get_app():
     return RadianApplication.instance
 
 
-class RadianApplication():
+class RadianApplication:
     instance = None
     r_home = None
 
@@ -193,17 +272,26 @@ class RadianApplication():
 
         if options.local_history:
             if not os.path.exists(".radian_history"):
-                open(".radian_history", 'w+').close()
+                open(".radian_history", "w+").close()
 
         doc_dir = os.path.join(self.r_home, "doc")
         include_dir = os.path.join(self.r_home, "include")
         share_dir = os.path.join(self.r_home, "share")
-        if not (os.path.isdir(doc_dir) and os.path.isdir(include_dir) and os.path.isdir(share_dir)):
+        if not (
+            os.path.isdir(doc_dir)
+            and os.path.isdir(include_dir)
+            and os.path.isdir(share_dir)
+        ):
             try:
-                paths = subprocess.check_output([
-                    os.path.join(self.r_home, "bin", "R"), "--no-echo", "--vanilla", "-e",
-                    "cat(paste(R.home('doc'), R.home('include'), R.home('share'), sep=':'))"
-                ])
+                paths = subprocess.check_output(
+                    [
+                        os.path.join(self.r_home, "bin", "R"),
+                        "--no-echo",
+                        "--vanilla",
+                        "-e",
+                        "cat(paste(R.home('doc'), R.home('include'), R.home('share'), sep=':'))",
+                    ]
+                )
                 doc_dir, include_dir, share_dir = paths.decode().split(":")
             except Exception:
                 pass
@@ -271,7 +359,8 @@ class RadianApplication():
 
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
         rchitect.def_callback(name="write_console_ex")(
-            create_write_console_ex(self.session, settings.stderr_format))
+            create_write_console_ex(self.session, settings.stderr_format)
+        )
 
         rutils.load_custom_key_bindings()
 
@@ -279,6 +368,7 @@ class RadianApplication():
             rutils.register_cleanup(cleanup)
 
         from . import reticulate
+
         reticulate.configure()
 
         # run user on load hooks
