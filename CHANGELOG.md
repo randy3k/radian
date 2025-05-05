@@ -6,18 +6,15 @@
 
 * docs: update primary instruction to install radian
 
+### Other
+
+* Update message locale for `test_early_termination` ([#487](https://github.com/randy3k/radian/pull/487))
+
 ## 0.6.14 - 2025-05-04
 
 ### Bug Fixes
 
 * fix: use --no-echo instread of --slave
-
-### Miscellaneous
-
-* chore: update changelog
-* chore: update Makefile
-* chore: add test section in git-changelog
-* chore: update changelog for v0.6.14
 
 ### Other
 
@@ -39,7 +36,6 @@
 ### Other
 
 * change R and python versions
-* bump to 0.6.13
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.12...v0.6.13
 
@@ -48,7 +44,6 @@
 ### Other
 
 * do not normalized before writing
-* bump to 0.6.12
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.11...v0.6.12
 
@@ -58,7 +53,6 @@
 
 * require python 3.7
 * remove replace carriage return with new line
-* bump to 0.6.11
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.10...v0.6.11
 
@@ -66,7 +60,6 @@
 
 ### Other
 
-* bump to 0.6.10 ([#461](https://github.com/randy3k/radian/pull/461))
 * Update change log
 * push to on tags
 
@@ -77,7 +70,6 @@
 ### Other
 
 * Require prompt-toolkit 3.0.41 ([#451](https://github.com/randy3k/radian/pull/451))
-* bump to 0.6.9
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.8...v0.6.9
 
@@ -98,7 +90,6 @@
 
 * set LC_CTYPE to en_US.UTF-8 if it is not set
 * only change locate for R 4.2 windows
-* bump to v0.6.7 ([#431](https://github.com/randy3k/radian/pull/431))
 * require rchitect 0.4.1
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.6...v0.6.7
@@ -109,7 +100,6 @@
 
 * Use backported is_ascii ([#415](https://github.com/randy3k/radian/pull/415))
 * Use simple ascii check instead ([#416](https://github.com/randy3k/radian/pull/416))
-* bump to 0.6.6
 * add a note about parallel computation
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.5...v0.6.6
@@ -125,7 +115,6 @@
 * Update README.md
 * force utf8 encoding when triming history
 * use codecov action
-* bump to 0.6.5
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.4...v0.6.5
 
@@ -138,7 +127,6 @@
 ### Other
 
 * add a faq for using unicode in windows and R 4.2+
-* bump to 0.6.4
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.3...v0.6.4
 
@@ -149,7 +137,6 @@
 * getpass should return an R object
 * add a test for getpass
 * only set askpass if unset
-* bump to 0.6.3
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.2...v0.6.3
 
@@ -158,7 +145,6 @@
 ### Other
 
 * set LANG to en_US.UTF-8 if not set for R 4.2 windows
-* bump to 0.6.2
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.1...v0.6.2
 
@@ -169,7 +155,6 @@
 * strip ansi sequence
 * check if text is empty in shell mode
 * require at least prompt_toolkit 3.0.15
-* bump to 0.6.1
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.0...v0.6.1
 
@@ -210,7 +195,6 @@
 * wider screen
 * use v2 actions
 * unused os
-* bump to radian 0.6.0
 
 ### Refactor
 
@@ -234,7 +218,6 @@
 * show r version in job names
 * also test python 2.7
 * start 0.5.12.dev0
-* bump to 0.5.12
 * update CHANGELOG
 
 ### Testing
@@ -253,7 +236,6 @@
 * Add conda-forge badge ([#258](https://github.com/randy3k/radian/pull/258))
 * make sure the binary is intel based
 * only needed for reticulate <1.18.9008
-* refactor
 * wrong note
 * support jedi 0.18
 * bump version
@@ -268,7 +250,10 @@
 * use actions
 * use github actions to upload tar ball
 * use cancel-workflow-action
-* bump to 0.5.11
+
+### Refactor
+
+* refactor
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.10...v0.5.11
 
@@ -280,7 +265,6 @@
 * use jedi 0.17.2
 * upper bound jedi [ci skip]
 * set the default value of `emacs_bindings_in_vi_insert_mode` to False
-* bump to 0.5.10
 * bound jedi
 * enable
 * update changelog
@@ -315,7 +299,6 @@
 * set `RETICULATE_PYTHON` automatically when `force_reticulate_python`
 * better switching handling
 * add a line break
-* bump to 0.5.8
 * use readline instead
 * default to "no"
 * bump rchitect requirement
@@ -334,13 +317,11 @@
 * prompt to switch python runtime
 * instruct user to open radian manually on windows
 * support dev version
-* bump to prerelease
 * option to force current python runtime
 * do not use quiet flag
 * Update setup.py
 * Update setup.py ([#203](https://github.com/randy3k/radian/pull/203))
 * no spaces
-* bump to 0.5.7
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.6...v0.5.7
 
@@ -351,7 +332,6 @@
 * use XDG_CONFIG_HOME instead of XDG_DATA_HOME
 * clarification
 * updated changelog
-* bump to 0.5.6
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.5...v0.5.6
 
@@ -374,7 +354,6 @@
 * different settings for global/local history file
 * read both local and global profile if both exist
 * load both global and local profiles if they both exist
-* bump to 0.5.5
 * global profile should be in home directory
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.4...v0.5.5
@@ -397,7 +376,6 @@
 * catch radian profile loading error
 * explictly use register_signal_handlers [ci skip]
 * the workaround for microsoft store python is in place
-* bump to 0.5.4
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.3...v0.5.4
 
@@ -410,7 +388,6 @@
 * updated README
 * a workaround for the slow completion of "print"
 * require rchitect 0.3.23
-* bump to 0.5.3
 * disable complete while typing in 'print()'
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.2...v0.5.3
@@ -425,7 +402,6 @@
 
 * disable sigint when processing events
 * added flag to support profiling
-* bump to 0.5.2
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.1...v0.5.2
 
@@ -437,7 +413,6 @@
 * added changelog
 * Revert "remove completion.timeout"
 * workaround to not trigger completions when loading packages
-* bump to 0.5.1
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.5.0...v0.5.1
 
@@ -465,7 +440,6 @@
 * check completion is not token
 * require 0.1.5
 * exclude tests
-* bump to 0.4.9
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.4.8...v0.4.9
 
@@ -482,7 +456,6 @@
 * detach input
 * better support later::later
 * do not echo text while processing events
-* bump to 0.4.8
 * do not enable line mode
 * suppress quartz error message
 * do not run inputhook in ci
@@ -506,7 +479,6 @@
 * APPVEYOR doens't like these flags
 * use CMDER_ROOT instead
 * do not use partial matching
-* bump to 0.4.7
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.4.6...v0.4.7
 
@@ -517,7 +489,6 @@
 * fallback to `input` if `read_console` is called nestedly
 * add a reference to prompt_toolkit
 * use ANSICON on windows instead of crayon.enabled
-* bump to v0.4.6
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.4.5...v0.4.6
 
@@ -541,7 +512,6 @@
 * increase default timeout
 * support askpass
 * add radian.highlight_matching_bracket
-* bump to 0.4.5
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.4.4...v0.4.5
 
@@ -605,7 +575,6 @@
 * github actions on pull_request
 * update github actions config
 * requires rchitect 0.3.14
-* bump to 0.4.3
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.4.2...v0.4.3
 
@@ -626,10 +595,8 @@
 * pytest -s
 * add a comment about windows-latest
 * make sure type is correct
-* bump to 0.4.2
 * use os._exit to force quit
 * special handle for carriage return
-* bump to 0.4.2
 * don't ask
 
 ### Testing
@@ -659,7 +626,6 @@
 * check if cursor is at an empty line
 * add readline test
 * bump rchitect requirement
-* bump to 0.4.1
 * bump rchitect requirement again
 * add vi mode state in prompt
 * add spaces around escaped key
@@ -703,7 +669,6 @@
 * require rchitect>=0.3.0.dev0
 * pytest -s
 * delete py_config.py
-* refactor
 * minor refactor
 * update rchitect dependency
 * remove the reticulate repl trigger
@@ -737,10 +702,10 @@
 * bump requirement of rchitect
 * indent python code if previous char is colon
 * improve multiline tests
-* bump to v0.4.0
 
 ### Refactor
 
+* refactor
 * refactor reticulate keybindings loading code
 * refactor hooks into individual functions
 * refactor tests
@@ -764,7 +729,6 @@
 
 * FileNotFoundError is python 3 only
 * readline error
-* bump to 0.3.4
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.3.3...v0.3.4
 
@@ -781,7 +745,6 @@
 * move locals and globals in function so reticulate is not initialized
 * remove rtichoke reference
 * why radian
-* bump to 0.3.3
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.3.2...v0.3.3
 
@@ -794,7 +757,6 @@
 * Update README.md
 * get R_SHARE_DIR etc from R if they don't exist
 * catch subprocess.CalledProcessError
-* bump to 0.3.2
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.3.1...v0.3.2
 
@@ -811,7 +773,6 @@
 * Update README.md
 * update logo
 * lower bound rchitect
-* bump to v0.3.1
 * remove old code
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.3.0...v0.3.1
@@ -839,10 +800,6 @@
 
 * fix .pythonapi masking issue
 
-### Other
-
-* bump to 0.2.14
-
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.13...v0.2.14
 
 ## 0.2.13 - 2018-12-16
@@ -856,7 +813,6 @@
 * disable .py namespace due to recent changes of R upstream
 * namespace is depreated, use .pythonapi env
 * .py namespace is deprecated
-* bump to 0.2.13
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.12...v0.2.13
 
@@ -865,10 +821,6 @@
 ### Bug Fixes
 
 * fix backspace deletion
-
-### Other
-
-* bump to v0.2.12
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.11...v0.2.12
 
@@ -879,7 +831,6 @@
 * remove unused rexec
 * update the usage of os.execv
 * determine how the script is executed
-* bump to 0.2.11
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.10...v0.2.11
 
@@ -888,7 +839,6 @@
 ### Other
 
 * enable_suspend
-* bump to 0.2.10
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.9...v0.2.10
 
@@ -907,7 +857,6 @@
 
 * add 0.2.7 note
 * add quiet option
-* bump to 0.2.8
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.7...v0.2.8
 
@@ -916,7 +865,6 @@
 ### Other
 
 * support R_LD_LIBRARY_PATH
-* bump to 0.2.7
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.6...v0.2.7
 
@@ -925,7 +873,6 @@
 ### Other
 
 * allow non-empty LD_LIBRARY_PATH
-* bump to 0.2.6
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.5...v0.2.6
 
@@ -935,7 +882,6 @@
 
 * do not use travis to deploy [ci skip]
 * new option `indent_lines`
-* bump to v0.2.5
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.4...v0.2.5
 
@@ -946,7 +892,6 @@
 * add backspace to exit reticulte repl mode
 * add a short note about libR
 * do not pass `--restore-data` to R
-* bump to v0.2.4
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.3...v0.2.4
 
@@ -956,7 +901,6 @@
 
 * better auto match quotation
 * install py namespace
-* bump to 0.2.3
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.2...v0.2.3
 
@@ -978,7 +922,6 @@
 * Update README.md
 * R-release appveyor test
 * bump minimum requirement of rapi
-* bump to 0.2.1
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.2.0...v0.2.1
 
@@ -1015,7 +958,6 @@
 * esc enter only insert new line in mutliline mode
 * move mode detection out of while loop
 * bump rapi to 0.0.6
-* bump to 0.0.3
 * browse mode and r mode share history
 * simplify create_read_console
 * bump rapi and lineedi versions
@@ -1117,7 +1059,6 @@
 * add note for loading library
 * or upgrade readline
 * suppressWarnings when cancelling completion
-* bump to 0.1.9
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.8...v0.1.9
 
@@ -1138,7 +1079,6 @@
 * check insert_new_line when ^C
 * redraw layout when stdout.flush() returns an error
 * more note to setTimeLimit
-* bump to 0.1.8
 
 ### Refactor
 
@@ -1158,7 +1098,6 @@
 * Update prompt-toolkit
 * output byte data to STDOUT directly
 * convert MSCS to string
-* bump to 0.1.7
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.6...v0.1.7
 
@@ -1172,7 +1111,6 @@
 
 * break curly braces when auto_match is True
 * start 0.1.5.dev0
-* bump to 0.1.6
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.5...v0.1.6
 
@@ -1181,7 +1119,6 @@
 ### Other
 
 * only reset when completions is empty
-* bump to 0.1.5
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.4...v0.1.5
 
@@ -1197,7 +1134,6 @@
 * start 0.1.4.dev0
 * use --ask-save instead of --save
 * update prompt-toolkit
-* bump to 0.1.4
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.3...v0.1.4
 
@@ -1214,7 +1150,6 @@
 * remove rice
 * support --save and --restore-data
 * use SA_NOSAVE and SA_SAVE
-* bump to 0.1.3
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.2...v0.1.3
 
@@ -1226,7 +1161,6 @@
 * update rtichoke.png
 * update prompt_toolkit
 * only reset eventloop when app is running
-* bump to v0.1.2
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.1.1...v0.1.2
 
@@ -1244,7 +1178,6 @@
 * more traceback for debugging
 * rename rtichoke
 * mroe rename
-* bump to 0.1.1
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.43...v0.1.1
 
@@ -1266,7 +1199,6 @@
 * forward stderr to stdout
 * NA r_version when r_home is empty
 * add libR dir to PATH on windows
-* bump to 0.0.43
 * search again using registry
 * use latin-1 as default in Windows
 * use msvcrt to change PATH
@@ -1288,7 +1220,6 @@
 * added an environment vairable RICE_COMMAND_ARGS
 * update prompt-toolkit
 * update prompt-toolkit
-* bump to 0.0.42
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.41...v0.0.42
 
@@ -1301,7 +1232,6 @@
 * update prompt toolkit and disable _start_timeout() in key processor
 * update prompt-toolkit
 * bugfix on flushing using prompt-toolkit
-* bump to 0.0.41
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.40...v0.0.41
 
@@ -1324,7 +1254,6 @@
 * remove unneccessary import
 * don't detect via registry
 * update note for R_HOME
-* bump to 0.0.40
 
 ### Refactor
 
@@ -1338,7 +1267,6 @@
 
 * make sure token is non empty
 * improve package name completion
-* bump to 0.0.39
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.38...v0.0.39
 
@@ -1347,7 +1275,6 @@
 ### Other
 
 * use PYFUNCTYPE to keep GIL
-* bump to 0.0.38
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.37...v0.0.38
 
@@ -1379,7 +1306,6 @@
 * remove the debug code
 * python 2 fix
 * pass status as reference
-* bump to 0.0.37
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.36...v0.0.37
 
@@ -1389,7 +1315,6 @@
 
 * wrong last working index
 * set history search text to empty string
-* bump to 0.0.36
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.35...v0.0.36
 
@@ -1399,7 +1324,6 @@
 
 * libR_dir first
 * windows python 2 support
-* bump to 0.0.35
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.34...v0.0.35
 
@@ -1409,7 +1333,6 @@
 
 * add libR_dir to PATH on Windows
 * use registry to find R
-* bump to 0.0.34
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.33...v0.0.34
 
@@ -1419,7 +1342,6 @@
 
 * improve readme
 * unneccessary create_layout
-* bump to 0.0.33
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.32...v0.0.33
 
@@ -1436,7 +1358,6 @@
 * improve accept_handler
 * double escape not exit auto completion anymore
 * remove unused methods
-* bump to 0.0.32
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.31...v0.0.32
 
@@ -1451,7 +1372,6 @@
 * return double backslashes
 * customizable browse prompt
 * tab to insert space when buffer is empty
-* bump to 0.0.31
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.30...v0.0.31
 
@@ -1469,7 +1389,6 @@
 * null char is also invalid
 * \` is valid
 * improve search for invalid chars
-* bump to 0.0.30
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.29...v0.0.30
 
@@ -1484,7 +1403,6 @@
 * update reticulate note
 * note to reticulate rice users
 * use packageStartupMessage
-* bump to 0.0.29
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.28...v0.0.29
 
@@ -1498,7 +1416,6 @@
 * detect if dependencies_loaded
 * more robust browse prompt
 * always pass `--no-restore-data`
-* bump to 0.0.28
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.27...v0.0.28
 
@@ -1514,7 +1431,6 @@
 * use a local history if it exists
 * --no-history --local-history and --global-history
 * add note to history file
-* bump to 0.0.27
 * use boolean
 * encoding using codepage in windows
 * catch error in shlex.split
@@ -1540,7 +1456,6 @@
 * use auto_width
 * poll terminal width
 * auto width feature
-* bump to 0.0.26
 
 ### Refactor
 
@@ -1556,7 +1471,6 @@
 * change default shell prompt
 * update screenshort
 * update default shell prompt setting
-* bump to 0.0.25
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.24...v0.0.25
 
@@ -1567,7 +1481,6 @@
 * flushed a wrong device
 * customize tab size
 * too many deletion
-* bump to 0.0.24
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.23...v0.0.24
 
@@ -1577,7 +1490,6 @@
 
 * backeted paste mode should evaluate
 * do not copy margin when auto indentation is off
-* bump to 0.0.23
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.22...v0.0.23
 
@@ -1791,7 +1703,6 @@
 * add an env variable RICE_VERSION
 * when if the app is dummy
 * repect windows encoding
-* bump to 0.0.10
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.9...v0.0.10
 
@@ -1805,7 +1716,6 @@
 * read more than 4096 bytes
 * add a note about prompt_toolkit
 * complete package names
-* bump to 0.0.9
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.8...v0.0.9
 
@@ -1826,7 +1736,6 @@
 * check if app is dummy
 * nvim-r no highlight
 * not partially
-* bump to 0.0.8
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.7...v0.0.8
 
@@ -1838,7 +1747,6 @@
 * Update README.md
 * auto indent on braces and brackets
 * tab to indent
-* bump to 0.0.7
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.6...v0.0.7
 
@@ -1847,7 +1755,6 @@
 ### Other
 
 * catch all errors
-* bump to 0.0.6
 
 **Full Changelog**: https://github.com/randy3k/radian/compare/v0.0.5...v0.0.6
 
@@ -1908,7 +1815,6 @@
 * use unicode_literals
 * update .gitignore
 * Update README.md
-* bump to 0.0.3
 * add 🍚
 * enable suspend by c-z
 * update prompt_toolkit
@@ -1925,7 +1831,6 @@
 * update README.md
 * history file should be .rice_history
 * Update README.md
-* bump to 0.0.5
 
 ### Refactor
 

@@ -49,16 +49,14 @@ postprocessors = []
 [git]
 conventional_commits = false
 commit_parsers = [
-    { message = "^[f|F]eat[ :]", group = "Features" },
-    { message = "^(?i)fix[ :]", group = "Bug Fixes" },
-    { message = "^[d|D]ocs[ :]", group = "Documentation" },
-    { message = "^[p|P]erf[ :]", group = "Performance" },
-    { message = "^[r|R]efactor[ :]", group = "Refactor" },
-    { message = "^[s|S]tyle[ :]", group = "Styling" },
-    { message = "^[t|T]est[ :]", group = "Testing" },
-    { message = "^chore\\(release\\): prepare for", skip = true },
-    { message = "^chore", group = "Miscellaneous" },
-    { body = ".*security", group = "Security" },
+    { message = "(?i)^feat\\b", group = "Features" },
+    { message = "(?i)^fix\\b", group = "Bug Fixes" },
+    { message = "(?i)^docs\\b", group = "Documentation" },
+    { message = "(?i)^perf\\b", group = "Performance" },
+    { message = "(?i)^refactor\\b", group = "Refactor" },
+    { message = "(?i)^style\\b", group = "Styling" },
+    { message = "(?i)^test\\b", group = "Testing" },
+    { message = "(?i)^(chore|bump to)\\b", skip = true },
     { body = ".*", group = "Other" },
 ]
 filter_commits = true
