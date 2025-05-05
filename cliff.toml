@@ -15,30 +15,37 @@ body = """
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
 
-    ### {{ group | upper_first }}    
+    ### {{ group | upper_first }}
     {% for commit in commits %}
+        {% set_global issues = [] %}\
+        {% if commit.remote.pr_number %}\
+            {% set_global issues = issues | concat(with=commit.remote.pr_number) %}\
+        {%- endif %}\
+        {% for link in commit.links %}\
+            {% set_global issues = issues | concat(with=link.text | split(pat="#") | last) %}\
+        {%- endfor -%}\
         {% if commit.remote.pr_title -%}\
             {%- set commit_message = commit.remote.pr_title -%}\
         {%- else -%}\
             {%- set commit_message = commit.message -%}\
-        {%- endif -%}
+        {%- endif -%}\
         * {{ commit_message | split(pat="\n") | first | trim }}\
-            {% if commit.remote.pr_number %} \
-            ([#{{ commit.remote.pr_number }}]({{ self::remote_url() }}/pull/{{ commit.remote.pr_number }}))
-            {%- endif %}\n
-    {%- endfor -%}
-
+            {% set_global issues = issues | unique %}\
+            {% if issues | length > 0 %} (\
+            {% for issue in issues %}\
+                [#{{ issue }}](https://github.com/randy3k/radian/issues/{{ issue }})\
+                {% if not loop.last %}, {% endif %}\
+            {%- endfor -%})\
+            {%- endif %}\
+    {%- endfor -%}\n
 {% endfor %}\
 {% if version %}
     {% if previous.version %}
-      **Full Changelog**: {{ self::remote_url() }}/compare/{{ previous.version }}...{{ version }}
+      **Full Changelog**: https://github.com/randy3k/radian/compare/{{ previous.version }}...{{ version }}
     {% endif %}
 {% else -%}
   {% raw %}\n{% endraw %}
 {% endif %}\
-{%- macro remote_url() -%}
-  https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
-{%- endmacro -%}
 """
 trim = true
 footer = """
@@ -48,6 +55,7 @@ postprocessors = []
 
 [git]
 conventional_commits = false
+split_commits = false
 commit_parsers = [
     { message = "(?i)^feat\\b", group = "Features" },
     { message = "(?i)^fix\\b", group = "Bug Fixes" },
@@ -56,8 +64,11 @@ commit_parsers = [
     { message = "(?i)^refactor\\b", group = "Refactor" },
     { message = "(?i)^style\\b", group = "Styling" },
     { message = "(?i)^test\\b", group = "Testing" },
-    { message = "(?i)^(chore|bump to)\\b", skip = true },
+    { message = "(?i)^(chore|bump to|Merge branch)\\b", skip = true },
     { body = ".*", group = "Other" },
+]
+link_parsers = [
+    { pattern = "(?i)\\b(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) #(\\d+)", href = "https://github.com/randy3k/radian/issues/$1" },
 ]
 filter_commits = true
 topo_order = false
