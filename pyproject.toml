@@ -15,6 +15,7 @@ dependencies = [
     "rchitect>=0.4.8,<0.5.0",
     "prompt_toolkit>=3.0.41,<3.1",
     "pygments>=2.5.0",
+    "lief>=0.16; sys_platform == 'darwin'",
 ]
 
 [project.urls]

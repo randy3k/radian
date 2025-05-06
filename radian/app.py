@@ -7,9 +7,9 @@ def main(cleanup=None):
     import optparse
     import os
     import sys
-    import subprocess
     from rchitect.utils import Rhome, rversion
     from radian import __version__
+    from .dyld import should_set_ld_library_path, set_ld_library_path, reset_dyld_insert_blas_dylib
 
     try:
         # failed to import jedi on demand in some edge cases.
@@ -167,66 +167,16 @@ def main(cleanup=None):
 
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
+    
 
+    if sys.platform == "darwin":
+        # avoid libRBlas to propagate downstream
+        reset_dyld_insert_blas_dylib()
+
+    # setup proper dynamic libraries
     if not sys.platform.startswith("win"):
-        lib_path = os.path.join(r_home, "lib")
-        ldpaths = os.path.join(r_home, "etc", "ldpaths")
-
-        if sys.platform == "darwin":
-            libr_blas_dylib = os.path.join(lib_path, "libRblas.dylib")
-            # avoid libRBlas to propagate downstream
-            if "DYLD_INSERT_LIBRARIES" in os.environ:
-                libs = [
-                    lib
-                    for lib in os.environ["DYLD_INSERT_LIBRARIES"].split(":")
-                    if lib != libr_blas_dylib
-                ]
-                if libs:
-                    os.environ["DYLD_INSERT_LIBRARIES"] = ":".join(libs)
-                else:
-                    del os.environ["DYLD_INSERT_LIBRARIES"]
-
-        if (
-            "R_LD_LIBRARY_PATH" not in os.environ
-            or lib_path not in os.environ["R_LD_LIBRARY_PATH"]
-        ):
-            if os.path.exists(ldpaths):
-                R_LD_LIBRARY_PATH = (
-                    subprocess.check_output(
-                        '. "{}"; echo $R_LD_LIBRARY_PATH'.format(ldpaths),
-                        shell=True,
-                    )
-                    .decode("utf-8")
-                    .strip()
-                )
-            elif "R_LD_LIBRARY_PATH" in os.environ:
-                R_LD_LIBRARY_PATH = os.environ["R_LD_LIBRARY_PATH"]
-            else:
-                R_LD_LIBRARY_PATH = lib_path
-            if lib_path not in R_LD_LIBRARY_PATH:
-                R_LD_LIBRARY_PATH = "{}:{}".format(lib_path, R_LD_LIBRARY_PATH)
-            os.environ["R_LD_LIBRARY_PATH"] = R_LD_LIBRARY_PATH
-            # respect R_ARCH variable?
-            if sys.platform == "darwin":
-                ld_library_var = "DYLD_FALLBACK_LIBRARY_PATH"
-            else:
-                ld_library_var = "LD_LIBRARY_PATH"
-            if ld_library_var in os.environ:
-                LD_LIBRARY_PATH = "{}:{}".format(
-                    R_LD_LIBRARY_PATH, os.environ[ld_library_var]
-                )
-            else:
-                LD_LIBRARY_PATH = R_LD_LIBRARY_PATH
-            os.environ[ld_library_var] = LD_LIBRARY_PATH
-
-            if sys.platform == "darwin":
-                if os.path.exists(libr_blas_dylib):
-                    if "DYLD_INSERT_LIBRARIES" not in os.environ:
-                        os.environ["DYLD_INSERT_LIBRARIES"] = libr_blas_dylib
-                    else:
-                        os.environ["DYLD_INSERT_LIBRARIES"] = "{}:{}".format(
-                            os.environ["DYLD_INSERT_LIBRARIES"], libr_blas_dylib
-                        )
+        if should_set_ld_library_path(r_home):
+            set_ld_library_path(r_home)
 
             if sys.argv[0].endswith("radian"):
                 os.execv(sys.argv[0], sys.argv)
