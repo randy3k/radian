@@ -1,5 +1,7 @@
 # radian: A 21 century R console
 
+**Important**: radian is no longer under maintenance. If you are looking for an alternaive R console, check out @eitsupi's [arf](https://github.com/eitsupi/arf).
+
 [![Main](https://github.com/randy3k/radian/actions/workflows/main.yml/badge.svg)](https://github.com/randy3k/radian/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/randy3k/radian/branch/master/graph/badge.svg)](https://codecov.io/gh/randy3k/radian)
 [![](https://img.shields.io/pypi/v/radian.svg)](https://pypi.org/project/radian/)
