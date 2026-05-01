@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.16 - 2026-04-30
+
+### Features
+
+* feat: improve RBlas detection in macOS ([#518](https://github.com/randy3k/radian/issues/518))
+
+### Other
+
+* require rchitect 0.4.10
+* Update README.md
+* Update README to emphasize maintenance status
+* Clarify maintenance status of radian
+
+**Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.15...v0.6.16
+
 ## 0.6.15 - 2025-05-05
 
 ### Bug Fixes
