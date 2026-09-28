@@ -40,6 +40,8 @@ def test_multiline(terminal):
     terminal.current_line().strip().assert_equal(">>>")
     terminal.write("c\n")
     terminal.previous_line(2).strip().assert_equal("3")
+    terminal.write("1 + \\\nc\n")
+    terminal.previous_line(2).strip().assert_equal("4")
     exit_reticulate_prompt(terminal)
 
 
