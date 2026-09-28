@@ -43,9 +43,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install and run tests
+        shell: bash
         run: |
           python -m pip install jedi
           python -m pip install -e .[dev]
+          if git clone -b "${{ github.head_ref || github.ref_name }}" https://github.com/randy3k/rchitect ../rchitect; then
+            python -m pip install -e ../rchitect
+          fi
           pytest -s --coverage
           coverage combine
           coverage xml -i -o coverage.xml
