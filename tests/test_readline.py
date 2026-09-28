@@ -20,12 +20,34 @@ def test_askpass(terminal):
 
 
 def test_strings(terminal):
-    # issue #377
+    # issue #377, #523
+    from prompt_toolkit.document import Document
+    from radian.document import cursor_in_string
+
+    assert not cursor_in_string(Document("", 0))
+    assert cursor_in_string(Document('"', 1))
+    assert cursor_in_string(Document('"hello', 6))
+    assert cursor_in_string(Document('"hello (', 8))
+    assert cursor_in_string(Document('"hello\\nworld', 12))
+    assert cursor_in_string(Document('"hello \\"world', 14))
+    assert not cursor_in_string(Document('"hello"', 7))
+    assert not cursor_in_string(Document('"hello" ', 8))
+    assert cursor_in_string(Document('r"(', 3))
+    assert cursor_in_string(Document('r"(hello', 8))
+    assert not cursor_in_string(Document('r"(hello)"', 10))
+    assert cursor_in_string(Document('r"--(hello )-"', 14))
+    assert not cursor_in_string(Document('r"--(hello )--"', 15))
+
     terminal.current_line().assert_startswith("r$>")
     terminal.write("x <- 'a'\n")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("nchar(x)\n")
     terminal.previous_line(2).assert_startswith("[1] 1")
+
+    terminal.write('y <- c("a\\"b", r"(hello (world) "test")")\n')
+    terminal.current_line().strip().assert_equal("r$>")
+    terminal.write("nchar(y)\n")
+    terminal.previous_line(2).assert_startswith("[1]  3 20")
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="windows doesn't support bpm.")
