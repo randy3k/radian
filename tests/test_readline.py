@@ -8,6 +8,12 @@ def test_readline(terminal):
     terminal.write("cat('hello'); readline('> ')\n")
     terminal.previous_line(1).assert_startswith("hello")
     terminal.current_line().assert_startswith("> ")
+    terminal.write("ok\n")
+    terminal.previous_line(2).assert_contain("\"ok\"")
+
+    # multiline backspace with fewer than tab_size leading spaces
+    terminal.write("1 +\n  \x7f2\n")
+    terminal.previous_line(2).assert_startswith("[1] 3")
 
 
 def test_askpass(terminal):
