@@ -37,7 +37,7 @@ class ModalFileHistory(ModelHistory, FileHistory):
         strings = []
         lines = []
         mode = [None]
-        breaks = []
+        entry_starts = []
 
         def add() -> None:
             if lines:
@@ -47,29 +47,36 @@ class ModalFileHistory(ModelHistory, FileHistory):
 
         if os.path.exists(self.filename):
             with open(self.filename, "rb") as f:
-                for i, line_bytes in enumerate(f):
-                    line = line_bytes.decode("utf-8", errors="replace")
+                raw_lines = f.readlines()
 
-                    if line.startswith('# mode: '):
-                        mode[0] = line.replace('# mode: ', '').strip()
-                    elif line.startswith("+"):
-                        lines.append(line[1:])
-                    else:
+            entry_start = 0
+            for i, line_bytes in enumerate(raw_lines):
+                line = line_bytes.decode("utf-8", errors="replace")
+
+                if line.startswith("+"):
+                    lines.append(line[1:])
+                else:
+                    if lines:
                         add()
-                        if lines:
-                            breaks.append(i)
+                        entry_starts.append(entry_start)
                         lines = []
+                        mode[0] = None
+                        entry_start = i
+                    if line.startswith('# mode: '):
+                        mode[0] = line[8:].strip()
 
+            if lines:
                 add()
+                entry_starts.append(entry_start)
 
-            if len(breaks) > max(self.max_history_size, 10):
+            max_size = max(self.max_history_size, 10)
+            if len(strings) > max_size:
                 # trim history if it is too big
-                with open(self.filename, "r+", encoding="utf-8") as f:
-                    backup = f.readlines()
-                    f.seek(0)
-                    f.truncate()
-                    trimed = backup[breaks[-round(self.max_history_size * 0.9)]+1:]
-                    f.writelines(trimed)
+                keep = round(max_size * 0.9)
+                strings = strings[-keep:]
+                trimmed = raw_lines[entry_starts[-keep]:]
+                with open(self.filename, "wb") as f:
+                    f.writelines(trimmed)
 
         # Reverse the order, because newest items have to go first.
         return reversed(strings)
