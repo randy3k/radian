@@ -145,7 +145,7 @@ def create_prompt_key_bindings(parse_text_complete):
     handle = kb.add
 
     @Condition
-    def prase_complete():
+    def parse_complete():
         app = get_app()
         return parse_text_complete(app.current_buffer.text)
 
@@ -154,8 +154,8 @@ def create_prompt_key_bindings(parse_text_complete):
     def _(event):
         newline(event)
 
-    @handle('c-j', filter=insert_mode & default_focused & prase_complete)
-    @handle('enter', filter=insert_mode & default_focused & prase_complete)
+    @handle('c-j', filter=insert_mode & default_focused & parse_complete)
+    @handle('enter', filter=insert_mode & default_focused & parse_complete)
     def _(event):
         event.current_buffer.validate_and_handle()
 

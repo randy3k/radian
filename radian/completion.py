@@ -13,9 +13,9 @@ from .console import suppress_stderr
 from .document import cursor_in_string
 
 
-TOKEN_PATTERN = re.compile(r".*?([a-zA-Z0-9._]+)$")
+TOKEN_PATTERN = re.compile(r".*?(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")
 LIBRARY_PATTERN = re.compile(
-    r"(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$")
+    r"(?<![a-zA-Z0-9._])(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$")
 
 
 def remove_nested_paren(text):
@@ -53,7 +53,7 @@ class RCompleter(Completer):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
-        library_prefix = LIBRARY_PATTERN.match(text_before)
+        library_prefix = LIBRARY_PATTERN.search(text_before)
         if library_prefix:
             return
 
@@ -92,11 +92,13 @@ class RCompleter(Completer):
         if not token_match:
             return
         token = token_match.group(1)
-        library_prefix = LIBRARY_PATTERN.match(text_before)
+        library_prefix = LIBRARY_PATTERN.search(text_before)
         instring = cursor_in_string(document)
+        if instring and not library_prefix:
+            return
         for p in installed_packages():
             if p.startswith(token):
-                comp = p if instring or library_prefix else p + "::"
+                comp = p if library_prefix else p + "::"
                 yield Completion(comp, -len(token))
 
 
@@ -133,7 +135,7 @@ class SmartPathCompleter(Completer):
                         quoted = True
                     else:
                         path = shlex.split(text)[-1]
-                except RuntimeError:
+                except (RuntimeError, ValueError, IndexError):
                     pass
                 finally:
                     if not path:
