@@ -1,8 +1,8 @@
 # radian: A 21 century R console
 
-## Important 
+## Important
 
-`radian` is no longer under active development. While I may address critical or obvious bugs, no new features will be added. If you are looking for an active alternative, I recommend checking out [arf](https://github.com/eitsupi/arf) by @eitsupi.
+`radian` is currently developed at a slow pace. If you are looking for a more actively developed alternative, I recommend checking out [arf](https://github.com/eitsupi/arf) by @eitsupi.
 
 ---
 
