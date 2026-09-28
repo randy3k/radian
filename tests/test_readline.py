@@ -66,3 +66,17 @@ def test_early_termination(terminal):
     terminal.previous_line(2).assert_startswith("Error")
     terminal.write("d\n")
     terminal.previous_line(2).assert_startswith("Error: object 'd' not found")
+
+
+def test_utf8(terminal):
+    terminal.current_line().assert_startswith("r$>")
+    terminal.write("l10n_info()[['UTF-8']]\n")
+    terminal.previous_line(2).assert_startswith("[1] TRUE")
+    if sys.platform.startswith("win"):
+        terminal.write("l10n_info()[['system.codepage']]\n")
+        terminal.previous_line(2).assert_startswith("[1] 65001")
+    terminal.write("x <- 'ěščřžýáíé 中文'\n")
+    terminal.current_line().strip().assert_equal("r$>")
+    terminal.write("cat(Encoding(x), nchar(x), '\\n')\n")
+    terminal.previous_line(2).assert_startswith("UTF-8 12")
+

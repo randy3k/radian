@@ -98,6 +98,13 @@ def register_cleanup(cleanup):
 
 def set_utf8():
     if sys.platform.startswith("win"):
+        import ctypes
+
+        try:
+            if ctypes.windll.kernel32.GetACP() == 65001:
+                return
+        except Exception:
+            pass
         ucrt = rcopy(
             reval('compareVersion(paste0(R.version$major, ".", R.version$minor), "4.2.0") >= 0'))
         if ucrt:

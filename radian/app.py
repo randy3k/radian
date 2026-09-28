@@ -7,7 +7,7 @@ def main(cleanup=None):
     import optparse
     import os
     import sys
-    from rchitect.utils import Rhome, rversion
+    from rchitect.utils import Rhome, rversion, should_use_utf8_host, exec_utf8_host
     from radian import __version__
     from .dyld import should_set_ld_library_path, set_ld_library_path, reset_dyld_insert_blas_dylib
 
@@ -185,6 +185,9 @@ def main(cleanup=None):
                     sys.executable,
                     [sys.executable, "-m", "radian"] + sys.argv[1:],
                 )
+    else:
+        if should_use_utf8_host(r_home):
+            exec_utf8_host(["-m", "radian"] + sys.argv[1:])
 
     RadianApplication(r_home, ver=__version__).run(options, cleanup=cleanup)
 
