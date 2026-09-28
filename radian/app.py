@@ -7,9 +7,9 @@ def main(cleanup=None):
     import optparse
     import os
     import sys
-    from rchitect.utils import get_rhome, rversion, should_use_utf8_host, exec_utf8_host
+    from rchitect.utils import get_rhome, rversion
     from radian import __version__
-    from .dyld import should_set_ld_library_path, set_ld_library_path, reset_dyld_insert_blas_dylib
+    from .dyld import maybe_reexec
 
     try:
         # failed to import jedi on demand in some edge cases.
@@ -167,27 +167,8 @@ def main(cleanup=None):
 
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
-    
 
-    if sys.platform == "darwin":
-        # avoid libRBlas to propagate downstream
-        reset_dyld_insert_blas_dylib()
-
-    # setup proper dynamic libraries
-    if not sys.platform.startswith("win"):
-        if should_set_ld_library_path(r_home):
-            set_ld_library_path(r_home)
-
-            if sys.argv[0].endswith("radian"):
-                os.execv(sys.argv[0], sys.argv)
-            else:
-                os.execv(
-                    sys.executable,
-                    [sys.executable, "-m", "radian"] + sys.argv[1:],
-                )
-    else:
-        if should_use_utf8_host(r_home):
-            exec_utf8_host(["-m", "radian"] + sys.argv[1:])
+    maybe_reexec(r_home)
 
     RadianApplication(r_home, ver=__version__).run(options, cleanup=cleanup)
 

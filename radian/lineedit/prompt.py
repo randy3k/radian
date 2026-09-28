@@ -68,6 +68,8 @@ class ModalPromptSession(PromptSession):
                 del kwargs[key]
 
     def __init__(self, inputhook=None, *args, **kwargs):
+        self._default_settings = {}
+        self._specs = OrderedDict()
         self._inputhook = inputhook
         self._check_args(kwargs)
         self._filter_args(kwargs)
@@ -223,7 +225,7 @@ class ModalPromptSession(PromptSession):
             if name in kwargs:
                 value = kwargs[name]
                 if value is not None:
-                    setattr(self._default_settings, name, value)
+                    self._default_settings[name] = value
 
         orig_mode = self.current_mode
         try:
