@@ -23,7 +23,7 @@ class CustomSLexer(RegexLexer):
     mimetypes = ['text/S-plus', 'text/S', 'text/x-r-source', 'text/x-r',
                  'text/x-R', 'text/x-r-history', 'text/x-r-profile']
 
-    valid_name = r'(?:`[^`\\]*(?:\\.[^`\\]*)*`)|(?:(?:[a-zA-z]|[_.][^0-9])[\w_.]*)'
+    valid_name = r'(?:`[^`\\]*(?:\\.[^`\\]*)*`)|(?:(?:[a-zA-Z]|[_.][^0-9])[\w_.]*)'
     tokens = {
         'comments': [
             (r'#.*$', Comment.Single),
@@ -47,8 +47,8 @@ class CustomSLexer(RegexLexer):
              Keyword.Namespace)
         ],
         'operators': [
-            (r'<<?-|->>?|-|==|<=|>=|<|>|&&?|!=|\|\|?|\?', Operator),
-            (r'\*|\+|\^|/|!|%[^%]*%|=|~|\$|@|:{1,3}', Operator),
+            (r'<<?-|->>?|-|==|<=|>=|<|>|&&?|!=|\|>|\|\|?|\?', Operator),
+            (r'\*|\+|\^|/|!|%[^%]*%|=|~|\$|@|:{1,3}|\\', Operator),
         ],
         'builtin_symbols': [
             (r'(NULL|NA(_(integer|real|complex|character)_)?|'
