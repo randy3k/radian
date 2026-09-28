@@ -1,4 +1,5 @@
 import __main__
+import ast
 from code import compile_command
 import re
 import sys
@@ -57,23 +58,16 @@ def tidy_code(code):
 
 def handle_multiline_code(code):
     main_dict = __main__.__dict__
-    lines = code.split("\n")
-    lastline = lines[-1]
-    indentation = leading_spaces(lastline)
-
-    compiled_prefix = None
-    if indentation == "":
-        try:
-            compiled_prefix = compile("\n".join(lines[:-1]), "<input>", "exec")
-        except Exception:
-            compiled_prefix = None
-
     try:
-        if indentation == "" and compiled_prefix is not None:
-            eval(compiled_prefix, main_dict, main_dict)
-            eval(compile(lastline, "<input>", "single"), main_dict, main_dict)
+        mod = ast.parse(code, "<input>", "exec")
+        if mod.body and isinstance(mod.body[-1], ast.Expr):
+            if len(mod.body) > 1:
+                prefix = ast.Module(body=mod.body[:-1], type_ignores=[])
+                eval(compile(prefix, "<input>", "exec"), main_dict, main_dict)
+            last = ast.Interactive(body=[mod.body[-1]])
+            eval(compile(last, "<input>", "single"), main_dict, main_dict)
         else:
-            eval(compile(code, "<input>", "exec"), main_dict, main_dict)
+            eval(compile(mod, "<input>", "exec"), main_dict, main_dict)
     except Exception as e:
         sys.last_type, sys.last_value, sys.last_traceback = sys.exc_info()
         rcall(("base", "message"), "{}: {}".format(type(e).__name__, e))
