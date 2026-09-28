@@ -191,9 +191,11 @@ def register_reticulate_mode(*args):
         else None
     )
 
+    py_repl_active = reval("reticulate:::py_repl_active")
+
     app.session.register_mode(
         "reticulate",
-        is_activated=lambda session: rcopy(bool, reval("reticulate:::py_repl_active()")),
+        is_activated=lambda session: bool(rcall(py_repl_active, _convert=True)),
         prompt_message=lambda x: x,
         callback=lambda session: handle_code(session.default_buffer.text),
         multiline=True,
@@ -210,7 +212,7 @@ def register_reticulate_mode(*args):
 
 def configure():
     if package_is_installed("reticulate") and roption("radian.enable_reticulate_prompt", True):
-        if "reticulate" in rcopy(rcall(("base", "loadedNamespaces"))):
+        if "reticulate" in rcall(("base", "loadedNamespaces"), _convert=True):
             register_reticulate_mode()
         else:
             set_hook(package_event("reticulate", "onLoad"), register_reticulate_mode)

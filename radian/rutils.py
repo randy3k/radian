@@ -18,7 +18,7 @@ def is_long_non_ascii_multiline(text):
 
 
 def package_is_loaded(pkg):
-    return pkg in rcopy(rcall(("base", "loadedNamespaces")))
+    return pkg in rcall(("base", "loadedNamespaces"), _convert=True)
 
 
 def package_is_installed(pkg):
@@ -44,7 +44,6 @@ def installed_packages():
         return []
 
 
-
 def source_file(path):
     rcall(("base", "source"), path, rcall(("base", "new.env")))
 
@@ -54,7 +53,7 @@ def make_path(*p):
 
 
 def user_path(*args):
-    return make_path(rcopy(rcall(("base", "path.expand"), "~")), *args)
+    return make_path(rcall(("base", "path.expand"), "~", _convert=True), *args)
 
 
 def source_radian_profile(path):
