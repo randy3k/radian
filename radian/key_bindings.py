@@ -269,7 +269,7 @@ def create_prompt_key_bindings(parse_text_complete):
     def _(event):
         tab_size = settings.tab_size
         buf = event.current_buffer
-        leading_spaces = len(buf.document.text_before_cursor)
+        leading_spaces = len(buf.document.current_line_before_cursor)
         buf.delete_before_cursor(min(tab_size, leading_spaces))
 
     @handle('tab', filter=insert_mode & default_focused & preceding_text(r"^\s*$"))
