@@ -177,7 +177,7 @@ options(
 
 #### Unicode doesn't work in Windows and R 4.2+
 
-The latest version of R supports Unicode codepage directly. However, radian relies on Python and Python doesn't support Unicode in the way that R supports it. A workaround could be found here: <https://github.com/randy3k/radian/issues/269#issuecomment-1169663251>. Though it may break the ploting device (running `plot()` will kill radian).
+Native UTF-8 on Windows with R 4.2+ is supported starting in `radian` v0.7.0 (with `rchitect` v0.5.0). Please upgrade `radian` and `rchitect` to the latest version if you encounter Unicode issues on Windows.
 
 #### I can't specify python runtime in reticulate
 
