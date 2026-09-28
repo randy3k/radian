@@ -25,11 +25,24 @@ def package_is_installed(pkg):
     return pkg in installed_packages()
 
 
+_installed_packages_cache = (None, [])
+
+
 def installed_packages():
+    global _installed_packages_cache
     try:
-        return rcall(("base", ".packages"), **{"all.available": True, "_convert": True})
+        lib_paths = rcopy(list, rcall(("base", ".libPaths")))
+        key = tuple(
+            (p, os.stat(p).st_mtime if os.path.isdir(p) else None)
+            for p in lib_paths
+        )
+        if _installed_packages_cache[0] != key:
+            pkgs = rcopy(list, rcall(("base", ".packages"), **{"all.available": True}))
+            _installed_packages_cache = (key, pkgs)
+        return _installed_packages_cache[1]
     except Exception:
         return []
+
 
 
 def source_file(path):
