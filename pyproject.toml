@@ -30,6 +30,7 @@ dev = [
     "pytest",
     "pyte>=0.8.0",
     "pexpect",
+    "jedi>=0.16",
     "pywinpty; sys_platform == 'win32'",
     "ptyprocess; sys_platform != 'win32'",
 ]
@@ -39,6 +40,3 @@ packages = { find = { where = ["."], exclude = ["tests*"] } }
 
 [tool.setuptools.dynamic]
 version = { attr = "radian.__version__" }
-
-[tool.setuptools.package-data]
-radian = ["reticulate/*.R"]
