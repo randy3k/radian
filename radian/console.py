@@ -147,7 +147,7 @@ def create_read_console(session):
                 else:
                     _text_stored[0] = ""
                     _text_stored[1] = 0
-                    _text_stored[1] = False
+                    _text_stored[2] = False
         else:
             text = _read_console(message, add_history)
 
