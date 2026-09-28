@@ -7,7 +7,7 @@ def main(cleanup=None):
     import optparse
     import os
     import sys
-    from rchitect.utils import Rhome, rversion, should_use_utf8_host, exec_utf8_host
+    from rchitect.utils import get_rhome, rversion, should_use_utf8_host, exec_utf8_host
     from radian import __version__
     from .dyld import should_set_ld_library_path, set_ld_library_path, reset_dyld_insert_blas_dylib
 
@@ -140,7 +140,7 @@ def main(cleanup=None):
     if options.r:
         os.environ["R_BINARY"] = options.r
 
-    r_home = Rhome()
+    r_home = get_rhome()
 
     if options.version:
         if r_home:
@@ -263,7 +263,6 @@ class RadianApplication:
         from .prompt_session import create_radian_prompt_session
         from .console import create_read_console, create_write_console_ex
         import rchitect
-        from . import dispatch  # noqa
         from . import rutils, settings
 
         self.set_env_vars(options)
@@ -290,8 +289,6 @@ class RadianApplication:
         if options.restore_data is not True:
             args.append("--no-restore-data")
 
-        # disable the code injection of rchitect to reticulate::py_discover_config
-        os.environ["RCHITECT_RETICULATE_CONFIG"] = "0"
         # enable signal handlers
         os.environ["RCHITECT_REGISTER_SIGNAL_HANDLERS"] = "1"
 
