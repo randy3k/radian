@@ -5,7 +5,7 @@ import subprocess
 
 
 def run_command(command):
-    if not command:
+    if not command or not command.strip():
         sys.stdout.write("\n")
         return
 
@@ -13,17 +13,20 @@ def run_command(command):
         if sys.platform.startswith('win'):
             cmd_list = command.strip().split(" ", 1)
         else:
-            cmd_list = shlex.split(command)
+            cmd_list = shlex.split(command, comments=True)
     except Exception as e:
         print(e)
         return
 
+    if not cmd_list:
+        return
+
     if cmd_list[0] == "cd":
-        if len(cmd_list) != 2:
-            sys.stdout.write("cd method takes one argument\n\n")
+        if len(cmd_list) > 2:
+            sys.stdout.write("cd method takes at most one argument\n\n")
             return
         try:
-            path = cmd_list[1].strip()
+            path = cmd_list[1].strip() if len(cmd_list) == 2 else "~"
             if path == "-":
                 oldpwd = os.environ["OLDPWD"] if "OLDPWD" in os.environ else os.getcwd()
                 os.environ["OLDPWD"] = os.getcwd()
@@ -49,7 +52,12 @@ def run_command(command):
         if sys.platform.startswith('win'):
             p = subprocess.Popen(command, shell=True, stdin=sys.stdin, stdout=sys.stdout)
         else:
-            shell = os.path.basename(os.environ.get("SHELL", "/bin/sh"))
+            shell = os.environ.get("SHELL") or "/bin/sh"
             p = subprocess.Popen([shell, "-c", command], stdin=sys.stdin, stdout=sys.stdout)
 
-        p.wait()
+        while True:
+            try:
+                p.wait()
+                break
+            except KeyboardInterrupt:
+                pass
