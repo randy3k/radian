@@ -4,7 +4,7 @@ import re
 
 from pygments.lexer import Lexer, RegexLexer, include, words, do_insertions, bygroups
 from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Generic
+    Number, Punctuation, Generic, Error
 
 
 line_re = re.compile('.*?\n')
@@ -118,100 +118,132 @@ class CustomSLexer(RegexLexer):
             (r'.', Text),
         ],
         'string_squote': [
-            (r'([^\'\\]|\\.)*\'', String, '#pop'),
+            (r'([^\'\\]|\\[\s\S])*\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_r': [
-            (r'(.|\n)*?\)\'', String, '#pop'),
+            (r'[\s\S]*?\)\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_s': [
-            (r'(.|\n)*?\]\'', String, '#pop'),
+            (r'[\s\S]*?\]\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_c': [
-            (r'(.|\n)*?\}\'', String, '#pop'),
+            (r'[\s\S]*?\}\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_r1': [
-            (r'(.|\n)*?\)-\'', String, '#pop'),
+            (r'[\s\S]*?\)-\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_s1': [
-            (r'(.|\n)*?\]-\'', String, '#pop'),
+            (r'[\s\S]*?\]-\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_c1': [
-            (r'(.|\n)*?\}-\'', String, '#pop'),
+            (r'[\s\S]*?\}-\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_r2': [
-            (r'(.|\n)*?\)--\'', String, '#pop'),
+            (r'[\s\S]*?\)--\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_s2': [
-            (r'(.|\n)*?\]--\'', String, '#pop'),
+            (r'[\s\S]*?\]--\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_c2': [
-            (r'(.|\n)*?\}--\'', String, '#pop'),
+            (r'[\s\S]*?\}--\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_r3': [
-            (r'(.|\n)*?\)---\'', String, '#pop'),
+            (r'[\s\S]*?\)---\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_s3': [
-            (r'(.|\n)*?\]---\'', String, '#pop'),
+            (r'[\s\S]*?\]---\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_c3': [
-            (r'(.|\n)*?\}---\'', String, '#pop'),
+            (r'[\s\S]*?\}---\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_r4': [
-            (r'(.|\n)*?\)-{4,}\'', String, '#pop'),
+            (r'[\s\S]*?\)-{4,}\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_s4': [
-            (r'(.|\n)*?\]-{4,}\'', String, '#pop'),
+            (r'[\s\S]*?\]-{4,}\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_squote_c4': [
-            (r'(.|\n)*?\}-{4,}\'', String, '#pop'),
+            (r'[\s\S]*?\}-{4,}\'', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote': [
-            (r'([^"\\]|\\.)*"', String, '#pop'),
+            (r'([^"\\]|\\[\s\S])*"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_r': [
-            (r'(.|\n)*?\)\"', String, '#pop'),
+            (r'[\s\S]*?\)\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_s': [
-            (r'(.|\n)*?\]\"', String, '#pop'),
+            (r'[\s\S]*?\]\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_c': [
-            (r'(.|\n)*?\}\"', String, '#pop'),
+            (r'[\s\S]*?\}\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_r1': [
-            (r'(.|\n)*?\)-\"', String, '#pop'),
+            (r'[\s\S]*?\)-\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_s1': [
-            (r'(.|\n)*?\]-\"', String, '#pop'),
+            (r'[\s\S]*?\]-\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_c1': [
-            (r'(.|\n)*?\}-\"', String, '#pop'),
+            (r'[\s\S]*?\}-\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_r2': [
-            (r'(.|\n)*?\)--\"', String, '#pop'),
+            (r'[\s\S]*?\)--\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_s2': [
-            (r'(.|\n)*?\]--\"', String, '#pop'),
+            (r'[\s\S]*?\]--\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_c2': [
-            (r'(.|\n)*?\}--\"', String, '#pop'),
+            (r'[\s\S]*?\}--\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_r3': [
-            (r'(.|\n)*?\)---\"', String, '#pop'),
+            (r'[\s\S]*?\)---\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_s3': [
-            (r'(.|\n)*?\]---\"', String, '#pop'),
+            (r'[\s\S]*?\]---\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_c3': [
-            (r'(.|\n)*?\}---\"', String, '#pop'),
+            (r'[\s\S]*?\}---\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_r4': [
-            (r'(.|\n)*?\)-{4,}\"', String, '#pop'),
+            (r'[\s\S]*?\)-{4,}\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_s4': [
-            (r'(.|\n)*?\]-{4,}\"', String, '#pop'),
+            (r'[\s\S]*?\]-{4,}\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
         'string_dquote_c4': [
-            (r'(.|\n)*?\}-{4,}\"', String, '#pop'),
+            (r'[\s\S]*?\}-{4,}\"', String, '#pop'),
+            (r'[\s\S]+', Error),
         ],
     }
 

@@ -5,16 +5,12 @@ lexer = CustomSLexer()
 
 
 def cursor_in_string(document):
-    tokens = list(lexer.get_tokens(document.text_before_cursor.rstrip()))
+    tokens = list(lexer.get_tokens_unprocessed(document.text_before_cursor))
     if not tokens:
         return False
-    for t, s in reversed(tokens):
-        if t is Token.Text and s == "\n":
-            continue
-        elif t is Token.Error:
-            return True
-        elif t is Token.Literal.String:
-            return True
-        else:
-            return False
+    _, last_token, _ = tokens[-1]
+    if last_token is Token.Error:
+        return True
+    elif last_token is Token.Literal.String:
+        return sum(1 for _, t, _ in tokens if t is Token.Literal.String) % 2 == 1
     return False

@@ -232,8 +232,8 @@ def create_prompt_key_bindings(parse_text_complete):
     @handle(')', filter=insert_mode & default_focused & auto_match & following_text(r"^\)"))
     @handle(']', filter=insert_mode & default_focused & auto_match & following_text(r"^\]"))
     @handle('}', filter=insert_mode & default_focused & auto_match & following_text(r"^\}"))
-    @handle('"', filter=insert_mode & default_focused & auto_match & following_text("^\""))
-    @handle("'", filter=insert_mode & default_focused & auto_match & following_text("^'"))
+    @handle('"', filter=insert_mode & default_focused & auto_match & following_text("^\"") & ~preceding_text(r".*(?<!\\)(?:\\\\)*\\$"))
+    @handle("'", filter=insert_mode & default_focused & auto_match & following_text("^'") & ~preceding_text(r".*(?<!\\)(?:\\\\)*\\$"))
     def _(event):
         event.current_buffer.cursor_right()
 
