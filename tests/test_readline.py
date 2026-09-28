@@ -102,3 +102,25 @@ def test_utf8(terminal):
     terminal.write("cat(Encoding(x), nchar(x), '\\n')\n")
     terminal.previous_line(2).assert_startswith("UTF-8 12")
 
+
+def test_history(tmp_path):
+    from radian.lineedit.history import ModalFileHistory
+
+    hist_file = str(tmp_path / "radian_history")
+    h1 = ModalFileHistory(hist_file, max_history_size=10)
+    list(h1.load())
+    for i in range(12):
+        h1.append_string(f"line_{i}\ncont_{i}", "r" if i % 2 == 0 else "shell")
+
+    # Reload with max_history_size=10; 12 > 10 so it should trim to round(10 * 0.9) = 9 entries
+    h2 = ModalFileHistory(hist_file, max_history_size=10)
+    list(h2.load())
+    assert h2.get_strings() == [f"line_{i}\ncont_{i}" for i in range(3, 12)]
+    assert h2.get_modes() == ["r" if i % 2 == 0 else "shell" for i in range(3, 12)]
+
+    # Reload again from the trimmed file on disk to verify on-disk integrity
+    h3 = ModalFileHistory(hist_file, max_history_size=10)
+    list(h3.load())
+    assert h3.get_strings() == [f"line_{i}\ncont_{i}" for i in range(3, 12)]
+    assert h3.get_modes() == ["r" if i % 2 == 0 else "shell" for i in range(3, 12)]
+
