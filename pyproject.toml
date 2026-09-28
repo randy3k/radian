@@ -15,7 +15,6 @@ dependencies = [
     "rchitect @ git+https://github.com/randy3k/rchitect.git@master",
     "prompt_toolkit>=3.0.41,<3.1",
     "pygments>=2.5.0",
-    "lief>=0.16; sys_platform == 'darwin'",
 ]
 
 [project.urls]
