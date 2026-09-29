@@ -122,7 +122,10 @@ class Terminal(object):
         try:
             yield cls(process, screen, stream)
         finally:
-            process.terminate(force=True)
+            try:
+                process.terminate(force=True)
+            except PermissionError:
+                pass
 
     def sendintr(self):
         self.process.sendintr()
