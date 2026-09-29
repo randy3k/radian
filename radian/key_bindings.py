@@ -33,7 +33,7 @@ def prompt_mode(mode):
     except KeyError:
         pass
     app = get_radian_app()
-    condition = Condition(lambda: app.session.current_mode == mode)
+    condition = Condition(lambda: app.session.current_mode.name == mode)
     _prompt_mode_cache[mode] = condition
     return condition
 
@@ -454,7 +454,7 @@ def create_key_bindings():
 
 def map_key(key, value, mode="r", filter_str=""):
     app = get_radian_app()
-    kb = app.session.specs[mode].prompt_key_bindings
+    kb = app.session.modes[mode].prompt_key_bindings
     @kb.add(*key, filter=insert_mode & default_focused, eager=True)
     def _(event):
         event.current_buffer.insert_text(value)
