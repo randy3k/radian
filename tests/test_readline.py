@@ -130,3 +130,207 @@ def test_history(tmp_path):
     assert h3.get_strings() == [f"line_{i}\ncont_{i}" for i in range(3, 12)]
     assert h3.get_modes() == ["r" if i % 2 == 0 else "shell" for i in range(3, 12)]
 
+
+def test_history_search(terminal):
+    terminal.current_line().assert_startswith("r$>")
+    terminal.write("apple_val <- 111\n")
+    terminal.previous_line(2).assert_contain("apple_val <- 111")
+    terminal.current_line().strip().assert_equal("r$>")
+    terminal.write("apple_val <- 222\n")
+    terminal.previous_line(2).assert_contain("apple_val <- 222")
+    terminal.current_line().strip().assert_equal("r$>")
+    # Enter shell mode, run a command containing 'apple_val', then return to R mode
+    terminal.write(";echo apple_val_shell\n")
+    terminal.previous_line(2).assert_startswith("apple_val_shell")
+    terminal.current_line().strip().assert_equal("#!>")
+    # In shell mode, Ctrl-R should find the shell command, not the R ones;
+    # Ctrl-G (\x07) aborts search and restores the empty shell prompt
+    terminal.write("echo other_shell\n")
+    terminal.previous_line(2).assert_startswith("other_shell")
+    terminal.current_line().strip().assert_equal("#!>")
+    terminal.write("\x12apple_val")
+    terminal.current_line().assert_contain("echo apple_val_shell")
+    terminal.write("\x07")
+    terminal.current_line().strip().assert_equal("#!>")
+    terminal.write("\x7f")
+    terminal.current_line().strip().assert_equal("r$>")
+
+    # Ctrl-R search for 'apple_val' in R mode should skip shell history and find 'apple_val <- 222'
+    terminal.write("\x12apple_val")
+    terminal.current_line().assert_contain("apple_val <- 222")
+    # Pressing Ctrl-R again finds the older 'apple_val <- 111'
+    terminal.write("\x12")
+    terminal.current_line().assert_contain("apple_val <- 111")
+    # Pressing Ctrl-S (\x13) reverses direction back to 'apple_val <- 222', then Ctrl-R back to '111'
+    terminal.write("\x13")
+    terminal.current_line().assert_contain("apple_val <- 222")
+    terminal.write("\x12\r\r")
+    terminal.current_line().strip().assert_equal("r$>")
+    terminal.write("apple_val\n")
+    terminal.previous_line(2).assert_startswith("[1] 111")
+
+    # Prefix history search with Up (\x1b[A) and Down (\x1b[B) arrows skips shell mode
+    terminal.write("apple_val <- \x1b[A")
+    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.write("\x1b[A")
+    terminal.current_line().assert_contain("apple_val <- 222")
+    terminal.write("\x1b[B")
+    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.sendintr()
+    terminal.current_line().strip().assert_equal("r$>")
+
+    # Browse mode shares 'r' history_book and ignores browser commands ('n', 'Q', etc.) in history
+    terminal.write("browser()\n")
+    terminal.current_line().strip().assert_equal("Browse[1]>")
+    terminal.write("browse_apple <- 333\n")
+    terminal.previous_line(2).assert_contain("browse_apple <- 333")
+    terminal.current_line().strip().assert_equal("Browse[1]>")
+    terminal.write("Q\n")
+    terminal.current_line().strip().assert_equal("r$>")
+    # 'Q' was ignored, so Up arrow recalls 'browse_apple <- 333' directly
+    terminal.write("\x1b[A")
+    terminal.current_line().assert_contain("browse_apple <- 333")
+    terminal.sendintr()
+    terminal.current_line().strip().assert_equal("r$>")
+
+
+def test_history_search_options(radian_command, tmp_path):
+    import time
+    from .terminal import Terminal
+
+    profile = tmp_path / "radian_profile"
+    profile.write_text(
+        "options(radian.history_search_no_duplicates = TRUE)\n"
+        "options(radian.history_search_ignore_case = TRUE)\n"
+        "options(radian.escape_key_map = list(list(key = '-', value = ' <- ')))\n"
+    )
+
+    cmd = radian_command + ["--no-history", f"--profile={profile}"]
+    with Terminal.open(cmd) as terminal:
+        try:
+            terminal.current_line().assert_startswith("r$>")
+            # Test escape_key_map (which binds via session.modes['r'].prompt_key_bindings)
+            terminal.write("dup_item\x1b-20\n")
+            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.current_line().strip().assert_equal("r$>")
+            # Layout of history:
+            # 0: dup_item <- 20 (older duplicate before oldest unique match!)
+            # 1: dup_item <- 10 (oldest unique match)
+            # 2: dup_item <- 20
+            # 3: other_cmd <- 99
+            # 4: dup_item <- 20 (newest duplicate)
+            terminal.write("dup_item <- 10\n")
+            terminal.previous_line(2).assert_contain("dup_item <- 10")
+            terminal.current_line().strip().assert_equal("r$>")
+            terminal.write("dup_item <- 20\n")
+            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.current_line().strip().assert_equal("r$>")
+            terminal.write("other_cmd <- 99\n")
+            terminal.previous_line(2).assert_contain("other_cmd <- 99")
+            terminal.current_line().strip().assert_equal("r$>")
+            terminal.write("dup_item <- 20\n")
+            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.current_line().strip().assert_equal("r$>")
+
+            # Case-insensitive Ctrl-R search for 'DUP_ITEM':
+            # 1st match is 'dup_item <- 20' (index 4)
+            terminal.write("\x12DUP_ITEM")
+            terminal.current_line().assert_contain("dup_item <- 20")
+            # Pressing Ctrl-R once should skip index 2 ('dup_item <- 20') and find 'dup_item <- 10' (index 1)
+            terminal.write("\x12")
+            terminal.current_line().assert_contain("dup_item <- 10")
+            # Pressing Ctrl-R again at the oldest unique match should NOT match index 0 ('dup_item <- 20'),
+            # and accepting + executing should run 'dup_item <- 10'
+            terminal.write("\x12\r\r")
+            terminal.current_line().strip().assert_equal("r$>")
+            terminal.write("dup_item\n")
+            terminal.previous_line(2).assert_startswith("[1] 10")
+
+            # Multiple occurrences on the same line + Ctrl-S forward search with search_no_duplicates:
+            # 'dup_item ' (with trailing space) occurs twice on 'dup_item <- dup_item + 5'
+            terminal.write("dup_item <- dup_item + 5\n")
+            terminal.previous_line(2).assert_contain("dup_item <- dup_item + 5")
+            terminal.current_line().strip().assert_equal("r$>")
+            # 1st match is 2nd 'dup_item ' on 'dup_item <- dup_item + 5'
+            terminal.write("\x12dup_item ")
+            terminal.current_line().assert_contain("dup_item <- dup_item + 5")
+            # Next Ctrl-R moves to 1st 'dup_item ' on the same line
+            terminal.write("\x12")
+            terminal.current_line().assert_contain("dup_item <- dup_item + 5")
+            # Next Ctrl-R moves to 'dup_item <- 10', then skips duplicate '10' to 'dup_item <- 20'
+            terminal.write("\x12")
+            terminal.current_line().assert_contain("dup_item <- 10")
+            terminal.write("\x12")
+            terminal.current_line().assert_contain("dup_item <- 20")
+            # Ctrl-S (\x13) reverses direction to forward search ('dup_item <- 10'),
+            # then next Ctrl-S steps forward to 'dup_item <- dup_item + 5'
+            terminal.write("\x13")
+            terminal.current_line().assert_contain("dup_item <- 10")
+            terminal.write("\x13\r\r")
+            terminal.current_line().strip().assert_equal("r$>")
+            terminal.write("dup_item\n")
+            terminal.previous_line(2).assert_startswith("[1] 20")
+        finally:
+            terminal.sendintr()
+            terminal.write("q()\n")
+            start_time = time.time()
+            while terminal.isalive():
+                if time.time() - start_time > 15:
+                    raise Exception("radian didn't quit cleanly")
+                time.sleep(0.1)
+
+
+def test_modal_prompt_session():
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+    from radian.lineedit.history import ModalInMemoryHistory
+    from radian.lineedit.prompt import ModalPromptSession, PromptMode
+
+    with pytest.raises(KeyError):
+        PromptMode("bad", nonexistent_field=True)
+
+    with create_pipe_input() as pipe_input:
+        session = ModalPromptSession(
+            history=ModalInMemoryHistory(),
+            input=pipe_input,
+            output=DummyOutput(),
+            multiline=False,
+            add_history=True,
+            search_no_duplicates=True,
+        )
+        assert session.add_history is True
+        assert session.search_no_duplicates is True
+
+        session.register_mode(
+            "r",
+            is_activated=lambda s: s._prompt_message == "r$> ",
+            history_book="r",
+            multiline=True,
+        )
+        session.register_mode(
+            "shell",
+            is_activated=lambda s: s._prompt_message == "#!> ",
+            history_book="shell",
+            multiline=False,
+        )
+
+        # First registered mode is automatically activated
+        assert isinstance(session.current_mode, PromptMode)
+        assert session.current_mode.name == "r"
+        assert session.current_mode is session.modes["r"]
+        assert session.multiline is True
+
+        # Switching modes restores default settings and applies the target mode's settings
+        session.activate_mode("shell")
+        assert session.current_mode is session.modes["shell"]
+        assert session.current_mode.name == "shell"
+        assert session.multiline is False
+
+        with pytest.raises(KeyError):
+            session.activate_mode("nonexistent")
+
+        # mode_to_be_activated checks registered modes in reverse order
+        session._prompt_message = "r$> "
+        assert session.mode_to_be_activated() == "r"
+        session._prompt_message = "other> "
+        assert session.mode_to_be_activated() == "unknown"

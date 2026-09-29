@@ -77,22 +77,21 @@ def create_read_console(session):
             return native_prompt(app, message)
 
         session._prompt_message = message
-        current_mode_spec = session.current_mode_spec
 
         if interrupted[0]:
             interrupted[0] = False
-            if not session.current_mode_spec.sticky_on_sigint:
+            if not session.current_mode.sticky_on_sigint:
                 session.activate_mode(session.mode_to_be_activated())
-            if current_mode_spec.insert_new_line_on_sigint:
+            if session.current_mode.insert_new_line_on_sigint:
                 app.output.write_raw("\n")
         elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
-                (settings.insert_new_line and current_mode_spec.insert_new_line):
+                (settings.insert_new_line and session.current_mode.insert_new_line):
             app.output.write_raw("\n")
 
         text = None
 
         while text is None:
-            if not session.current_mode_spec.sticky:
+            if not session.current_mode.sticky:
                 session.activate_mode(session.mode_to_be_activated())
 
             try:
@@ -115,7 +114,7 @@ def create_read_console(session):
                     import os
                     os._exit(1)
 
-            if text is None and settings.insert_new_line and current_mode_spec.insert_new_line:
+            if text is None and settings.insert_new_line and session.current_mode.insert_new_line:
                 app.output.write_raw("\n")
 
         return text
@@ -123,7 +122,7 @@ def create_read_console(session):
     _text_stored = ["", 0, False]  # text, startpos, sent_by_line
 
     def read_console(message, add_history):
-        if session.current_mode in ["r", "browse"]:
+        if session.current_mode.name in ["r", "browse"]:
             # this code is needed to allow new line breaks with strings, see #377
             if _text_stored[0]:
                 text = _text_stored[0][_text_stored[1]:]

@@ -3,7 +3,7 @@ import re
 import sys
 import time
 
-from .lineedit.prompt import ModalPromptSession, ModeSpec
+from .lineedit.prompt import ModalPromptSession
 from .lineedit.history import ModalInMemoryHistory, ModalFileHistory
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
@@ -11,7 +11,6 @@ from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.utils import is_windows, get_term_environment_variable
-from prompt_toolkit.validation import Validator
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 from pygments.styles import get_style_by_name
@@ -27,53 +26,8 @@ from .io import CustomInput, CustomOutput
 from .lexer import CustomSLexer as SLexer
 
 
-PROMPT = "\x1b[34mr$>\x1b[0m "
-SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
-BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
-VI_MODE_PROMPT = "\x1b[34m[{}]\x1b[0m "
-
-
-class RadianModeSpec(ModeSpec):
-    def __init__(
-            self,
-            name,
-            prompt_message=None,
-            is_activated=None,
-            callback=None,
-            sticky=False,
-            sticky_on_sigint=False,
-            insert_new_line=False,
-            insert_new_line_on_sigint=False,
-            **kwargs):
-        self.prompt_message = prompt_message
-        self.is_activated = is_activated
-        self.callback = callback
-        self.sticky = sticky
-        self.sticky_on_sigint = sticky_on_sigint
-        self.insert_new_line = insert_new_line
-        self.insert_new_line_on_sigint = insert_new_line_on_sigint
-        super().__init__(name, **kwargs)
-
-
-class RadianPromptSession(ModalPromptSession):
-    _spec_class = RadianModeSpec
-    _prompt_message = ""
-
-    def mode_to_be_activated(self):
-        for name in reversed(self.specs):
-            spec = self.specs[name]
-            if spec.is_activated and spec.is_activated(self):
-                return name
-        return "unknown"
-
-    def prompt(self, *args, **kwargs):
-        text = super().prompt(*args, **kwargs)
-        current_mode_spec = self.current_mode_spec
-        if current_mode_spec.callback:
-            text = current_mode_spec.callback(self)
-
-        return text
+BROWSE_COMMANDS = {"n", "s", "f", "c", "cont", "Q", "where", "help"}
 
 
 def apply_settings(session, settings):
@@ -137,9 +91,9 @@ def create_radian_prompt_session(options, settings):
         return ""
 
     def message():
-        if session.current_mode_spec.prompt_message:
+        if session.current_mode.prompt_message:
             return ANSI(
-                vi_mode_prompt() + session.current_mode_spec.prompt_message(session._prompt_message)
+                vi_mode_prompt() + session.current_mode.prompt_message(session._prompt_message)
                 )
         else:
             return session._prompt_message
@@ -179,7 +133,7 @@ def create_radian_prompt_session(options, settings):
 
         return _
 
-    session = RadianPromptSession(
+    session = ModalPromptSession(
         message=message,
         style=style_from_pygments_cls(get_style_by_name(settings.color_scheme)),
         editing_mode=editing_mode,
@@ -219,22 +173,11 @@ def create_radian_prompt_session(options, settings):
     browse_level = [""]
 
     def browse_activator(session):
-        message = session._prompt_message
-        if BROWSE_PATTERN.match(message):
-            browse_level[0] = BROWSE_PATTERN.match(message).group(1)
+        m = BROWSE_PATTERN.match(session._prompt_message)
+        if m:
+            browse_level[0] = m.group(1)
             return True
-        else:
-            return False
-
-    class BrowseValidator(Validator):
-        """
-        As a pre-accept processor.
-        """
-        def validate(self, document):
-            text = document.text
-            if settings.history_ignore_browser_commands:
-                if text.strip() in ["n", "s", "f", "c", "cont", "Q", "where", "help"]:
-                    session.add_history = False
+        return False
 
     session.register_mode(
         name="browse",
@@ -245,7 +188,9 @@ def create_radian_prompt_session(options, settings):
         multiline=settings.indent_lines,
         completer=RCompleter(timeout=settings.completion_timeout),
         complete_while_typing=settings.complete_while_typing,
-        validator=BrowseValidator(),
+        keep_history=lambda text: not (
+            settings.history_ignore_browser_commands and text.strip() in BROWSE_COMMANDS
+        ),
         lexer=PygmentsLexer(SLexer),
         tempfile_suffix=".R",
         input_processors=input_processors,
