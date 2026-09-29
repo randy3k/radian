@@ -3,151 +3,88 @@ import re
 import sys
 import time
 
-from .lineedit.prompt import ModalPromptSession
-from .lineedit.history import ModalInMemoryHistory, ModalFileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles import style_from_pygments_cls
-from prompt_toolkit.utils import is_windows, get_term_environment_variable
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-
+from prompt_toolkit.utils import get_term_environment_variable, is_windows
 from pygments.styles import get_style_by_name
-
-from rchitect import rcopy, rcall, robject
-from rchitect.interface import roption, setoption, parse_text_complete, \
-    process_events, peek_event, polled_events
+from rchitect.interface import (
+    parse_text_complete,
+    peek_event,
+    polled_events,
+    process_events,
+    setoption,
+)
 
 from . import shell
-from .key_bindings import create_r_key_bindings, create_shell_key_bindings, create_key_bindings
 from .completion import RCompleter, SmartPathCompleter
 from .io import CustomInput, CustomOutput
+from .key_bindings import (
+    create_key_bindings,
+    create_r_key_bindings,
+    create_shell_key_bindings,
+)
 from .lexer import CustomSLexer as SLexer
+from .lineedit.history import ModalFileHistory, ModalInMemoryHistory
+from .lineedit.prompt import ModalPromptSession
 
 
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 BROWSE_COMMANDS = {"n", "s", "f", "c", "cont", "Q", "where", "help"}
 
 
-def apply_settings(session, settings):
-    setoption("prompt", settings.prompt)
-
-    if settings.auto_width:
-        output_width = session.app.output.get_size().columns
-        if output_width:
-            setoption("width", output_width)
-
-    # necessary on windows
-    setoption("menu.graphics", False)
-
-    def askpass(message):
-        app = session.app
-        if app.is_running:
-            from getpass import getpass
-            return getpass(message)
-        else:
-            from prompt_toolkit import prompt
-            return prompt(message, is_password=True)
-
-    if not roption("askpass"):
-        setoption("askpass", robject(askpass, convert=True))
-
-    # enables completion of installed package names
-    if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
-        rcall(("utils", "rc.settings"), ipck=True)
-
-
-def create_radian_prompt_session(options, settings):
-
+def _create_history(options, settings):
     local_history_file = settings.local_history_file
     global_history_file = settings.global_history_file
 
     if options.no_history:
-        history = ModalInMemoryHistory()
-    elif not options.global_history and os.path.exists(local_history_file):
-        history = ModalFileHistory(os.path.abspath(local_history_file), settings.history_size)
-    else:
-        history_file = os.path.join(os.path.expanduser(global_history_file))
-        history_file = os.path.expandvars(history_file)
-        history_file_dir = os.path.dirname(history_file)
-        if not os.path.exists(history_file_dir):
-            os.makedirs(history_file_dir, 0o700)
-        history = ModalFileHistory(history_file, settings.history_size)
+        return ModalInMemoryHistory()
+    if not options.global_history and os.path.exists(local_history_file):
+        return ModalFileHistory(
+            os.path.abspath(local_history_file), settings.history_size
+        )
 
-    if is_windows():
-        output = None
-    else:
-        output = CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
+    history_file = os.path.expandvars(os.path.expanduser(global_history_file))
+    history_file_dir = os.path.dirname(history_file)
+    if not os.path.exists(history_file_dir):
+        os.makedirs(history_file_dir, 0o700)
+    return ModalFileHistory(history_file, settings.history_size)
 
-    def vi_mode_prompt():
-        if session.editing_mode == EditingMode.VI and settings.show_vi_mode_prompt:
-            im = session.app.vi_state.input_mode.value
-            vi_mode_prompt = settings.vi_mode_prompt
-            if isinstance(vi_mode_prompt, str):
-                return vi_mode_prompt.format(str(im)[3:6])
-            else:
-                return vi_mode_prompt[str(im)[3:6]]
-        return ""
 
-    def message():
-        if session.current_mode.prompt_message:
-            return ANSI(
-                vi_mode_prompt() + session.current_mode.prompt_message(session._prompt_message)
-                )
-        else:
-            return session._prompt_message
+def _create_inputhook(get_session):
+    if "RADIAN_NO_INPUTHOOK" in os.environ:
+        return None
 
-    if settings.editing_mode in ["vim", "vi"]:
-        editing_mode = EditingMode.VI
-    else:
-        editing_mode = EditingMode.EMACS
+    terminal_width = [None]
 
-    def get_inputhook():
-        # make testing more robust
-        if "RADIAN_NO_INPUTHOOK" in os.environ:
-            return None
+    def inputhook(context):
+        session = get_session()
+        output_width = session.app.output.get_size().columns
+        if output_width and terminal_width[0] != output_width:
+            terminal_width[0] = output_width
+            setoption("width", max(terminal_width[0], 20))
 
-        terminal_width = [None]
+        while True:
+            if context.input_is_ready():
+                break
+            try:
+                if peek_event():
+                    with session.app.input.detach():
+                        with session.app.input.rare_mode():
+                            process_events()
+                else:
+                    polled_events()
+            except Exception:
+                pass
+            time.sleep(1.0 / 30)
 
-        def _(context):
-            output_width = session.app.output.get_size().columns
-            if output_width and terminal_width[0] != output_width:
-                terminal_width[0] = output_width
-                setoption("width", max(terminal_width[0], 20))
+    return inputhook
 
-            while True:
-                if context.input_is_ready():
-                    break
-                try:
-                    if peek_event():
-                        with session.app.input.detach():
-                            with session.app.input.rare_mode():
-                                process_events()
-                    else:
-                        polled_events()
 
-                except Exception:
-                    pass
-                time.sleep(1.0 / 30)
-
-        return _
-
-    session = ModalPromptSession(
-        message=message,
-        style=style_from_pygments_cls(get_style_by_name(settings.color_scheme)),
-        editing_mode=editing_mode,
-        history=history,
-        enable_history_search=True,
-        search_no_duplicates=settings.history_search_no_duplicates,
-        search_ignore_case=settings.history_search_ignore_case,
-        enable_suspend=True,
-        input=CustomInput(sys.stdin),
-        output=output,
-        auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None,
-        inputhook=get_inputhook()
-    )
-
+def _register_modes(session, settings):
     input_processors = []
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
@@ -157,7 +94,7 @@ def create_radian_prompt_session(options, settings):
     session.register_mode(
         name="r",
         prompt_message=lambda x: x,
-        is_activated=lambda session: session._prompt_message == settings.prompt,
+        is_activated=lambda s: s._prompt_message == settings.prompt,
         history_book="r",
         insert_new_line=True,
         multiline=settings.indent_lines,
@@ -167,13 +104,13 @@ def create_radian_prompt_session(options, settings):
         tempfile_suffix=".R",
         input_processors=input_processors,
         key_bindings=create_key_bindings(),
-        prompt_key_bindings=r_key_bindings
+        prompt_key_bindings=r_key_bindings,
     )
 
     browse_level = [""]
 
-    def browse_activator(session):
-        m = BROWSE_PATTERN.match(session._prompt_message)
+    def browse_activator(s):
+        m = BROWSE_PATTERN.match(s._prompt_message)
         if m:
             browse_level[0] = m.group(1)
             return True
@@ -194,11 +131,11 @@ def create_radian_prompt_session(options, settings):
         lexer=PygmentsLexer(SLexer),
         tempfile_suffix=".R",
         input_processors=input_processors,
-        prompt_key_bindings=r_key_bindings
+        prompt_key_bindings=r_key_bindings,
     )
 
-    def shell_process_text(session):
-        text = session.default_buffer.text
+    def shell_process_text(s):
+        text = s.default_buffer.text
         if text.strip():
             shell.run_command(text)
 
@@ -214,7 +151,7 @@ def create_radian_prompt_session(options, settings):
         complete_while_typing=settings.complete_while_typing,
         lexer=None,
         input_processors=input_processors,
-        prompt_key_bindings=create_shell_key_bindings()
+        prompt_key_bindings=create_shell_key_bindings(),
     )
 
     session.register_mode(
@@ -226,9 +163,58 @@ def create_radian_prompt_session(options, settings):
         lexer=None,
         completer=None,
         prompt_key_bindings=None,
-        input_processors=[]
+        input_processors=[],
     )
 
-    apply_settings(session, settings)
+
+def create_radian_prompt_session(options, settings):
+    history = _create_history(options, settings)
+    output = (
+        None
+        if is_windows()
+        else CustomOutput.from_pty(sys.stdout, term=get_term_environment_variable())
+    )
+    editing_mode = (
+        EditingMode.VI if settings.editing_mode in ["vim", "vi"] else EditingMode.EMACS
+    )
+
+    session_ref = [None]
+
+    def vi_mode_prompt():
+        session = session_ref[0]
+        if session.editing_mode == EditingMode.VI and settings.show_vi_mode_prompt:
+            im = session.app.vi_state.input_mode.value
+            vmp = settings.vi_mode_prompt
+            if isinstance(vmp, str):
+                return vmp.format(str(im)[3:6])
+            return vmp[str(im)[3:6]]
+        return ""
+
+    def message():
+        session = session_ref[0]
+        if session.current_mode.prompt_message:
+            return ANSI(
+                vi_mode_prompt()
+                + session.current_mode.prompt_message(session._prompt_message)
+            )
+        return session._prompt_message
+
+    session = ModalPromptSession(
+        message=message,
+        style=style_from_pygments_cls(get_style_by_name(settings.color_scheme)),
+        editing_mode=editing_mode,
+        history=history,
+        enable_history_search=True,
+        search_no_duplicates=settings.history_search_no_duplicates,
+        search_ignore_case=settings.history_search_ignore_case,
+        enable_suspend=True,
+        input=CustomInput(sys.stdin),
+        output=output,
+        auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None,
+        inputhook=_create_inputhook(lambda: session_ref[0]),
+    )
+    session_ref[0] = session
+
+    _register_modes(session, settings)
 
     return session

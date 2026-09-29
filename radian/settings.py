@@ -1,11 +1,9 @@
-import re
 from rchitect.interface import roption
 
 
 PROMPT = "\x1b[34mr$>\x1b[0m "
 SHELL_PROMPT = "\x1b[31m#!>\x1b[0m "
 BROWSE_PROMPT = "\x1b[33mBrowse[{}]>\x1b[0m "
-BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 VI_MODE_PROMPT = "\x1b[34m[{}]\x1b[0m "
 STDERR_FORMAT = "\x1b[31m{}\x1b[0m"
 

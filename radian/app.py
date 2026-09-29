@@ -1,185 +1,25 @@
 import os
-import sys
 import subprocess
+import sys
 
+import rchitect
+from rchitect import rcall, rcopy, robject
+from rchitect.interface import roption, setoption
 
-def main(cleanup=None):
-    import optparse
-    import os
-    import sys
-    from rchitect.utils import get_rhome, rversion, maybe_reexec
-    from radian import __version__
-
-    parser = optparse.OptionParser("usage: radian")
-    parser.add_option(
-        "-v", "--version", action="store_true", dest="version", help="Get version"
-    )
-    parser.add_option("--r-binary", dest="r", help="Path to R binary")
-    parser.add_option(
-        "--profile",
-        dest="profile",
-        help="Path to .radian_profile, ignore both global and local profiles",
-    )
-    parser.add_option(
-        "-q",
-        "--quiet",
-        "--silent",
-        action="store_true",
-        dest="quiet",
-        help="Don't print startup message",
-    )
-    parser.add_option(
-        "--no-environ",
-        action="store_true",
-        dest="no_environ",
-        help="Don't read the site and user environment files",
-    )
-    parser.add_option(
-        "--no-site-file",
-        action="store_true",
-        dest="no_site_file",
-        help="Don't read the site-wide Rprofile",
-    )
-    parser.add_option(
-        "--no-init-file",
-        action="store_true",
-        dest="no_init_file",
-        help="Don't read the user R profile",
-    )
-    parser.add_option(
-        "--local-history",
-        action="store_true",
-        dest="local_history",
-        help="Force using local history file",
-    )
-    parser.add_option(
-        "--global-history",
-        action="store_true",
-        dest="global_history",
-        help="Force using global history file",
-    )
-    parser.add_option(
-        "--no-history",
-        action="store_true",
-        dest="no_history",
-        help="Don't load any history files",
-    )
-    parser.add_option(
-        "--vanilla",
-        action="store_true",
-        dest="vanilla",
-        help="Combine --no-history --no-environ --no-site-file --no-init-file",
-    )
-    parser.add_option(
-        "--save",
-        action="store_true",
-        dest="save",
-        help="Do save workspace at the end of the session",
-    )
-    parser.add_option(
-        "--ask-save", action="store_true", dest="ask_save", help="Ask to save R data"
-    )
-    parser.add_option(
-        "--restore-data",
-        action="store_true",
-        dest="restore_data",
-        help="Restore previously saved objects",
-    )
-    parser.add_option("--debug", action="store_true", dest="debug", help="Debug mode")
-    parser.add_option(
-        "--coverage", action="store_true", dest="coverage", help=optparse.SUPPRESS_HELP
-    )
-    parser.add_option(
-        "--cprofile", action="store_true", dest="cprofile", help=optparse.SUPPRESS_HELP
-    )
-
-    # we accept these options, but never check them
-    parser.add_option(
-        "--no-save", action="store_true", dest="no_save", help=optparse.SUPPRESS_HELP
-    )
-    parser.add_option(
-        "--no-restore-data",
-        action="store_true",
-        dest="no_restore_data",
-        help=optparse.SUPPRESS_HELP,
-    )
-    parser.add_option(
-        "--no-restore-history",
-        action="store_true",
-        dest="no_restore_history",
-        help=optparse.SUPPRESS_HELP,
-    )
-    parser.add_option(
-        "--no-restore",
-        action="store_true",
-        dest="no_restore",
-        help=optparse.SUPPRESS_HELP,
-    )
-    parser.add_option(
-        "--no-readline",
-        action="store_true",
-        dest="no_readline",
-        help=optparse.SUPPRESS_HELP,
-    )
-    parser.add_option(
-        "--interactive",
-        action="store_true",
-        dest="interactive",
-        help=optparse.SUPPRESS_HELP,
-    )
-
-    options, args = parser.parse_args()
-
-    if options.r:
-        os.environ["R_BINARY"] = options.r
-
-    if not options.version:
-        maybe_reexec(module="radian")
-
-    r_home = get_rhome()
-
-    if options.version:
-        if r_home:
-            r_binary = os.path.normpath(os.path.join(r_home, "bin", "R"))
-            r_version = rversion(r_home)
-        else:
-            r_binary = "NA"
-            r_version = "NA"
-        print("radian version: {}".format(__version__))
-        print("r executable: {}".format(r_binary))
-        print("r version: {}".format(r_version))
-        print("python executable: {}".format(sys.executable))
-        print(
-            "python version: {:d}.{:d}.{:d}".format(
-                sys.version_info.major, sys.version_info.minor, sys.version_info.micro
-            )
-        )
-        return
-
-    os.environ["RADIAN_VERSION"] = __version__
-    os.environ["RADIAN_COMMAND_ARGS"] = " ".join(
-        ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v]
-    )
-
-    if not r_home:
-        raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
-
-    from packaging.version import parse as parse_version
-
-    if rversion(r_home) < parse_version("4.2.0"):
-        raise RuntimeError("R >= 4.2.0 is required.")
-
-    try:
-        # failed to import jedi on demand in some edge cases.
-        import jedi  # noqa
-    except ImportError:
-        pass
-
-    RadianApplication(r_home, ver=__version__).run(options, cleanup=cleanup)
+from . import reticulate, rutils
+from .console import create_read_console, create_write_console_ex
+from .prompt_session import create_radian_prompt_session
+from .settings import radian_settings
 
 
 def get_app():
     return RadianApplication.instance
+
+
+def main(cleanup=None):
+    from .__main__ import main as _main
+
+    return _main(cleanup=cleanup)
 
 
 class RadianApplication:
@@ -190,7 +30,7 @@ class RadianApplication:
         RadianApplication.instance = self
         self.r_home = r_home
         self.ver = ver
-        super(RadianApplication, self).__init__()
+        self.session = None
 
     def set_env_vars(self, options):
         if options.vanilla:
@@ -209,9 +49,8 @@ class RadianApplication:
         if options.no_init_file:
             os.environ["R_PROFILE_USER"] = ""
 
-        if options.local_history:
-            if not os.path.exists(".radian_history"):
-                open(".radian_history", "w+").close()
+        if options.local_history and not os.path.exists(".radian_history"):
+            open(".radian_history", "w+").close()
 
         doc_dir = os.path.join(self.r_home, "doc")
         include_dir = os.path.join(self.r_home, "include")
@@ -241,18 +80,10 @@ class RadianApplication:
 
         # enable crayon on windows
         # we use CMDER_ROOT as a temporary workaround
-        if sys.platform.startswith("win"):
-            if "CMDER_ROOT" not in os.environ:
-                os.environ["CMDER_ROOT"] = "NA"
+        if sys.platform.startswith("win") and "CMDER_ROOT" not in os.environ:
+            os.environ["CMDER_ROOT"] = "NA"
 
-    def run(self, options, cleanup=None):
-        from .prompt_session import create_radian_prompt_session
-        from .console import create_read_console, create_write_console_ex
-        import rchitect
-        from . import rutils, settings
-
-        self.set_env_vars(options)
-
+    def init_r(self, options):
         args = ["radian", "--quiet", "--no-restore-history"]
 
         if sys.platform != "win32":
@@ -275,13 +106,44 @@ class RadianApplication:
         if options.restore_data is not True:
             args.append("--no-restore-data")
 
-        # enable signal handlers
         os.environ["RCHITECT_REGISTER_SIGNAL_HANDLERS"] = "1"
-
         rchitect.init(args=args, register_signal_handlers=True)
 
         if sys.platform.startswith("win"):
             rutils.set_utf8()
+
+    def apply_r_settings(self, settings):
+        setoption("prompt", settings.prompt)
+
+        if settings.auto_width:
+            output_width = self.session.app.output.get_size().columns
+            if output_width:
+                setoption("width", output_width)
+
+        # necessary on windows
+        setoption("menu.graphics", False)
+
+        def askpass(message):
+            app = self.session.app
+            if app.is_running:
+                from getpass import getpass
+
+                return getpass(message)
+            else:
+                from prompt_toolkit import prompt
+
+                return prompt(message, is_password=True)
+
+        if not roption("askpass"):
+            setoption("askpass", robject(askpass, convert=True))
+
+        # enables completion of installed package names
+        if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
+            rcall(("utils", "rc.settings"), ipck=True)
+
+    def run(self, options, cleanup=None):
+        self.set_env_vars(options)
+        self.init_r(options)
 
         try:
             rutils.source_radian_profile(options.profile)
@@ -289,13 +151,13 @@ class RadianApplication:
             print("Got an error while loading radian profile")
             print(e)
 
-        settings = settings.radian_settings
-        settings.load()
-        self.session = create_radian_prompt_session(options, settings)
+        radian_settings.load()
+        self.session = create_radian_prompt_session(options, radian_settings)
+        self.apply_r_settings(radian_settings)
 
         rchitect.def_callback(name="read_console")(create_read_console(self.session))
         rchitect.def_callback(name="write_console_ex")(
-            create_write_console_ex(self.session, settings.stderr_format)
+            create_write_console_ex(self.session, radian_settings.stderr_format)
         )
 
         rutils.load_custom_key_bindings()
@@ -303,18 +165,14 @@ class RadianApplication:
         if cleanup:
             rutils.register_cleanup(cleanup)
 
-        from . import reticulate
-
         reticulate.configure()
 
-        # run user on load hooks
         try:
             rutils.run_on_load_hooks()
         except Exception as e:
             print("Error in running user hooks")
             print(e)
 
-        # print welcome message
         if options.quiet is not True:
             self.session.app.output.write(rchitect.interface.greeting())
 
