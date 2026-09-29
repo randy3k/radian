@@ -117,12 +117,9 @@ def set_utf8():
                 return
         except Exception:
             pass
-        ucrt = rcopy(
-            reval('compareVersion(paste0(R.version$major, ".", R.version$minor), "4.2.0") >= 0'))
-        if ucrt:
-            if not os.environ.get("LANG", ""):
-                os.environ["LANG"] = "en_US.UTF-8"
-            setoption("encoding", "UTF-8")
+        if not os.environ.get("LANG", ""):
+            os.environ["LANG"] = "en_US.UTF-8"
+        setoption("encoding", "UTF-8")
 
 
 def run_on_load_hooks():

@@ -7,9 +7,8 @@ def main(cleanup=None):
     import optparse
     import os
     import sys
-    from rchitect.utils import get_rhome, rversion
+    from rchitect.utils import get_rhome, rversion, maybe_reexec
     from radian import __version__
-    from .dyld import maybe_reexec
 
     parser = optparse.OptionParser("usage: radian")
     parser.add_option(
@@ -134,6 +133,9 @@ def main(cleanup=None):
     if options.r:
         os.environ["R_BINARY"] = options.r
 
+    if not options.version:
+        maybe_reexec(module="radian")
+
     r_home = get_rhome()
 
     if options.version:
@@ -162,7 +164,10 @@ def main(cleanup=None):
     if not r_home:
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
-    maybe_reexec(r_home)
+    from packaging.version import parse as parse_version
+
+    if rversion(r_home) < parse_version("4.2.0"):
+        raise RuntimeError("R >= 4.2.0 is required.")
 
     try:
         # failed to import jedi on demand in some edge cases.
