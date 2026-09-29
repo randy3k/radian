@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        r: [4.4, latest, devel]
+        r: [oldrel, latest, devel]
         python: ["3.10", "3.14"]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
