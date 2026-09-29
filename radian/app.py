@@ -11,12 +11,6 @@ def main(cleanup=None):
     from radian import __version__
     from .dyld import maybe_reexec
 
-    try:
-        # failed to import jedi on demand in some edge cases.
-        import jedi  # noqa
-    except ImportError:
-        pass
-
     parser = optparse.OptionParser("usage: radian")
     parser.add_option(
         "-v", "--version", action="store_true", dest="version", help="Get version"
@@ -169,6 +163,12 @@ def main(cleanup=None):
         raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
 
     maybe_reexec(r_home)
+
+    try:
+        # failed to import jedi on demand in some edge cases.
+        import jedi  # noqa
+    except ImportError:
+        pass
 
     RadianApplication(r_home, ver=__version__).run(options, cleanup=cleanup)
 
