@@ -1,9 +1,12 @@
-from radian import main
 import sys
 
 # this file is used when radian is called with `python -m radian`
 
 if __name__ == '__main__':
+    if not any(a in ("-v", "--version", "-h", "--help") for a in sys.argv[1:]):
+        from rchitect.utils import maybe_reexec
+
+        maybe_reexec(module="radian")
 
     if "--coverage" in sys.argv:
         import coverage
@@ -28,4 +31,7 @@ if __name__ == '__main__':
     else:
         cleanup = None
 
+    from radian import main
+
     main(cleanup=cleanup)
+
