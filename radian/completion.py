@@ -10,7 +10,8 @@ from .settings import radian_settings as settings
 from .latex import get_latex_completions
 from .rutils import installed_packages
 from .console import suppress_stderr
-from .document import cursor_in_string
+from .lexer import cursor_in_string
+
 
 
 TOKEN_PATTERN = re.compile(r".*?(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")

@@ -28,7 +28,8 @@ def test_askpass(terminal):
 def test_strings(terminal):
     # issue #377, #523
     from prompt_toolkit.document import Document
-    from radian.document import cursor_in_string
+    from radian.lexer import cursor_in_string
+
 
     assert not cursor_in_string(Document("", 0))
     assert cursor_in_string(Document('"', 1))

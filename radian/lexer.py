@@ -1,13 +1,51 @@
-# -*- coding: utf-8 -*-
-
 import re
 
-from pygments.lexer import Lexer, RegexLexer, include, words, do_insertions, bygroups
-from pygments.token import Text, Comment, Operator, Keyword, Name, String, \
-    Number, Punctuation, Generic, Error
+from pygments.lexer import RegexLexer, include
+from pygments.token import (
+    Comment,
+    Error,
+    Keyword,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+    Text,
+    Token,
+)
 
 
-line_re = re.compile('.*?\n')
+def _build_raw_string_tokens():
+    statements = []
+    states = {
+        "string_squote": [
+            (r"([^\'\\]|\\[\s\S])*\'", String, "#pop"),
+            (r"[\s\S]+", Error),
+        ],
+        "string_dquote": [
+            (r'([^"\\]|\\[\s\S])*"', String, "#pop"),
+            (r"[\s\S]+", Error),
+        ],
+    }
+    quotes = [("squote", r"\'"), ("dquote", r"\"")]
+    dashes = [("", ""), ("1", "-"), ("2", "--"), ("3", "---"), ("4", "-{4,}")]
+    brackets = [("r", r"\(", r"\)"), ("s", r"\[", r"\]"), ("c", r"\{", r"\}")]
+
+    for q_name, q_pat in quotes:
+        statements.append((q_pat, String, f"string_{q_name}"))
+        for d_idx, d_pat in dashes:
+            for b_key, b_open, b_close in brackets:
+                state_name = f"string_{q_name}_{b_key}{d_idx}"
+                statements.append((rf"(r|R){q_pat}{d_pat}{b_open}", String, state_name))
+                states[state_name] = [
+                    (rf"[\s\S]*?{b_close}{d_pat}{q_pat}", String, "#pop"),
+                    (r"[\s\S]+", Error),
+                ]
+
+    return statements, states
+
+
+_RAW_STRING_STATEMENTS, _RAW_STRING_STATES = _build_raw_string_tokens()
 
 
 class CustomSLexer(RegexLexer):
@@ -68,38 +106,7 @@ class CustomSLexer(RegexLexer):
             include('comments'),
             # whitespaces
             (r'\s+', Text),
-            (r'\'', String, 'string_squote'),
-            (r'(r|R)\'\(', String, 'string_squote_r'),
-            (r'(r|R)\'\[', String, 'string_squote_s'),
-            (r'(r|R)\'\{', String, 'string_squote_c'),
-            (r'(r|R)\'-\(', String, 'string_squote_r1'),
-            (r'(r|R)\'-\[', String, 'string_squote_s1'),
-            (r'(r|R)\'-\{', String, 'string_squote_c1'),
-            (r'(r|R)\'--\(', String, 'string_squote_r2'),
-            (r'(r|R)\'--\[', String, 'string_squote_s2'),
-            (r'(r|R)\'--\{', String, 'string_squote_c2'),
-            (r'(r|R)\'---\(', String, 'string_squote_r3'),
-            (r'(r|R)\'---\[', String, 'string_squote_s3'),
-            (r'(r|R)\'---\{', String, 'string_squote_c3'),
-            (r'(r|R)\'-{4,}\(', String, 'string_squote_r4'),
-            (r'(r|R)\'-{4,}\[', String, 'string_squote_s4'),
-            (r'(r|R)\'-{4,}\{', String, 'string_squote_c4'),
-            (r'\"', String, 'string_dquote'),
-            (r'(r|R)\"\(', String, 'string_dquote_r'),
-            (r'(r|R)\"\[', String, 'string_dquote_s'),
-            (r'(r|R)\"\{', String, 'string_dquote_c'),
-            (r'(r|R)\"-\(', String, 'string_dquote_r1'),
-            (r'(r|R)\"-\[', String, 'string_dquote_s1'),
-            (r'(r|R)\"-\{', String, 'string_dquote_c1'),
-            (r'(r|R)\"--\(', String, 'string_dquote_r2'),
-            (r'(r|R)\"--\[', String, 'string_dquote_s2'),
-            (r'(r|R)\"--\{', String, 'string_dquote_c2'),
-            (r'(r|R)\"---\(', String, 'string_dquote_r3'),
-            (r'(r|R)\"---\[', String, 'string_dquote_s3'),
-            (r'(r|R)\"---\{', String, 'string_dquote_c3'),
-            (r'(r|R)\"-{4,}\(', String, 'string_dquote_r4'),
-            (r'(r|R)\"-{4,}\[', String, 'string_dquote_s4'),
-            (r'(r|R)\"-{4,}\{', String, 'string_dquote_c4'),
+            *_RAW_STRING_STATEMENTS,
             include('builtin_symbols'),
             include('valid_name'),
             include('numbers'),
@@ -117,136 +124,25 @@ class CustomSLexer(RegexLexer):
             # (r'\{', Punctuation, 'block'),
             (r'.', Text),
         ],
-        'string_squote': [
-            (r'([^\'\\]|\\[\s\S])*\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_r': [
-            (r'[\s\S]*?\)\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_s': [
-            (r'[\s\S]*?\]\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_c': [
-            (r'[\s\S]*?\}\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_r1': [
-            (r'[\s\S]*?\)-\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_s1': [
-            (r'[\s\S]*?\]-\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_c1': [
-            (r'[\s\S]*?\}-\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_r2': [
-            (r'[\s\S]*?\)--\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_s2': [
-            (r'[\s\S]*?\]--\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_c2': [
-            (r'[\s\S]*?\}--\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_r3': [
-            (r'[\s\S]*?\)---\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_s3': [
-            (r'[\s\S]*?\]---\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_c3': [
-            (r'[\s\S]*?\}---\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_r4': [
-            (r'[\s\S]*?\)-{4,}\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_s4': [
-            (r'[\s\S]*?\]-{4,}\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_squote_c4': [
-            (r'[\s\S]*?\}-{4,}\'', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote': [
-            (r'([^"\\]|\\[\s\S])*"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_r': [
-            (r'[\s\S]*?\)\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_s': [
-            (r'[\s\S]*?\]\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_c': [
-            (r'[\s\S]*?\}\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_r1': [
-            (r'[\s\S]*?\)-\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_s1': [
-            (r'[\s\S]*?\]-\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_c1': [
-            (r'[\s\S]*?\}-\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_r2': [
-            (r'[\s\S]*?\)--\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_s2': [
-            (r'[\s\S]*?\]--\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_c2': [
-            (r'[\s\S]*?\}--\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_r3': [
-            (r'[\s\S]*?\)---\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_s3': [
-            (r'[\s\S]*?\]---\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_c3': [
-            (r'[\s\S]*?\}---\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_r4': [
-            (r'[\s\S]*?\)-{4,}\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_s4': [
-            (r'[\s\S]*?\]-{4,}\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
-        'string_dquote_c4': [
-            (r'[\s\S]*?\}-{4,}\"', String, '#pop'),
-            (r'[\s\S]+', Error),
-        ],
+        **_RAW_STRING_STATES,
     }
 
     def analyse_text(text):
         if re.search(r'[a-z0-9_\])\s]<-(?!-)', text):
             return 0.11
+
+
+_lexer = CustomSLexer()
+
+
+def cursor_in_string(document):
+    tokens = list(_lexer.get_tokens_unprocessed(document.text_before_cursor))
+    if not tokens:
+        return False
+    _, last_token, _ = tokens[-1]
+    if last_token is Token.Error:
+        return True
+    if last_token is Token.Literal.String:
+        return sum(1 for _, t, _ in tokens if t is Token.Literal.String) % 2 == 1
+    return False
+

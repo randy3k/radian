@@ -10,11 +10,10 @@ from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
 from pygments.lexers.python import PythonLexer
 
-from rchitect import rcall, rcopy, reval
-from rchitect.interface import roption, set_hook, package_event
+from rchitect import rcall, reval
+from rchitect.interface import package_event, roption, set_hook
 
-from radian import get_app
-from radian.key_bindings import (
+from .key_bindings import (
     commit_text,
     create_prompt_key_bindings,
     cursor_at_begin,
@@ -25,9 +24,9 @@ from radian.key_bindings import (
     prompt_mode,
     text_is_empty,
 )
-from radian.latex import get_latex_completions
-from radian.rutils import package_is_installed
-from radian.settings import radian_settings as settings
+from .latex import get_latex_completions
+from .rutils import package_is_installed
+from .settings import radian_settings as settings
 
 
 try:
@@ -100,51 +99,30 @@ def parse_text_complete(code):
                 return True
 
 
-if has_jedi and tuple(int(x) for x in jedi.__version__.split(".")[0:2]) >= (0, 18):
-    def get_reticulate_completions(document, complete_event):
-        word = document.get_word_before_cursor()
-        prefix_length = settings.completion_prefix_length
-        if len(word) < prefix_length and not complete_event.completion_requested:
-            return []
+def get_reticulate_completions(document, complete_event):
+    word = document.get_word_before_cursor()
+    prefix_length = settings.completion_prefix_length
+    if len(word) < prefix_length and not complete_event.completion_requested:
+        return []
 
-        try:
-            script = jedi.Interpreter(
-                document.text,
-                path="input-text",
-                namespaces=[__main__.__dict__]
+    try:
+        script = jedi.Interpreter(
+            document.text,
+            path="input-text",
+            namespaces=[__main__.__dict__],
+        )
+        return [
+            Completion(
+                str(c.name_with_symbols),
+                len(str(c.complete)) - len(str(c.name_with_symbols)),
             )
-            return [
-                Completion(
-                    str(c.name_with_symbols),
-                    len(str(c.complete)) - len(str(c.name_with_symbols)))
-                for c in script.complete(
-                    line=document.cursor_position_row + 1, column=document.cursor_position_col)
-            ]
-        except Exception:
-            return []
-else:
-    def get_reticulate_completions(document, complete_event):
-        word = document.get_word_before_cursor()
-        prefix_length = settings.completion_prefix_length
-        if len(word) < prefix_length and not complete_event.completion_requested:
-            return []
-
-        try:
-            script = jedi.Interpreter(
-                document.text,
-                column=document.cursor_position_col,
+            for c in script.complete(
                 line=document.cursor_position_row + 1,
-                path="input-text",
-                namespaces=[__main__.__dict__]
+                column=document.cursor_position_col,
             )
-            return [
-                Completion(
-                    str(c.name_with_symbols),
-                    len(str(c.complete)) - len(str(c.name_with_symbols)))
-                for c in script.completions()
-            ]
-        except Exception:
-            return []
+        ]
+    except Exception:
+        return []
 
 
 class PythonCompleter(Completer):
@@ -155,24 +133,23 @@ class PythonCompleter(Completer):
         return get_reticulate_completions(document, complete_event)
 
 
-def register_reticulate_mode(*args):
-    app = get_app()
-    if not app or "reticulate" in app.session.modes:
+def register_reticulate_mode(session):
+    if "reticulate" in session.modes:
         return
 
-    main_mode = prompt_mode("r") | prompt_mode("browse")
+    main_mode = prompt_mode(session, "r") | prompt_mode(session, "browse")
     kb = KeyBindings()
 
     @kb.add("~", filter=main_mode & insert_mode & default_focused & cursor_at_begin & text_is_empty)
     def _(event):
-        commit_text(event, "reticulate::repl_python(quiet = TRUE)", False)
+        commit_text(session, event, "reticulate::repl_python(quiet = TRUE)", False)
 
     pkb = create_prompt_key_bindings(parse_text_complete)
 
     @pkb.add("c-d", filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
     @pkb.add("backspace", filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
     def _(event):
-        commit_text(event, "exit", False)
+        commit_text(session, event, "exit", False)
 
     @pkb.add("enter", filter=insert_mode & default_focused & preceding_text(".*:"))
     def _(event):
@@ -187,11 +164,11 @@ def register_reticulate_mode(*args):
 
     py_repl_active = reval("reticulate:::py_repl_active")
 
-    app.session.register_mode(
+    session.register_mode(
         "reticulate",
-        is_activated=lambda session: bool(rcall(py_repl_active, _convert=True)),
+        is_activated=lambda s: bool(rcall(py_repl_active, _convert=True)),
         prompt_message=lambda x: x,
-        callback=lambda session: handle_code(session.default_buffer.text),
+        callback=lambda s: handle_code(s.default_buffer.text),
         multiline=True,
         insert_new_line=True,
         insert_new_line_on_sigint=True,
@@ -204,18 +181,21 @@ def register_reticulate_mode(*args):
     )
 
 
-def configure():
+def configure(session):
     if roption("radian.enable_reticulate_prompt", True) and package_is_installed("reticulate"):
         if "reticulate" in rcall(("base", "loadedNamespaces"), _convert=True):
-            register_reticulate_mode()
+            register_reticulate_mode(session)
         else:
-            set_hook(package_event("reticulate", "onLoad"), register_reticulate_mode)
+            set_hook(
+                package_event("reticulate", "onLoad"),
+                lambda *args: register_reticulate_mode(session),
+            )
 
-        session = get_app().session
         kb = session.modes["r"].prompt_key_bindings
         browsekb = session.modes["browse"].prompt_key_bindings
 
         @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
         @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
         def _(event):
-            commit_text(event, "reticulate::repl_python()", False)
+            commit_text(session, event, "reticulate::repl_python()", False)
+

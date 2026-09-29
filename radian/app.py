@@ -8,6 +8,7 @@ from rchitect.interface import roption, setoption
 
 from . import reticulate, rutils
 from .console import create_read_console, create_write_console_ex
+from .key_bindings import load_custom_key_bindings
 from .prompt_session import create_radian_prompt_session
 from .settings import radian_settings
 
@@ -160,12 +161,12 @@ class RadianApplication:
             create_write_console_ex(self.session, radian_settings.stderr_format)
         )
 
-        rutils.load_custom_key_bindings()
+        load_custom_key_bindings(self.session)
 
         if cleanup:
             rutils.register_cleanup(cleanup)
 
-        reticulate.configure()
+        reticulate.configure(self.session)
 
         try:
             rutils.run_on_load_hooks()

@@ -1,20 +1,7 @@
 import os
 import sys
-from rchitect import rcopy, reval, rcall
+from rchitect import rcall, rcopy
 from rchitect.interface import roption, setoption
-from .key_bindings import map_key
-
-def is_ascii(str):
-    return all(ord(c) < 128 for c in str)
-
-def is_long_non_ascii_multiline(text):
-    if is_ascii(text):
-        return False
-    if "\n" not in text:
-        return False
-    if len(text) < 1000:
-        return False
-    return True
 
 
 def package_is_loaded(pkg):
@@ -87,25 +74,13 @@ def source_radian_profile(path):
             source_file(local_profile)
 
 
-def load_custom_key_bindings(*args):
-    esc_keymap = roption("radian.escape_key_map", [])
-    for m in esc_keymap:
-        map_key(("escape", m["key"]), m["value"], mode=m["mode"] if "mode" in m else "r")
-
-    keymap = roption("radian.ctrl_key_map", [])
-    for m in keymap:
-        if m["key"] in "mihdc":
-            print("WARNING: Cannot remap c-" + m["key"] + ". Please remove this mapping from radian.ctrl_key_map in your radian profile")
-        else:
-            map_key(("c-" + m["key"],), m["value"], mode=m["mode"] if "mode" in m else "r")
-
-
-
 def register_cleanup(cleanup):
-    rcall(("base", "reg.finalizer"),
-          rcall(("base", "getOption"), "rchitect.py_tools"),
-          cleanup,
-          onexit=True)
+    rcall(
+        ("base", "reg.finalizer"),
+        rcall(("base", "getOption"), "rchitect.py_tools"),
+        cleanup,
+        onexit=True,
+    )
 
 
 def set_utf8():
@@ -126,3 +101,4 @@ def run_on_load_hooks():
     hooks = roption("radian.on_load_hooks", [])
     for hook in hooks:
         hook()
+
