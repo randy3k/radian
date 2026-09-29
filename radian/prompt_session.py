@@ -21,7 +21,7 @@ from rchitect.interface import (
 
 from . import shell
 from .completion import RCompleter, SmartPathCompleter
-from .io import CustomInput, CustomOutput
+from .console import CustomInput, CustomOutput
 from .key_bindings import (
     create_key_bindings,
     create_r_key_bindings,
@@ -89,7 +89,7 @@ def _register_modes(session, settings):
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
 
-    r_key_bindings = create_r_key_bindings(parse_text_complete)
+    r_key_bindings = create_r_key_bindings(session, parse_text_complete)
 
     session.register_mode(
         name="r",
@@ -151,7 +151,7 @@ def _register_modes(session, settings):
         complete_while_typing=settings.complete_while_typing,
         lexer=None,
         input_processors=input_processors,
-        prompt_key_bindings=create_shell_key_bindings(),
+        prompt_key_bindings=create_shell_key_bindings(session),
     )
 
     session.register_mode(

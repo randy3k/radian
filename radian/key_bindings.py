@@ -14,9 +14,8 @@ from prompt_toolkit.filters import (
 )
 from prompt_toolkit.enums import DEFAULT_BUFFER
 
-from radian.settings import radian_settings as settings
-from radian.document import cursor_in_string
-from radian import get_app as get_radian_app
+from .lexer import cursor_in_string
+from .settings import radian_settings as settings
 from rchitect.interface import roption
 
 
@@ -24,18 +23,10 @@ default_focused = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 vi_focused_insert = vi_insert_mode & default_focused
 
-_prompt_mode_cache = {}
 
+def prompt_mode(session, mode):
+    return Condition(lambda: session.current_mode.name == mode)
 
-def prompt_mode(mode):
-    try:
-        return _prompt_mode_cache[mode]
-    except KeyError:
-        pass
-    app = get_radian_app()
-    condition = Condition(lambda: app.session.current_mode.name == mode)
-    _prompt_mode_cache[mode] = condition
-    return condition
 
 
 _preceding_text_cache = {}
@@ -123,12 +114,12 @@ def if_no_repeat(event):
     return not event.is_repeat
 
 
-def commit_text(event, text, add_history=True):
-    app = get_radian_app()
-    app.session.add_history = add_history
+def commit_text(session, event, text, add_history=True):
+    session.add_history = add_history
     buf = event.current_buffer
     buf.text = text
     buf.validate_and_handle()
+
 
 
 def newline(event, chars=["{", "[", "("]):
@@ -298,21 +289,20 @@ def create_prompt_key_bindings(parse_text_complete):
     return kb
 
 
-# keybinds for both r mond and browse mode
-def create_r_key_bindings(parse_text_complete):
+# keybinds for both r mode and browse mode
+def create_r_key_bindings(session, parse_text_complete):
     kb = create_prompt_key_bindings(parse_text_complete)
     handle = kb.add
 
     # r mode
     @handle(';', filter=insert_mode & default_focused & cursor_at_begin)
     def _(event):
-        app = get_radian_app()
-        app.session.activate_mode("shell")
+        session.activate_mode("shell")
 
     return kb
 
 
-def create_shell_key_bindings():
+def create_shell_key_bindings(session):
     kb = KeyBindings()
     handle = kb.add
 
@@ -322,9 +312,8 @@ def create_shell_key_bindings():
         filter=insert_mode & default_focused & cursor_at_begin,
         save_before=if_no_repeat)
     def _(event):
-        app = get_radian_app()
-        mode = app.session.mode_to_be_activated()
-        app.session.activate_mode(mode)
+        mode = session.mode_to_be_activated()
+        session.activate_mode(mode)
 
     @handle('c-j', filter=insert_mode & default_focused)
     @handle('enter', filter=insert_mode & default_focused)
@@ -332,6 +321,7 @@ def create_shell_key_bindings():
         event.current_buffer.validate_and_handle()
 
     return kb
+
 
 
 def create_key_bindings():
@@ -452,9 +442,27 @@ def create_key_bindings():
     return kb
 
 
-def map_key(key, value, mode="r", filter_str=""):
-    app = get_radian_app()
-    kb = app.session.modes[mode].prompt_key_bindings
+def map_key(session, key, value, mode="r"):
+    kb = session.modes[mode].prompt_key_bindings
+
     @kb.add(*key, filter=insert_mode & default_focused, eager=True)
     def _(event):
         event.current_buffer.insert_text(value)
+
+
+def load_custom_key_bindings(session):
+    esc_keymap = roption("radian.escape_key_map", [])
+    for m in esc_keymap:
+        map_key(session, ("escape", m["key"]), m["value"], mode=m.get("mode", "r"))
+
+    keymap = roption("radian.ctrl_key_map", [])
+    for m in keymap:
+        if m["key"] in "mihdc":
+            print(
+                "WARNING: Cannot remap c-"
+                + m["key"]
+                + ". Please remove this mapping from radian.ctrl_key_map in your radian profile"
+            )
+        else:
+            map_key(session, ("c-" + m["key"],), m["value"], mode=m.get("mode", "r"))
+

@@ -1,10 +1,55 @@
-import signal
+import os
 import re
+import signal
+import traceback
 from contextlib import contextmanager
 
-from .settings import radian_settings as settings
-from .rutils import is_long_non_ascii_multiline
+from prompt_toolkit.utils import is_windows
 from rchitect import console
+
+from .settings import radian_settings as settings
+
+
+if not is_windows():
+    import termios
+    from prompt_toolkit.input.vt100 import Vt100Input, cooked_mode
+    from prompt_toolkit.output.vt100 import Vt100_Output
+
+    class rare_mode(cooked_mode):
+        @classmethod
+        def _patch_lflag(cls, attrs):
+            return attrs | (termios.IEXTEN | termios.ISIG)
+
+    class CustomInput(Vt100Input):
+        @property
+        def responds_to_cpr(self):
+            return False
+
+        def rare_mode(self):
+            return rare_mode(self.stdin.fileno())
+
+    class CustomOutput(Vt100_Output):
+        pass
+
+else:
+    from ctypes import windll
+    from prompt_toolkit.input.win32 import Win32Input, cooked_mode
+
+    class rare_mode(cooked_mode):
+        def _patch(self):
+            ENABLE_PROCESSED_INPUT = 0x0001
+
+            windll.kernel32.SetConsoleMode(
+                self.handle, self.original_mode.value | ENABLE_PROCESSED_INPUT
+            )
+
+    class CustomInput(Win32Input):
+        def rare_mode(self):
+            return rare_mode()
+
+    # either Win32Output or Windows10_Output
+    CustomOutput = None
+
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
@@ -15,6 +60,14 @@ ANSI_ESCAPE_RE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 def normalize(string):
     return ANSI_ESCAPE_RE.sub('', string.replace('\r\n', '\n'))
+
+
+def is_ascii(text):
+    return all(ord(c) < 128 for c in text)
+
+
+def is_long_non_ascii_multiline(text):
+    return len(text) >= 1000 and "\n" in text and not is_ascii(text)
 
 
 @contextmanager
@@ -84,8 +137,9 @@ def create_read_console(session):
                 session.activate_mode(session.mode_to_be_activated())
             if session.current_mode.insert_new_line_on_sigint:
                 app.output.write_raw("\n")
-        elif not TERMINAL_CURSOR_AT_BEGINNING[0] or \
-                (settings.insert_new_line and session.current_mode.insert_new_line):
+        elif not TERMINAL_CURSOR_AT_BEGINNING[0] or (
+            settings.insert_new_line and session.current_mode.insert_new_line
+        ):
             app.output.write_raw("\n")
 
         text = None
@@ -105,14 +159,11 @@ def create_read_console(session):
                 if isinstance(e, EOFError):
                     # todo: confirmation in "r" mode
                     return None
-                else:
-                    print("unexpected error was caught.")
-                    print("please report to https://github.com/randy3k/radian for such error.")
-                    print(e)
-                    import traceback
-                    traceback.print_exc()
-                    import os
-                    os._exit(1)
+                print("unexpected error was caught.")
+                print("please report to https://github.com/randy3k/radian for such error.")
+                print(e)
+                traceback.print_exc()
+                os._exit(1)
 
             if text is None and settings.insert_new_line and session.current_mode.insert_new_line:
                 app.output.write_raw("\n")
@@ -156,63 +207,46 @@ def create_read_console(session):
 
 
 def create_write_console_ex(session, stderr_format):
-    app = session.app
-    output = app.output
-    from prompt_toolkit.utils import is_windows
-
-    write_console_ex = None
+    output = session.app.output
+    write_text = None
 
     if is_windows():
         from prompt_toolkit.output.win32 import Win32Output
+
         if isinstance(output, Win32Output):
             # we use print_formatted_text to support ANSI sequences in older Windows
             from prompt_toolkit.formatted_text import ANSI
             from prompt_toolkit.shortcuts import print_formatted_text
 
-            def write_console_ex(buf, otype):
-                if otype == 0:
-                    if not SUPPRESS_STDOUT:
-                        buf = buf.replace("\r\n", "\n")
-                        sbuf = buf.split("\r")
-                        for i, b in enumerate(sbuf):
-                            print_formatted_text(ANSI(b), end="", output=output)
-                            if i < len(sbuf) - 1:
-                                output.write("\r")
-                        output.flush()
-                        buf = normalize(buf)
-                        if buf:
-                            TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
-                else:
-                    if not SUPPRESS_STDERR:
-                        buf = buf.replace("\r\n", "\n")
-                        sbuf = buf.split("\r")
-                        for i, b in enumerate(sbuf):
-                            print_formatted_text(
-                                ANSI(stderr_format.format(b)), end="", output=output)
-                            if i < len(sbuf) - 1:
-                                output.write("\r")
-                        output.flush()
-                        buf = normalize(buf)
-                        if buf:
-                            TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+            def write_text(buf, format_str=None):
+                buf = buf.replace("\r\n", "\n")
+                sbuf = buf.split("\r")
+                for i, b in enumerate(sbuf):
+                    text = format_str.format(b) if format_str else b
+                    print_formatted_text(ANSI(text), end="", output=output)
+                    if i < len(sbuf) - 1:
+                        output.write("\r")
+                output.flush()
 
-    if not write_console_ex:
-        def write_console_ex(buf, otype):
-            if otype == 0:
-                if not SUPPRESS_STDOUT:
-                    output.enable_autowrap() #Patch for Windows10_Output
-                    output.write_raw(buf)
-                    output.flush()
-                    buf = normalize(buf)
-                    if buf:
-                        TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
-            else:
-                if not SUPPRESS_STDERR:
-                    output.enable_autowrap()
-                    output.write_raw(stderr_format.format(buf))
-                    output.flush()
-                    buf = normalize(buf)
-                    if buf:
-                        TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+    if not write_text:
+        def write_text(buf, format_str=None):
+            output.enable_autowrap()  # Patch for Windows10_Output
+            output.write_raw(format_str.format(buf) if format_str else buf)
+            output.flush()
+
+    def write_console_ex(buf, otype):
+        if otype == 0:
+            if SUPPRESS_STDOUT:
+                return
+            write_text(buf)
+        else:
+            if SUPPRESS_STDERR:
+                return
+            write_text(buf, stderr_format)
+
+        buf = normalize(buf)
+        if buf:
+            TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
     return write_console_ex
+
