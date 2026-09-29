@@ -22,7 +22,7 @@ def package_is_loaded(pkg):
 
 
 def package_is_installed(pkg):
-    return pkg in installed_packages()
+    return len(rcall(("base", "find.package"), pkg, quiet=True, _convert=True)) > 0
 
 
 _installed_packages_cache = (None, [])

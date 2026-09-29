@@ -205,7 +205,7 @@ def register_reticulate_mode(*args):
 
 
 def configure():
-    if package_is_installed("reticulate") and roption("radian.enable_reticulate_prompt", True):
+    if roption("radian.enable_reticulate_prompt", True) and package_is_installed("reticulate"):
         if "reticulate" in rcall(("base", "loadedNamespaces"), _convert=True):
             register_reticulate_mode()
         else:
