@@ -37,7 +37,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y libpng-dev          
       - name: Install required R packages for testing
-        run: Rscript -e "install.packages(c('remotes', 'askpass'))"
+        run: Rscript -e "install.packages(c('remotes', 'askpass', 'renv'))"
       - name: Install required R packages for testing
         run: Rscript -e "remotes::install_github('rstudio/reticulate')"
         env:

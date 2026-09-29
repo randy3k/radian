@@ -5,6 +5,7 @@ import re
 import sys
 
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
@@ -25,7 +26,7 @@ from .key_bindings import (
     text_is_empty,
 )
 from .latex import get_latex_completions
-from .rutils import package_is_installed
+from .rutils import package_is_installed, package_is_loaded
 from .settings import radian_settings as settings
 
 
@@ -182,8 +183,8 @@ def register_reticulate_mode(session):
 
 
 def configure(session):
-    if roption("radian.enable_reticulate_prompt", True) and package_is_installed("reticulate"):
-        if "reticulate" in rcall(("base", "loadedNamespaces"), _convert=True):
+    if roption("radian.enable_reticulate_prompt", True):
+        if package_is_loaded("reticulate"):
             register_reticulate_mode(session)
         else:
             set_hook(
@@ -191,11 +192,13 @@ def configure(session):
                 lambda *args: register_reticulate_mode(session),
             )
 
+        has_reticulate = Condition(lambda: package_is_installed("reticulate"))
         kb = session.modes["r"].prompt_key_bindings
         browsekb = session.modes["browse"].prompt_key_bindings
 
-        @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
-        @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty)
+        @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate)
+        @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate)
         def _(event):
             commit_text(session, event, "reticulate::repl_python()", False)
+
 

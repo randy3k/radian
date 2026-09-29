@@ -3,8 +3,9 @@ import subprocess
 import sys
 
 import rchitect
-from rchitect import rcall, rcopy, robject
+from rchitect import robject
 from rchitect.interface import roption, setoption
+
 
 from . import reticulate, rutils
 from .console import create_read_console, create_write_console_ex
@@ -138,9 +139,6 @@ class RadianApplication:
         if not roption("askpass"):
             setoption("askpass", robject(askpass, convert=True))
 
-        # enables completion of installed package names
-        if rcopy(rcall(("utils", "rc.settings"), "ipck")) is None:
-            rcall(("utils", "rc.settings"), ipck=True)
 
     def run(self, options, cleanup=None):
         self.set_env_vars(options)

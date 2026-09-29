@@ -25,6 +25,63 @@ def test_askpass(terminal):
     terminal.previous_line(2).assert_contain("\"answer\"")
 
 
+def test_renv(terminal, tmp_path):
+    import os
+    import time
+
+    orig_wd = os.getcwd().replace("\\", "/")
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    renv_root = (tmp_path / "renv_root").as_posix()
+
+    terminal.current_line().assert_startswith("r$>")
+    terminal.write(
+        f"Sys.setenv(RENV_PATHS_ROOT = '{renv_root}', RENV_WATCHDOG_ENABLED = 'FALSE'); "
+        f"setwd('{proj.as_posix()}'); "
+        "renv::init(bare = TRUE, restart = FALSE); "
+        "cat('RENV_READY\\n')\n"
+    )
+    terminal.previous_line(2).assert_startswith("RENV_READY", timeout=30)
+    terminal.current_line().strip().assert_equal("r$>")
+
+    terminal.write("grepl('renv/library', normalizePath(.libPaths()[1], winslash = '/'))\n")
+    terminal.previous_line(2).assert_startswith("[1] TRUE")
+    terminal.current_line().strip().assert_equal("r$>")
+
+    # In bare renv project, reticulate is not in .libPaths(), so '~' inserts literal '~'
+    terminal.write("~")
+    terminal.current_line().strip().assert_equal("r$> ~")
+    terminal.sendintr()
+    terminal.current_line().strip().assert_equal("r$>")
+
+    # Hydrate askpass into renv/library and verify package completion updates immediately
+    terminal.write("renv::hydrate('askpass', prompt = FALSE); cat('HYDRATED\\n')\n")
+    terminal.previous_line(2).assert_startswith("HYDRATED", timeout=30)
+    terminal.current_line().strip().assert_equal("r$>")
+
+    terminal.write("askpa")
+    terminal.current_line().assert_contains("askpa")
+    terminal.write("\t")
+    terminal.current_line().strip().assert_equal("r$> askpass::")
+    terminal.sendintr()
+    time.sleep(0.1)
+    terminal.sendintr()
+    terminal.current_line().strip().assert_equal("r$>")
+
+    terminal.write("library(askpa")
+    terminal.current_line().assert_contains("library(askpa")
+    terminal.write("\t")
+    terminal.current_line().strip().assert_startswith("r$> library(askpass")
+    terminal.sendintr()
+    time.sleep(0.1)
+    terminal.sendintr()
+    terminal.current_line().strip().assert_equal("r$>")
+
+    terminal.write(f"renv::deactivate(); setwd('{orig_wd}'); cat('DEACTIVATED\\n')\n")
+    terminal.previous_line(2).assert_startswith("DEACTIVATED", timeout=30)
+    terminal.current_line().strip().assert_equal("r$>")
+
+
 def test_strings(terminal):
     # issue #377, #523
     from prompt_toolkit.document import Document
