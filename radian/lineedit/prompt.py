@@ -1,3 +1,8 @@
+import asyncio
+import os
+import selectors
+import threading
+from asyncio import get_running_loop
 from typing import cast
 
 from prompt_toolkit import PromptSession
@@ -6,6 +11,7 @@ from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import DynamicAutoSuggest
 from prompt_toolkit.completion import DynamicCompleter, ThreadedCompleter
 from prompt_toolkit.enums import DEFAULT_BUFFER
+from prompt_toolkit.eventloop.inputhook import InputHookContext, InputHookSelector
 from prompt_toolkit.filters import Condition, emacs_mode
 from prompt_toolkit.key_binding.key_bindings import (
     DynamicKeyBindings,
@@ -17,6 +23,70 @@ from prompt_toolkit.utils import to_str
 from prompt_toolkit.validation import DynamicValidator
 
 from .buffer import ModalBuffer
+
+
+class CustomInputHookSelector(InputHookSelector):
+    def select(self, timeout=None):
+        loop = get_running_loop()
+        if len(getattr(loop, "_ready", [])) > 0:
+            return self.selector.select(timeout=timeout)
+
+        ready = False
+        result = None
+        exc = None
+
+        def run_selector():
+            nonlocal ready, result, exc
+            try:
+                result = self.selector.select(timeout=timeout)
+            except BaseException as e:
+                exc = e
+            finally:
+                try:
+                    os.write(self._w, b"x")
+                except OSError:
+                    pass
+                ready = True
+
+        th = threading.Thread(target=run_selector)
+        th.start()
+
+        def input_is_ready():
+            return ready
+
+        try:
+            self.inputhook(InputHookContext(self._r, input_is_ready))
+        except BaseException:
+            if not ready:
+                try:
+                    loop.call_soon_threadsafe(lambda: None)
+                except RuntimeError:
+                    pass
+            raise
+        finally:
+            # Wait for the selector thread to finish before draining the pipe.
+            # Avoids select.select([self._r], ...), which fails with
+            # ValueError("filedescriptor out of range in select()") when
+            # self._r >= FD_SETSIZE (1024); see #519 and
+            # prompt-toolkit/python-prompt-toolkit#2111.
+            th.join()
+            try:
+                os.read(self._r, 1024)
+            except OSError:
+                pass
+
+        if exc is not None:
+            raise exc
+        assert result is not None
+        return result
+
+    def close(self):
+        if self._r >= 0:
+            os.close(self._r)
+            os.close(self._w)
+
+        self._r = self._w = -1
+        self.selector.close()
 
 
 class PromptMode:
@@ -169,6 +239,50 @@ class ModalPromptSession(PromptSession):
             event.app.pre_run_callables.append(set_working_index)
 
         app._default_bindings = merge_key_bindings([app._default_bindings, kb])
+
+        orig_run = app.run
+
+        def run(
+            pre_run=None,
+            set_exception_handler=True,
+            handle_sigint=True,
+            in_thread=False,
+            inputhook=None,
+        ):
+            if inputhook is not None and not in_thread:
+                coro = app.run_async(
+                    pre_run=pre_run,
+                    set_exception_handler=set_exception_handler,
+                    handle_sigint=handle_sigint,
+                )
+                selector = CustomInputHookSelector(
+                    selectors.DefaultSelector(), inputhook
+                )
+                loop = asyncio.SelectorEventLoop(selector)
+                try:
+                    return loop.run_until_complete(coro)
+                finally:
+                    try:
+                        to_cancel = asyncio.all_tasks(loop)
+                        if to_cancel:
+                            for task in to_cancel:
+                                task.cancel()
+                            loop.run_until_complete(
+                                asyncio.gather(*to_cancel, return_exceptions=True)
+                            )
+                        loop.run_until_complete(loop.shutdown_asyncgens())
+                    finally:
+                        loop.close()
+
+            return orig_run(
+                pre_run=pre_run,
+                set_exception_handler=set_exception_handler,
+                handle_sigint=handle_sigint,
+                in_thread=in_thread,
+                inputhook=inputhook,
+            )
+
+        app.run = run
 
         return app
 

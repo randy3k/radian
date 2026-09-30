@@ -392,3 +392,123 @@ def test_modal_prompt_session():
         assert session.mode_to_be_activated() == "r"
         session._prompt_message = "other> "
         assert session.mode_to_be_activated() == "unknown"
+
+
+def test_inputhook_select_and_cleanup(monkeypatch):
+    # issue #519
+    import gc
+    import os
+    import selectors
+    import time
+    import prompt_toolkit.eventloop.inputhook as pt_ih
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+    from radian.lineedit.history import ModalInMemoryHistory
+    from radian.lineedit.prompt import CustomInputHookSelector, ModalPromptSession
+
+    hook_fds = []
+    hook_action = [None]
+
+    def dummy_inputhook(context):
+        hook_fds.append(context.fileno())
+        if hook_action[0] is not None:
+            action, hook_action[0] = hook_action[0], None
+            action()
+        while not context.input_is_ready():
+            time.sleep(0.005)
+
+    with create_pipe_input() as pipe_input:
+        session = ModalPromptSession(
+            history=ModalInMemoryHistory(),
+            input=pipe_input,
+            output=DummyOutput(),
+            multiline=False,
+            inputhook=dummy_inputhook,
+        )
+        session.register_mode(
+            "r",
+            is_activated=lambda s: True,
+            history_book="r",
+            multiline=False,
+        )
+
+        # 1. Verify KeyboardInterrupt (both from key press and raised inside inputhook)
+        # closes the inputhook event loop and pipe FDs immediately without GC
+        gc.collect()
+        gc.disable()
+        try:
+            for _ in range(3):
+                hook_fds.clear()
+                hook_action[0] = lambda: pipe_input.send_text("\x03")
+                with pytest.raises(KeyboardInterrupt):
+                    session.prompt()
+                assert hook_fds
+                for fd in set(hook_fds):
+                    with pytest.raises(OSError):
+                        os.fstat(fd)
+
+            hook_fds.clear()
+
+            def raise_interrupt():
+                raise KeyboardInterrupt
+
+            hook_action[0] = raise_interrupt
+            with pytest.raises(KeyboardInterrupt):
+                session.prompt()
+            assert hook_fds
+            for fd in set(hook_fds):
+                with pytest.raises(OSError):
+                    os.fstat(fd)
+        finally:
+            gc.enable()
+
+        # 2. Verify high file descriptor (>= 1024) in inputhook pipe does not fail select()
+        if not sys.platform.startswith("win"):
+            import fcntl
+            import resource
+
+            soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+            min_fd = 1024
+            if hard == resource.RLIM_INFINITY or hard > min_fd:
+                try:
+                    if soft <= min_fd:
+                        new_soft = (
+                            min_fd + 64
+                            if hard == resource.RLIM_INFINITY
+                            else min(hard, min_fd + 64)
+                        )
+                        resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft, hard))
+
+                    orig_pipe = os.pipe
+
+                    def high_pipe():
+                        r, w = orig_pipe()
+                        high_r = fcntl.fcntl(r, fcntl.F_DUPFD_CLOEXEC, min_fd)
+                        os.close(r)
+                        return high_r, w
+
+                    with monkeypatch.context() as m:
+                        m.setattr(pt_ih.os, "pipe", high_pipe)
+                        hook_fds.clear()
+                        hook_action[0] = lambda: pipe_input.send_text("1 + 1\n")
+                        result = session.prompt()
+                        assert result == "1 + 1"
+                        assert hook_fds and all(fd >= min_fd for fd in hook_fds)
+                        for fd in set(hook_fds):
+                            with pytest.raises(OSError):
+                                os.fstat(fd)
+                finally:
+                    if soft <= min_fd:
+                        resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+
+        # 3. Verify CustomInputHookSelector.close() is idempotent
+        sel = CustomInputHookSelector(selectors.DefaultSelector(), dummy_inputhook)
+        r_fd, w_fd = sel._r, sel._w
+        sel.close()
+        assert sel._r == -1 and sel._w == -1
+        sel.close()  # second close should be a no-op
+        with pytest.raises(OSError):
+            os.fstat(r_fd)
+        with pytest.raises(OSError):
+            os.fstat(w_fd)
+
