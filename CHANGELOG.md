@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.7.0 - 2026-09-29
+
+### Features
+
+* Support native UTF-8 on Windows with R >= 4.2 via `rchitect`'s `host.exe` and unified cross-platform `maybe_reexec()` ([#529](https://github.com/randy3k/radian/pull/529))
+* Require Python >= 3.10, R >= 4.2.0, and `rchitect >= 0.5.1` ([#529](https://github.com/randy3k/radian/pull/529))
+
+### Bug Fixes
+
+* Support R 4.1+ pipe (`|>`) and lambda (`\`) operators in lexer and fix `A-z` character range ([#528](https://github.com/randy3k/radian/pull/528))
+* Fix `cursor_in_string` detection and escaped quote auto-matching ([#528](https://github.com/randy3k/radian/pull/528))
+* Fix shell mode edge cases and improve package/path completion ([#528](https://github.com/randy3k/radian/pull/528))
+* Reset `sent_by_line` flag properly after draining multiline console buffer ([#528](https://github.com/randy3k/radian/pull/528))
+* Prevent CWD module shadowing on re-exec and fix `ModalPromptSession` settings restoration ([#528](https://github.com/randy3k/radian/pull/528))
+* Track history entry boundaries accurately and trim in-memory history strings ([#528](https://github.com/randy3k/radian/pull/528))
+* Use `current_line_before_cursor` in multiline backspace unindent ([#528](https://github.com/randy3k/radian/pull/528))
+* Use `ast.parse` in `reticulate` `handle_multiline_code` to print final expressions ([#528](https://github.com/randy3k/radian/pull/528))
+* Improve `renv` compatibility for package completion and preloaded `reticulate` ([#530](https://github.com/randy3k/radian/pull/530))
+* Avoid `select()` file descriptor limit (`FD_SETSIZE`) and close event loop on interrupt when running with `inputhook` ([#519](https://github.com/randy3k/radian/issues/519), [#536](https://github.com/randy3k/radian/pull/536))
+
+### Performance & Refactoring
+
+* Cache `installed_packages()` based on `.libPaths()` modification time, use `find.package()` on startup, defer `jedi` import, and optimize completion hot paths ([#528](https://github.com/randy3k/radian/pull/528), [#530](https://github.com/randy3k/radian/pull/530))
+* Move `reticulate` mode implementation to Python and simplify `lineedit`, `prompt_session`, and `settings` ([#528](https://github.com/randy3k/radian/pull/528), [#529](https://github.com/randy3k/radian/pull/529), [#530](https://github.com/randy3k/radian/pull/530))
+
+**Full Changelog**: https://github.com/randy3k/radian/compare/v0.6.16...v0.7.0
+
 ## 0.6.16 - 2026-04-30
 
 ### Features

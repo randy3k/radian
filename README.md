@@ -1,11 +1,5 @@
 # radian: A 21 century R console
 
-## Important
-
-`radian` is currently developed at a slow pace. If you are looking for a more actively developed alternative, I recommend checking out [arf](https://github.com/eitsupi/arf) by @eitsupi.
-
----
-
 [![Main](https://github.com/randy3k/radian/actions/workflows/main.yml/badge.svg)](https://github.com/randy3k/radian/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/randy3k/radian/branch/master/graph/badge.svg)](https://codecov.io/gh/randy3k/radian)
 [![](https://img.shields.io/pypi/v/radian.svg)](https://pypi.org/project/radian/)
@@ -16,153 +10,114 @@
 
 _radian_ is an alternative console for the R program with multiline editing and rich syntax highlight.
 One would consider _radian_ as a [ipython](https://github.com/ipython/ipython) clone for R, though its design is more aligned to [julia](https://julialang.org).
+If you are looking for a Rust-based alternative, check out [arf](https://github.com/eitsupi/arf) by @eitsupi.
 
 <img width="600px" src="https://user-images.githubusercontent.com/1690993/30728530-b5e9eb5c-9f26-11e7-8453-73a2e880c9de.png"></img>
 
 ## Features
 
-- cross platform, runs on Windows, macOS and Linux
-- shell mode: hit `;` to enter and `<backspace>` to leave
-- reticulate python repl mode: hit `~` to enter
-- improved R prompt and reticulate python prompt
-  - multiline editing
-  - syntax highlight
-  - auto completion (reticulate autocompletion depends on `jedi`)
-- unicode support
-- latex completion
-- auto matching parens/quotes.
-- bracketed paste mode
-- emacs/vi editing mode
-- automatically adjust to terminal width
-- read more than 4096 bytes per line
+- Cross-platform: runs on Windows, macOS, and Linux
+- Shell mode: hit `;` to enter and `<backspace>` to leave
+- `reticulate` Python REPL mode: hit `~` to enter
+- Improved R prompt and `reticulate` Python prompt:
+  - Multiline editing
+  - Syntax highlighting
+  - Auto-completion (`reticulate` auto-completion uses `jedi`)
+- Native Unicode / UTF-8 support (including Windows with R >= 4.2)
+- LaTeX symbol completion (e.g., `\alpha` + `<tab>`)
+- Auto-matching parentheses and quotes
+- Bracketed paste mode
+- Emacs and Vi editing modes
+- Automatically adjusts to terminal width
+- Reads more than 4096 bytes per line
 
 ## Installation
 
-Requirements:
+### Requirements
 
-- An installation of R (version 4.2.0 or above) is required to use _radian_, an R installation binary for your system can be downloaded from <https://cran.r-project.org>.
-- `python` (version 3.8 or above) is also required to install _radian_. If your system doesn't come with a python distribution, it can be downloaded from <https://www.python.org/downloads/>.
-- Installing `radian` via [`pipx`](https://pipx.pypa.io/stable/installation/) would be the easiest option.
+- **R (>= 4.2.0)**: Download from <https://cran.r-project.org> (built with shared library `libR.so` / `libR.dylib` / `R.dll`).
+- **Python (>= 3.10)**: Download from <https://www.python.org/downloads/>.
+
+Installing `radian` via [`pipx`](https://pipx.pypa.io/stable/installation/) or [`uv`](https://docs.astral.sh/uv/) is recommended:
 
 ```sh
-# install released version
+# install released version via pipx (or `uv tool install radian`)
 pipx install radian
-# or the dev version
+
+# or install the development version
 pipx install git+https://github.com/randy3k/radian
-# to run radian
+
+# launch radian
 radian
 ```
 
-## Alias on unix system
+### Unix Alias
 
-You could alias `r` to _radian_ by putting
+You can alias `r` to _radian_ in `~/.bashrc` or `~/.zshrc` so that `r` launches _radian_ while `R` still opens the traditional R console (useful for commands like `R CMD build`):
 
 ```bash
 alias r="radian"
 ```
 
-in `~/.bash_profile` such that `r` would open _radian_ and `R` would still open the traditional R console.
-(`R` is still useful, e.g, running `R CMD BUILD`.)
-
 ## Settings
 
-_radian_ can be customized by specifying the below options in various locations
+_radian_ can be customized via R `options()` in any of the following profile files:
 
 - `$XDG_CONFIG_HOME/radian/profile` or `$HOME/.config/radian/profile` (Unix)
 - `%USERPROFILE%/radian/profile` (Windows)
 - `$HOME/.radian_profile` (Unix)
 - `%USERPROFILE%/.radian_profile` (Windows)
-- `.radian_profile` in the working directory
+- `.radian_profile` in the current working directory
 
-The options could be also specified in the `.Rprofile` files, however,
-it is not recommended because
-
-1. the settings are not persistent when vanilla mode is used;
-2. it doesn't work well with `packrat` or `renv`.
+> [!NOTE]
+> Specifying `radian.*` options in `.Rprofile` also works, but is not recommended because `.Rprofile` is skipped in `--vanilla` mode and may not be loaded in project-specific `renv` / `packrat` environments.
 
 ```r
-# Do not copy the whole configuration, just specify what you need!
-# see https://pygments.org/styles
-# for a list of supported color schemes, default scheme is "native"
-options(radian.color_scheme = "native")
-
-# either  `"emacs"` (default) or `"vi"`.
-options(radian.editing_mode = "emacs")
-# enable various emacs bindings in vi insert mode
-options(radian.emacs_bindings_in_vi_insert_mode = FALSE)
-# show vi mode state when radian.editing_mode is `vi`
-options(radian.show_vi_mode_prompt = TRUE)
-options(radian.vi_mode_prompt = "\033[0;34m[{}]\033[0m ")
-
-# indent continuation lines
-# turn this off if you want to copy code without the extra indentation;
-# but it leads to less elegent layout
-options(radian.indent_lines = TRUE)
-
-# auto match brackets and quotes
-options(radian.auto_match = TRUE)
-
-# enable the [prompt_toolkit](https://python-prompt-toolkit.readthedocs.io/en/master/index.html) [`auto_suggest` feature](https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#auto-suggestion)
-# this option is experimental and is known to break python prompt, use it with caution
-options(radian.auto_suggest = FALSE)
-
-# highlight matching bracket
-options(radian.highlight_matching_bracket = FALSE)
-
-# auto indentation for new line and curly braces
-options(radian.auto_indentation = TRUE)
-options(radian.tab_size = 4)
-
-# pop up completion while typing
-options(radian.complete_while_typing = TRUE)
-# the minimum length of prefix to trigger auto completions
-options(radian.completion_prefix_length = 2)
-# timeout in seconds to cancel completion if it takes too long
-# set it to 0 to disable it
-options(radian.completion_timeout = 0.05)
-# add spaces around equals in function argument completion
-options(radian.completion_adding_spaces_around_equals = TRUE)
-
-# automatically adjust R buffer size based on terminal width
-options(radian.auto_width = TRUE)
-
-# insert new line between prompts
-options(radian.insert_new_line = TRUE)
-
-# max number of history records
-options(radian.history_size = 20000)
-# where the global history is stored, environmental variables will be expanded
-# note that "~" is expanded to %USERPROFILE% or %HOME% in Windows
-options(radian.global_history_file = "~/.radian_history")
-# the filename that local history is stored, this file would be used instead of
-# `radian.global_history_file` if it exists in the current working directory
-options(radian.local_history_file = ".radian_history")
-# when using history search (ctrl-r/ctrl-s in emacs mode), do not show duplicate results
-options(radian.history_search_no_duplicates = FALSE)
-# ignore case in history search
-options(radian.history_search_ignore_case = FALSE)
-# do not save debug browser commands such as `Q` in history
-options(radian.history_ignore_browser_commands = TRUE)
-
-# custom prompt for different modes
-options(radian.prompt = "\033[0;34mr$>\033[0m ")
-options(radian.shell_prompt = "\033[0;31m#!>\033[0m ")
-options(radian.browse_prompt = "\033[0;33mBrowse[{}]>\033[0m ")
-
-# stderr color format
-options(radian.stderr_format = "\033[0;31m{}\033[0m")
-
-# enable reticulate prompt and trigger `~`
-options(radian.enable_reticulate_prompt = TRUE)
+# Example ~/.radian_profile — only specify the options you want to customize
+options(
+    radian.color_scheme = "native",
+    radian.editing_mode = "emacs"
+)
 ```
 
-### Custom key bindings
+| Option | Default | Description |
+| --- | --- | --- |
+| `radian.color_scheme` | `"native"` | Color scheme for syntax highlighting (see [Pygments styles](https://pygments.org/styles/)) |
+| `radian.editing_mode` | `"emacs"` | Key binding mode: `"emacs"` or `"vi"` |
+| `radian.emacs_bindings_in_vi_insert_mode` | `FALSE` | Enable common Emacs key bindings while in Vi insert mode |
+| `radian.show_vi_mode_prompt` | `TRUE` | Show Vi mode indicator when `radian.editing_mode = "vi"` |
+| `radian.vi_mode_prompt` | `"\033[34m[{}]\033[0m "` | Format string (or named list `list(ins = ..., nav = ...)`) for the Vi mode indicator |
+| `radian.prompt` | `"\033[34mr$>\033[0m "` | Custom R prompt string |
+| `radian.shell_prompt` | `"\033[31m#!>\033[0m "` | Custom shell mode prompt string |
+| `radian.browse_prompt` | `"\033[33mBrowse[{}]>\033[0m "` | Custom debug browser prompt string |
+| `radian.stderr_format` | `"\033[31m{}\033[0m"` | Format string for standard error output |
+| `radian.insert_new_line` | `TRUE` | Insert a blank newline between prompts |
+| `radian.indent_lines` | `TRUE` | Indent continuation lines in multiline prompt |
+| `radian.auto_indentation` | `TRUE` | Auto-indent new lines and curly braces |
+| `radian.tab_size` | `4` | Number of spaces per indentation level |
+| `radian.auto_match` | `TRUE` | Automatically match brackets and quotes |
+| `radian.highlight_matching_bracket` | `FALSE` | Highlight matching brackets around the cursor |
+| `radian.auto_width` | `TRUE` | Automatically adjust R `width` option when the terminal resizes |
+| `radian.complete_while_typing` | `TRUE` | Show completion menu automatically while typing |
+| `radian.completion_prefix_length` | `2` | Minimum prefix length to trigger auto-completion |
+| `radian.completion_timeout` | `0.15` | Timeout in seconds to cancel slow completions (`0` to disable) |
+| `radian.completion_adding_spaces_around_equals` | `TRUE` | Add spaces around `=` in function argument completions |
+| `radian.auto_suggest` | `FALSE` | Enable `prompt_toolkit` [auto-suggestion](https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#auto-suggestion) from history (experimental) |
+| `radian.history_size` | `20000` | Maximum number of history entries to keep |
+| `radian.global_history_file` | `"~/.radian_history"` | Path to the global history file (environment variables and `~` are expanded) |
+| `radian.local_history_file` | `".radian_history"` | Filename for project-local history (used instead of global history if present in the working directory) |
+| `radian.history_search_no_duplicates` | `FALSE` | Skip duplicate entries during incremental history search (`Ctrl-R` / `Ctrl-S`) |
+| `radian.history_search_ignore_case` | `FALSE` | Perform case-insensitive incremental history search |
+| `radian.history_ignore_browser_commands` | `TRUE` | Do not save short debug browser commands (such as `n`, `s`, `c`, `Q`) in history |
+| `radian.enable_reticulate_prompt` | `TRUE` | Enable `reticulate` Python REPL mode triggered by `~` |
+
+### Custom Key Bindings
+
+You can define custom `Escape` (or `Alt`) and `Ctrl` shortcuts in your profile. Note that some `Ctrl` keys (`m`, `i`, `h`, `d`, `c`) are reserved by the terminal and cannot be remapped.
 
 ```r
-# allows user defined shortcuts, these keys should be escaped when send through the terminal.
-# In the following example, `esc` + `-` sends `<-` and `ctrl` + `right` sends `%>%`.
-# Note that in some terminals, you could mark `alt` as `escape` so you could use `alt` + `-` instead.
-# Also, note that some ctrl mappings are reserved. You cannot remap m, i, h, d, or c
+# Example: `Esc` + `-` (or `Alt` + `-` if Alt sends Escape) inserts ` <- `,
+# and `Ctrl` + `Right` inserts ` %>% `
 options(
     radian.escape_key_map = list(
         list(key = "-", value = " <- ")
@@ -175,65 +130,38 @@ options(
 
 ## FAQ
 
-#### Unicode doesn't work in Windows and R 4.2+
+#### How do I switch to a different R version or specify the R binary?
 
-Native UTF-8 on Windows with R 4.2+ is supported starting in `radian` v0.7.0 (with `rchitect` v0.5.0). Please upgrade `radian` and `rchitect` to the latest version if you encounter Unicode issues on Windows.
+You can select which R installation _radian_ uses in several ways:
 
-#### I can't specify python runtime in reticulate
+- Pass `--r-binary`: `radian --r-binary=/path/to/R`
+- Expose the desired `R` binary first on `PATH`
+- Set `R_BINARY=/path/to/R`
+- Set `R_HOME` to the output of `R.home()` (for example, `env R_HOME=/usr/local/lib/R radian`)
 
-It is expected. `radian` runs on python and the python runtime used by radian is forced in
-reticulate. `reticulate::py_config()` gives the note:
+#### Why can't I switch the Python runtime in `reticulate`?
 
-```
-NOTE: Python version was forced by the current process
-```
+_radian_ itself runs inside a Python process, so `reticulate` is bound to the Python runtime hosting _radian_ (`NOTE: Python version was forced by the current process`). To use _radian_ with a different Python environment, install _radian_ in that environment.
 
-In order to use radian with another python runtime, you will need to install `radian` on
-that python environment.
+#### How do I enable `reticulate` auto-completions?
 
-#### How to switch to a different R or specify the version of R
+Install `jedi` in the same Python environment as _radian_ (e.g., `pipx inject radian jedi` or `pip install jedi`).
 
-There are serveral options.
+#### Cannot find R shared library (`libR.so` / `libR.dylib` / `R.dll`)
 
-- The easiest option is to pass the path to the R binary with `--r-binary`, i.e., `radian --r-binary=/path/to/R`
-- Also, one could expose the path to the R binary in the `PATH` variable
-- The environment variable `R_BINARY` could also be used to specify the path to R.
-- The environment variable `R_HOME` could also be used to specify R home directory. Note that it is should be set as the result of `R.home()`, not the directory where `R` is located. For example, in Unix
+Make sure R was compiled with the shared library enabled. When building R from source on Linux, pass `./configure --enable-R-shlib` (and run `make clean` before rebuilding if previously compiled without it).
 
-```sh
-env R_HOME=/usr/local/lib/R radian
-```
+#### How do I use a local history file?
 
-#### Cannot find shared library
+_radian_ stores history in `.radian_history` (separate from `.Rhistory`). If a `.radian_history` file exists in the working directory, _radian_ uses it automatically; otherwise it uses `~/.radian_history`. You can override this with `radian --local-history`, `radian --global-history`, or `radian --no-history`.
 
-Please also make sure that R was installed with the R shared library `libR.so` or `libR.dylib` or `libR.dll`. On Linux, the configure flag `./configure --enable-R-shlib` may be needed to install R from the source. Do not forget to `make clean` to force the recompilation of the files with the correct compiler options.
+#### Does _radian_ slow down R code?
 
-#### Outdated setuptools
+_radian_ only provides the interactive console frontend; R's evaluation loop is identical to the standard R console. However, fork-based parallelism (`parallel::mclapply` or `future::plan("multicore")`) is not recommended from an embedded R/Python process; prefer socket/multisession workers (`future::plan("multisession")`).
 
-If you encounter
+#### Nvim-R configuration
 
-> The package setup script has attempted to modify files on your system that are not within the EasyInstall build area.
-
-Please update your setuptools by
-
-```
-pip install -U setuptools
-
-```
-
-#### How to use local history file
-
-_radian_ maintains its own history file `.radian_history` and doesn't use the `.Rhistory` file. A local `.radian_history` is used if it is found in the launch directory. Otherwise, the global history file `~/.radian_history` would be used. To override the default behavior, you could launch _radian_ with the options: `radian --local-history`, `radian --global-history` or `radian --no-history`.
-
-#### Does it slow down my R program?
-
-_radian_ only provides a frontend to the R program, the actual running eventloop is the same as that of the traditional R console. There is no performance sacrifice (or gain) while using this modern command line interface.
-
-However, it was reported that radian may be slower when using parallel computation, specifially when using forking. User should take extra care in those cases.
-
-#### Nvim-R support
-
-Put
+Add the following to your Vim/Neovim configuration:
 
 ```vim
 let R_app = "radian"
@@ -243,29 +171,11 @@ let R_args = []  " if you had set any
 let R_bracketed_paste = 1
 ```
 
-in your vim config.
+#### Prompt not shown inside a Docker container
 
-#### `reticulate` Auto Completions
-
-To enable reticulate prompt completions, make sure that `jedi` is installed.
+This can happen when the container's PTY size is uninitialized. Run `stty size` to check, or pass `$COLUMNS` and `$LINES` when attaching:
 
 ```sh
-pip install jedi
-```
-
-Alternatively, if you use conda,
-
-```sh
-conda install -c conda-forge jedi
-```
-
-#### Prompt not shown inside a docker container
-
-It maybe caused by the invalid terminal size, try running `stty size` in your terminal
-to see if it returns a correct size. You could change the values of it from the environmental variables
-`$COLUMNS` and `$LINES` when you log-in the docker container.
-
-```
 docker exec -it <container> bash -c "stty cols $COLUMNS rows $LINES && bash"
 ```
 
@@ -275,4 +185,5 @@ _radian_ is powered by (π)thon.
 
 ## Credits
 
-_radian_ wouldn't be possible without the creative work [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit/) by Jonathan Slenders.
+_radian_ wouldn't be possible without the creative work [prompt_toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit/) by Jonathan Slenders.
+
