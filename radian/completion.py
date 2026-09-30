@@ -14,23 +14,26 @@ from .lexer import cursor_in_string
 
 
 
-TOKEN_PATTERN = re.compile(r".*?(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")
+TOKEN_PATTERN = re.compile(r"(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")
 LIBRARY_PATTERN = re.compile(
-    r"(?<![a-zA-Z0-9._])(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$")
+    r"(?<![a-zA-Z0-9._])(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$"
+)
+NESTED_PAREN_PATTERN = re.compile(r"\([^())]*\)")
+PRINT_PATTERN = re.compile(r"print\([^\)]*$")
 
 
 def remove_nested_paren(text):
-    new_text = re.sub(r"\([^())]*\)", "", text)
+    new_text = NESTED_PAREN_PATTERN.sub("", text)
     while new_text != text:
         text = new_text
-        new_text = re.sub(r"\([^())]*\)", "", text)
+        new_text = NESTED_PAREN_PATTERN.sub("", text)
     return text
 
 
 class RCompleter(Completer):
     def __init__(self, timeout=0.02):
         self.timeout = timeout
-        super(RCompleter, self).__init__()
+        super().__init__()
 
     def get_completions(self, document, complete_event):
         word = document.get_word_before_cursor()
@@ -38,17 +41,14 @@ class RCompleter(Completer):
         if len(word) < prefix_length and not complete_event.completion_requested:
             return
 
-        latex_comps = list(get_latex_completions(document, complete_event))
+        latex_comps = get_latex_completions(document, complete_event)
         # only return latex completions if prefix has \
-        if len(latex_comps) > 0:
-            for x in latex_comps:
-                yield x
+        if latex_comps:
+            yield from latex_comps
             return
 
-        for x in self.get_r_builtin_completions(document, complete_event):
-            yield x
-        for x in self.get_package_completions(document, complete_event):
-            yield x
+        yield from self.get_r_builtin_completions(document, complete_event)
+        yield from self.get_package_completions(document, complete_event)
 
     def get_r_builtin_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
@@ -58,15 +58,21 @@ class RCompleter(Completer):
         if library_prefix:
             return
 
-        # somehow completion while typing is very slow in "print("
-        # so we manually disable it
-        if not completion_requested and "print(" in text_before and \
-                re.match(r".*print\([^\)]*$", remove_nested_paren(text_before)):
-            token = rcompletion.assign_line_buffer(text_before)
-            text_before = token
-
         with suppress_stderr():
             try:
+                # Completion while typing inside "print(" is slow because R's
+                # utils:::.completeToken() calls functionArgs("print", ...), which
+                # inspects all S3 methods of print(). First call assign_line_buffer
+                # on the full line to extract the token, then overwrite R's
+                # .CompletionEnv$linebuffer with just `token` on the second call
+                # so inFunction() does not see "print(".
+                if (
+                    not completion_requested
+                    and "print(" in text_before
+                    and PRINT_PATTERN.search(remove_nested_paren(text_before))
+                ):
+                    text_before = rcompletion.assign_line_buffer(text_before)
+
                 token = rcompletion.assign_line_buffer(text_before)
                 # do not timeout package::func
                 if "::" in token or completion_requested:
@@ -89,13 +95,12 @@ class RCompleter(Completer):
 
     def get_package_completions(self, document, complete_event):
         text_before = document.current_line_before_cursor
-        token_match = TOKEN_PATTERN.match(text_before)
+        token_match = TOKEN_PATTERN.search(text_before)
         if not token_match:
             return
         token = token_match.group(1)
         library_prefix = LIBRARY_PATTERN.search(text_before)
-        instring = cursor_in_string(document)
-        if instring and not library_prefix:
+        if not library_prefix and cursor_in_string(document):
             return
         for p in installed_packages():
             if p.startswith(token):
@@ -113,15 +118,17 @@ class SmartPathCompleter(Completer):
         if not complete_event.completion_requested:
             return
 
-        if sys.platform.startswith('win'):
+        is_win = sys.platform.startswith("win")
+        if is_win:
             text = text.replace("\\", "/")
 
         directories_only = False
         quoted = False
 
-        if text.lstrip().startswith("cd "):
+        stripped = text.lstrip()
+        if stripped.startswith("cd "):
             directories_only = True
-            text = text.lstrip()[3:]
+            text = stripped[3:]
 
         try:
             path = ""
@@ -129,7 +136,7 @@ class SmartPathCompleter(Completer):
                 quoted = False
                 try:
                     if text.startswith('"'):
-                        path = shlex.split(text + "\"")[-1]
+                        path = shlex.split(text + '"')[-1]
                         quoted = True
                     elif text.startswith("'"):
                         path = shlex.split(text + "'")[-1]
@@ -147,16 +154,19 @@ class SmartPathCompleter(Completer):
             if not os.path.isabs(path):
                 path = os.path.join(os.getcwd(), path)
             basename = os.path.basename(path)
+            basename_lower = basename.lower()
             dirname = os.path.dirname(path)
 
             for c in os.listdir(dirname):
+                if not c.lower().startswith(basename_lower):
+                    continue
                 if directories_only and not os.path.isdir(os.path.join(dirname, c)):
                     continue
-                if c.lower().startswith(basename.lower()):
-                    if sys.platform.startswith('win') or quoted:
-                        yield Completion(str(c), -len(basename))
-                    else:
-                        yield Completion(str(c.replace(" ", "\\ ")), -len(basename))
+                if is_win or quoted:
+                    yield Completion(str(c), -len(basename))
+                else:
+                    yield Completion(str(c.replace(" ", "\\ ")), -len(basename))
 
         except Exception:
             pass
+
