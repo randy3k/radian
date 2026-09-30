@@ -136,7 +136,10 @@ _lexer = CustomSLexer()
 
 
 def cursor_in_string(document):
-    tokens = list(_lexer.get_tokens_unprocessed(document.text_before_cursor))
+    text = document.text_before_cursor
+    if "'" not in text and '"' not in text:
+        return False
+    tokens = list(_lexer.get_tokens_unprocessed(text))
     if not tokens:
         return False
     _, last_token, _ = tokens[-1]
@@ -145,4 +148,5 @@ def cursor_in_string(document):
     if last_token is Token.Literal.String:
         return sum(1 for _, t, _ in tokens if t is Token.Literal.String) % 2 == 1
     return False
+
 
