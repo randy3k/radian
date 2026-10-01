@@ -15,6 +15,14 @@ def test_readline(terminal):
     terminal.write("1 +\n  \x7f2\n")
     terminal.previous_line(2).assert_startswith("[1] 3")
 
+    # builtin R completion
+    terminal.write("R.version.str")
+    terminal.current_line().assert_contains("R.version.str")
+    terminal.write("\t")
+    terminal.current_line().strip().assert_equal("r$> R.version.string")
+    terminal.write("\n\n")
+    terminal.previous_line(2).assert_contain("R version")
+
 
 def test_askpass(terminal):
     # issue #359

@@ -64,7 +64,6 @@ def test_cd2(terminal):
         sys.modules,
         {
             "rchitect": MagicMock(),
-            "rchitect.completion": MagicMock(),
             "rchitect.interface": MagicMock(),
         },
     ):

@@ -1,7 +1,7 @@
 import os
 import sys
 from rchitect import rcall, rcopy
-from rchitect.interface import roption, setoption
+from rchitect.interface import roption
 
 
 # =============================================================================
@@ -9,14 +9,6 @@ from rchitect.interface import roption, setoption
 # =============================================================================
 
 _installed_packages_cache = (None, [])
-
-
-def package_is_loaded(pkg):
-    return pkg in rcall(("base", "loadedNamespaces"), _convert=True)
-
-
-def package_is_installed(pkg):
-    return len(rcall(("base", "find.package"), pkg, quiet=True, _convert=True)) > 0
 
 
 def installed_packages():
@@ -90,7 +82,7 @@ def run_on_load_hooks():
 
 
 # =============================================================================
-# 3. Session Lifecycle & Encoding Helpers
+# 3. Session Lifecycle Helpers
 # =============================================================================
 
 
@@ -101,18 +93,4 @@ def register_cleanup(cleanup):
         cleanup,
         onexit=True,
     )
-
-
-def set_utf8():
-    if sys.platform.startswith("win"):
-        import ctypes
-
-        try:
-            if ctypes.windll.kernel32.GetACP() == 65001:
-                return
-        except Exception:
-            pass
-        if not os.environ.get("LANG", ""):
-            os.environ["LANG"] = "en_US.UTF-8"
-        setoption("encoding", "UTF-8")
 

@@ -11,8 +11,8 @@ from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
 from pygments.lexers.python import PythonLexer
 
-from rchitect import rcall, reval
-from rchitect.interface import package_event, roption, set_hook
+from rchitect import rcall, reticulate as rreticulate
+from rchitect.interface import roption
 
 from .key_bindings import (
     commit_text,
@@ -26,7 +26,6 @@ from .key_bindings import (
     text_is_empty,
 )
 from .latex import get_latex_completions
-from .rutils import package_is_installed, package_is_loaded
 from .settings import radian_settings as settings
 
 
@@ -180,11 +179,9 @@ def register_reticulate_mode(session):
         else None
     )
 
-    py_repl_active = reval("reticulate:::py_repl_active")
-
     session.register_mode(
         "reticulate",
-        is_activated=lambda s: bool(rcall(py_repl_active, _convert=True)),
+        is_activated=lambda s: rreticulate.py_repl_active(),
         prompt_message=lambda x: x,
         callback=lambda s: handle_code(s.default_buffer.text),
         multiline=True,
@@ -201,15 +198,9 @@ def register_reticulate_mode(session):
 
 def configure(session):
     if roption("radian.enable_reticulate_prompt", True):
-        if package_is_loaded("reticulate"):
-            register_reticulate_mode(session)
-        else:
-            set_hook(
-                package_event("reticulate", "onLoad"),
-                lambda *args: register_reticulate_mode(session),
-            )
+        rreticulate.on_load(lambda: register_reticulate_mode(session))
 
-        has_reticulate = Condition(lambda: package_is_installed("reticulate"))
+        has_reticulate = Condition(rreticulate.is_installed)
         kb = session.modes["r"].prompt_key_bindings
         browsekb = session.modes["browse"].prompt_key_bindings
 

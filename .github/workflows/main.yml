@@ -46,11 +46,12 @@ jobs:
         shell: bash
         run: |
           python -m pip install jedi
-          python -m pip install -e .[dev]
-          if [ -n "${{ github.head_ref }}" ] && git ls-remote --exit-code --heads https://github.com/randy3k/rchitect "${{ github.head_ref }}"; then
-            git clone -b "${{ github.head_ref }}" https://github.com/randy3k/rchitect ../rchitect
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          if [ -n "$BRANCH" ] && git ls-remote --exit-code --heads https://github.com/randy3k/rchitect "$BRANCH"; then
+            git clone -b "$BRANCH" https://github.com/randy3k/rchitect ../rchitect
             python -m pip install -e ../rchitect
           fi
+          python -m pip install -e .[dev]
           pytest -s --coverage
           coverage combine
           coverage xml -i -o coverage.xml

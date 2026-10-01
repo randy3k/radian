@@ -4,7 +4,7 @@ import sys
 import shlex
 import re
 
-from rchitect import completion as rcompletion
+from rchitect.interface import rcall, reval, rcopy
 
 from .settings import radian_settings as settings
 from .latex import get_latex_completions
@@ -13,9 +13,70 @@ from .console import suppress_stderr
 from .lexer import cursor_in_string
 
 
+# =============================================================================
+# 1. R Completion Bridge
+# =============================================================================
+
+_completion_fns = None
+
+_ASSIGN_LINE_BUFFER_CODE = """
+function(buf) {
+    utils:::.assignLinebuffer(buf)
+    utils:::.assignEnd(nchar(buf))
+    utils:::.guessTokenFromLine()
+}
+"""
+
+_COMPLETE_TOKEN_CODE = """
+function(timeout = 0) {
+    settimelimit <- timeout > 0
+    tryCatch(
+        {
+            if (settimelimit) base::setTimeLimit(timeout)
+            utils:::.completeToken()
+            if (settimelimit) base::setTimeLimit()
+        },
+        error = function(e) {
+            if (settimelimit) base::setTimeLimit()
+            assign("comps", NULL, envir = utils:::.CompletionEnv)
+        }
+    )
+}
+"""
+
+
+def _get_completion_fns():
+    global _completion_fns
+    if _completion_fns is None:
+        _completion_fns = (
+            reval(_ASSIGN_LINE_BUFFER_CODE),
+            reval(_COMPLETE_TOKEN_CODE),
+            reval("utils:::.retrieveCompletions"),
+        )
+    return _completion_fns
+
+
+def assign_line_buffer(buf):
+    assign_fn, _, _ = _get_completion_fns()
+    return rcopy(str, rcall(assign_fn, buf))
+
+
+def complete_token(timeout=0):
+    _, complete_fn, _ = _get_completion_fns()
+    rcall(complete_fn, timeout)
+
+
+def retrieve_completions():
+    _, _, retrieve_fn = _get_completion_fns()
+    completions = rcopy(list, rcall(retrieve_fn))
+    if not completions:
+        return []
+    else:
+        return completions
+
 
 # =============================================================================
-# 1. R Code & Package Completer
+# 2. R Code & Package Completer
 # =============================================================================
 
 TOKEN_PATTERN = re.compile(r"(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")
@@ -75,16 +136,16 @@ class RCompleter(Completer):
                     and "print(" in text_before
                     and PRINT_PATTERN.search(remove_nested_paren(text_before))
                 ):
-                    text_before = rcompletion.assign_line_buffer(text_before)
+                    text_before = assign_line_buffer(text_before)
 
-                token = rcompletion.assign_line_buffer(text_before)
+                token = assign_line_buffer(text_before)
                 # do not timeout package::func
                 if "::" in token or completion_requested:
                     timeout = 0
                 else:
                     timeout = self.timeout
-                rcompletion.complete_token(timeout)
-                completions = rcompletion.retrieve_completions()
+                complete_token(timeout)
+                completions = retrieve_completions()
             except Exception:
                 completions = []
 
@@ -113,7 +174,7 @@ class RCompleter(Completer):
 
 
 # =============================================================================
-# 2. Shell Mode Path Completer
+# 3. Shell Mode Path Completer
 # =============================================================================
 
 
