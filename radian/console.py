@@ -61,7 +61,6 @@ else:
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
-SUPPRESS_STDOUT = False
 SUPPRESS_STDERR = False
 ANSI_ESCAPE_RE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
@@ -71,11 +70,11 @@ def normalize(string):
 
 
 def is_ascii(text):
-    return all(ord(c) < 128 for c in text)
+    return text.isascii()
 
 
 def is_long_non_ascii_multiline(text):
-    return len(text) >= 1000 and "\n" in text and not is_ascii(text)
+    return len(text) >= 1000 and "\n" in text and not text.isascii()
 
 
 @contextmanager
@@ -247,24 +246,31 @@ def create_write_console_ex(session, stderr_format):
                 output.flush()
 
     if not write_text:
+        is_win = is_windows()
+
         def write_text(buf, format_str=None):
-            output.enable_autowrap()  # Patch for Windows10_Output
+            if is_win:
+                output.enable_autowrap()  # Patch for Windows10_Output
             output.write_raw(format_str.format(buf) if format_str else buf)
             output.flush()
 
     def write_console_ex(buf, otype):
         if otype == 0:
-            if SUPPRESS_STDOUT:
-                return
             write_text(buf)
         else:
             if SUPPRESS_STDERR:
                 return
             write_text(buf, stderr_format)
 
-        buf = normalize(buf)
-        if buf:
-            TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+        if "\x1b" not in buf:
+            if buf:
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+        elif buf.endswith("\n"):
+            TERMINAL_CURSOR_AT_BEGINNING[0] = True
+        else:
+            buf = ANSI_ESCAPE_RE.sub("", buf)
+            if buf:
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
     return write_console_ex
 
