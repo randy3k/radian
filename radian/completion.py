@@ -45,6 +45,33 @@ function(timeout = 0) {
 """
 
 
+_COMPLETE_LINE_CODE = """
+function(buf, timeout = 0, in_print = FALSE) {
+    utils:::.assignLinebuffer(buf)
+    utils:::.assignEnd(nchar(buf))
+    token <- utils:::.guessTokenFromLine()
+    if (in_print) {
+        utils:::.assignLinebuffer(token)
+        utils:::.assignEnd(nchar(token))
+        token <- utils:::.guessTokenFromLine()
+    }
+    settimelimit <- timeout > 0 && !grepl("::", token, fixed = TRUE)
+    tryCatch(
+        {
+            if (settimelimit) base::setTimeLimit(timeout)
+            utils:::.completeToken()
+            if (settimelimit) base::setTimeLimit()
+        },
+        error = function(e) {
+            if (settimelimit) base::setTimeLimit()
+            assign("comps", NULL, envir = utils:::.CompletionEnv)
+        }
+    )
+    c(token, utils:::.retrieveCompletions())
+}
+"""
+
+
 def _get_completion_fns():
     global _completion_fns
     if _completion_fns is None:
@@ -52,27 +79,36 @@ def _get_completion_fns():
             reval(_ASSIGN_LINE_BUFFER_CODE),
             reval(_COMPLETE_TOKEN_CODE),
             reval("utils:::.retrieveCompletions"),
+            reval(_COMPLETE_LINE_CODE),
         )
     return _completion_fns
 
 
 def assign_line_buffer(buf):
-    assign_fn, _, _ = _get_completion_fns()
+    assign_fn, _, _, _ = _get_completion_fns()
     return rcopy(str, rcall(assign_fn, buf))
 
 
 def complete_token(timeout=0):
-    _, complete_fn, _ = _get_completion_fns()
+    _, complete_fn, _, _ = _get_completion_fns()
     rcall(complete_fn, timeout)
 
 
 def retrieve_completions():
-    _, _, retrieve_fn = _get_completion_fns()
+    _, _, retrieve_fn, _ = _get_completion_fns()
     completions = rcopy(list, rcall(retrieve_fn))
     if not completions:
         return []
     else:
         return completions
+
+
+def _complete_line(buf, timeout=0, in_print=False):
+    _, _, _, complete_line_fn = _get_completion_fns()
+    res = rcopy(list, rcall(complete_line_fn, buf, timeout, in_print))
+    if not res:
+        return "", []
+    return res[0], res[1:]
 
 
 # =============================================================================
@@ -112,14 +148,21 @@ class RCompleter(Completer):
             yield from latex_comps
             return
 
-        yield from self.get_r_builtin_completions(document, complete_event)
-        yield from self.get_package_completions(document, complete_event)
+        library_prefix = bool(LIBRARY_PATTERN.search(document.current_line_before_cursor))
+        if not library_prefix:
+            yield from self.get_r_builtin_completions(
+                document, complete_event, library_prefix=False
+            )
+        yield from self.get_package_completions(
+            document, complete_event, library_prefix=library_prefix
+        )
 
-    def get_r_builtin_completions(self, document, complete_event):
+    def get_r_builtin_completions(self, document, complete_event, library_prefix=None):
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
-        library_prefix = LIBRARY_PATTERN.search(text_before)
+        if library_prefix is None:
+            library_prefix = bool(LIBRARY_PATTERN.search(text_before))
         if library_prefix:
             return
 
@@ -127,27 +170,18 @@ class RCompleter(Completer):
             try:
                 # Completion while typing inside "print(" is slow because R's
                 # utils:::.completeToken() calls functionArgs("print", ...), which
-                # inspects all S3 methods of print(). First call assign_line_buffer
-                # on the full line to extract the token, then overwrite R's
-                # .CompletionEnv$linebuffer with just `token` on the second call
-                # so inFunction() does not see "print(".
-                if (
+                # inspects all S3 methods of print(). First assign the full line
+                # buffer to extract `token`, then overwrite .CompletionEnv$linebuffer
+                # with just `token` so inFunction() does not see "print(".
+                in_print = (
                     not completion_requested
                     and "print(" in text_before
-                    and PRINT_PATTERN.search(remove_nested_paren(text_before))
-                ):
-                    text_before = assign_line_buffer(text_before)
-
-                token = assign_line_buffer(text_before)
-                # do not timeout package::func
-                if "::" in token or completion_requested:
-                    timeout = 0
-                else:
-                    timeout = self.timeout
-                complete_token(timeout)
-                completions = retrieve_completions()
+                    and bool(PRINT_PATTERN.search(remove_nested_paren(text_before)))
+                )
+                timeout = 0 if completion_requested else self.timeout
+                token, completions = _complete_line(text_before, timeout, in_print)
             except Exception:
-                completions = []
+                token, completions = "", []
 
         for c in completions:
             if c.startswith(token) and c != token:
@@ -158,13 +192,14 @@ class RCompleter(Completer):
                     continue
                 yield Completion(c, -len(token))
 
-    def get_package_completions(self, document, complete_event):
+    def get_package_completions(self, document, complete_event, library_prefix=None):
         text_before = document.current_line_before_cursor
         token_match = TOKEN_PATTERN.search(text_before)
         if not token_match:
             return
         token = token_match.group(1)
-        library_prefix = LIBRARY_PATTERN.search(text_before)
+        if library_prefix is None:
+            library_prefix = bool(LIBRARY_PATTERN.search(text_before))
         if not library_prefix and cursor_in_string(document):
             return
         for p in installed_packages():
