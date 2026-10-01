@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.1 - 2026-09-30
+
+### Bug Fixes
+
+* Fix console hang when printing from multi-threaded C++ (`RcppParallel` / `Rprintf`) or Java (`rJava` stderr) code by requiring `rchitect >= 0.5.2` ([#367](https://github.com/randy3k/radian/issues/367), [#494](https://github.com/randy3k/radian/issues/494))
+
+### Performance & Refactoring
+
+* Organize modules, precompile keybinding regexes, deduplicate auto-match pair handlers, and export `radian.lineedit` API ([#537](https://github.com/randy3k/radian/pull/537))
+
+**Full Changelog**: https://github.com/randy3k/radian/compare/v0.7.0...v0.7.1
+
 ## 0.7.0 - 2026-09-29
 
 ### Features
