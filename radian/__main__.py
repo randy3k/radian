@@ -207,12 +207,6 @@ def main(cleanup=None):
         ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v]
     )
 
-    try:
-        # failed to import jedi on demand in some edge cases.
-        import jedi  # noqa: F401
-    except ImportError:
-        pass
-
     from .app import RadianApplication
 
     RadianApplication(r_home, ver=__version__).run(options, cleanup=cleanup)

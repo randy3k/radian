@@ -178,11 +178,19 @@ class ModalBuffer(Buffer):
         self._search_history.clear()
 
     def _reset_history(self):
-        self._working_lines_mode = deque([None])
-        for m, item in self.history.load():
-            self._working_lines.appendleft(item)
-            self._working_lines_mode.appendleft(m)
-            self._Buffer__working_index += 1
+        self.history._ensure_loaded()
+        if hasattr(self.history, "_loaded_lines"):
+            self._working_lines = deque(self.history._loaded_lines)
+            self._working_lines.append("")
+            self._working_lines_mode = deque(self.history._loaded_modes)
+            self._working_lines_mode.append(None)
+            self._Buffer__working_index = len(self._working_lines) - 1
+        else:
+            self._working_lines_mode = deque([None])
+            for m, item in self.history.load():
+                self._working_lines.appendleft(item)
+                self._working_lines_mode.appendleft(m)
+                self._Buffer__working_index += 1
 
     def reset(self, *args, **kwargs):
         self._reset_searching()

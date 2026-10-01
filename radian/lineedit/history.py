@@ -4,9 +4,16 @@ from prompt_toolkit.history import History
 
 
 class ModalHistory(History):
+    def __init__(self):
+        self._loaded_lines = []
+        self._loaded_modes = []
+        super().__init__()
+
     def _ensure_loaded(self):
         if not self._loaded:
             self._loaded_strings = list(self.load_history_strings())
+            self._loaded_lines = [s for _, s in reversed(self._loaded_strings)]
+            self._loaded_modes = [m for m, _ in reversed(self._loaded_strings)]
             self._loaded = True
 
     def load(self):
@@ -16,15 +23,17 @@ class ModalHistory(History):
     def append_string(self, string: str, mode=None) -> None:
         self._ensure_loaded()
         self._loaded_strings.insert(0, (mode, string))
+        self._loaded_lines.append(string)
+        self._loaded_modes.append(mode)
         self.store_string(string, mode)
 
     def get_strings(self):
         self._ensure_loaded()
-        return [s for _, s in reversed(self._loaded_strings)]
+        return list(self._loaded_lines)
 
     def get_modes(self):
         self._ensure_loaded()
-        return [m for m, _ in reversed(self._loaded_strings)]
+        return list(self._loaded_modes)
 
 
 class ModalInMemoryHistory(ModalHistory):

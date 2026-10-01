@@ -29,11 +29,21 @@ from .latex import get_latex_completions
 from .settings import radian_settings as settings
 
 
-try:
-    import jedi
-    has_jedi = True
-except ImportError:
-    has_jedi = False
+_jedi = None
+_jedi_checked = False
+
+
+def _get_jedi():
+    global _jedi, _jedi_checked
+    if not _jedi_checked:
+        _jedi_checked = True
+        try:
+            import jedi
+
+            _jedi = jedi
+        except ImportError:
+            _jedi = None
+    return _jedi
 
 
 # =============================================================================
@@ -117,6 +127,10 @@ def get_reticulate_completions(document, complete_event):
     if len(word) < prefix_length and not complete_event.completion_requested:
         return []
 
+    jedi = _get_jedi()
+    if jedi is None:
+        return []
+
     try:
         script = jedi.Interpreter(
             document.text,
@@ -172,7 +186,7 @@ def register_reticulate_mode(session):
     def _(event):
         newline(event, chars=[":"])
 
-    python_completer = PythonCompleter() if has_jedi else None
+    python_completer = PythonCompleter() if _get_jedi() is not None else None
     input_processors = (
         [HighlightMatchingBracketProcessor()]
         if settings.highlight_matching_bracket

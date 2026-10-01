@@ -32,7 +32,6 @@ def _build_raw_string_tokens():
     brackets = [("r", r"\(", r"\)"), ("s", r"\[", r"\]"), ("c", r"\{", r"\}")]
 
     for q_name, q_pat in quotes:
-        statements.append((q_pat, String, f"string_{q_name}"))
         for d_idx, d_pat in dashes:
             for b_key, b_open, b_close in brackets:
                 state_name = f"string_{q_name}_{b_key}{d_idx}"
@@ -61,7 +60,7 @@ class CustomSLexer(RegexLexer):
     mimetypes = ['text/S-plus', 'text/S', 'text/x-r-source', 'text/x-r',
                  'text/x-R', 'text/x-r-history', 'text/x-r-profile']
 
-    valid_name = r'(?:`[^`\\]*(?:\\.[^`\\]*)*`)|(?:(?:[a-zA-Z]|[_.][^0-9])[\w_.]*)'
+    valid_name = r'(?:`[^`\\]*(?:\\.[^`\\]*)*`)|(?![rR][\'"])(?:(?:[a-zA-Z]|[_.][^0-9])[\w_.]*)'
     tokens = {
         'comments': [
             (r'#.*$', Comment.Single),
@@ -106,11 +105,13 @@ class CustomSLexer(RegexLexer):
             include('comments'),
             # whitespaces
             (r'\s+', Text),
-            *_RAW_STRING_STATEMENTS,
+            (r"\'", String, "string_squote"),
+            (r'\"', String, "string_dquote"),
             include('builtin_symbols'),
             include('valid_name'),
             include('numbers'),
             include('operators'),
+            *_RAW_STRING_STATEMENTS,
         ],
         'root': [
             # calls:
@@ -133,20 +134,28 @@ class CustomSLexer(RegexLexer):
 
 
 _lexer = CustomSLexer()
+_cursor_in_string_cache = (None, False)
 
 
 def cursor_in_string(document):
+    global _cursor_in_string_cache
     text = document.text_before_cursor
     if "'" not in text and '"' not in text:
         return False
+    if _cursor_in_string_cache[0] == text:
+        return _cursor_in_string_cache[1]
     tokens = list(_lexer.get_tokens_unprocessed(text))
     if not tokens:
-        return False
-    _, last_token, _ = tokens[-1]
-    if last_token is Token.Error:
-        return True
-    if last_token is Token.Literal.String:
-        return sum(1 for _, t, _ in tokens if t is Token.Literal.String) % 2 == 1
-    return False
+        res = False
+    else:
+        _, last_token, _ = tokens[-1]
+        if last_token is Token.Error:
+            res = True
+        elif last_token is Token.Literal.String:
+            res = sum(1 for _, t, _ in tokens if t is Token.Literal.String) % 2 == 1
+        else:
+            res = False
+    _cursor_in_string_cache = (text, res)
+    return res
 
 
