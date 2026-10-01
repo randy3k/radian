@@ -74,8 +74,22 @@ class ModalBuffer(Buffer):
             return (self.working_index, self.cursor_position)
 
         orig_lines = self._working_lines
+        modes = self.session.modes
+        current_book = self.session.current_mode.history_book
+        valid_modes = {name for name, m in modes.items() if m.history_book == current_book}
+        no_dups = self.session.search_no_duplicates
+        search_history = self._search_history
+        working_modes = self._working_lines_mode
+        working_index = self.working_index
+        last_index = len(orig_lines) - 1
         self._working_lines = [
-            line if i == self.working_index or self._search_matches(i) else ""
+            line
+            if i == working_index
+            or (
+                (i == last_index or working_modes[i] in valid_modes)
+                and (not no_dups or line not in search_history)
+            )
+            else ""
             for i, line in enumerate(orig_lines)
         ]
         try:
@@ -179,18 +193,10 @@ class ModalBuffer(Buffer):
 
     def _reset_history(self):
         self.history._ensure_loaded()
-        if hasattr(self.history, "_loaded_lines"):
-            self._working_lines = deque(self.history._loaded_lines)
-            self._working_lines.append("")
-            self._working_lines_mode = deque(self.history._loaded_modes)
-            self._working_lines_mode.append(None)
-            self._Buffer__working_index = len(self._working_lines) - 1
-        else:
-            self._working_lines_mode = deque([None])
-            for m, item in self.history.load():
-                self._working_lines.appendleft(item)
-                self._working_lines_mode.appendleft(m)
-                self._Buffer__working_index += 1
+        self._working_lines = deque(self.history._loaded_lines)
+        self._working_lines.append("")
+        self._working_lines_mode = [*self.history._loaded_modes, None]
+        self._Buffer__working_index = len(self._working_lines) - 1
 
     def reset(self, *args, **kwargs):
         self._reset_searching()
