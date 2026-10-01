@@ -28,12 +28,16 @@ from .key_bindings import (
     create_shell_key_bindings,
 )
 from .lexer import CustomSLexer as SLexer
-from .lineedit.history import ModalFileHistory, ModalInMemoryHistory
-from .lineedit.prompt import ModalPromptSession
+from .lineedit import ModalFileHistory, ModalInMemoryHistory, ModalPromptSession
 
 
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
 BROWSE_COMMANDS = {"n", "s", "f", "c", "cont", "Q", "where", "help"}
+
+
+# =============================================================================
+# 1. History & InputHook Setup
+# =============================================================================
 
 
 def _create_history(options, settings):
@@ -82,6 +86,11 @@ def _create_inputhook(get_session):
             time.sleep(1.0 / 30)
 
     return inputhook
+
+
+# =============================================================================
+# 2. Mode Registration & Session Factory
+# =============================================================================
 
 
 def _register_modes(session, settings):

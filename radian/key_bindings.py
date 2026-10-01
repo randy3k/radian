@@ -19,18 +19,25 @@ from .settings import radian_settings as settings
 from rchitect.interface import roption
 
 
+# =============================================================================
+# 1. Filter Conditions & Text Helpers
+# =============================================================================
+
 default_focused = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 vi_focused_insert = vi_insert_mode & default_focused
 
-
-def prompt_mode(session, mode):
-    return Condition(lambda: session.current_mode.name == mode)
-
-
+RAW_STRING_PREFIX_RE = re.compile(r".*(r|R)[\"'](-*)")
+WHITESPACE_ONLY_RE = re.compile(r"^\s*$")
+LEADING_WHITESPACE_RE = re.compile(r"^\s*")
+WORD_SPLIT_RE = re.compile(r"(\S+\s+)")
 
 _preceding_text_cache = {}
 _following_text_cache = {}
+
+
+def prompt_mode(session, mode):
+    return Condition(lambda: session.current_mode.name == mode)
 
 
 def preceding_text(pattern):
@@ -121,7 +128,6 @@ def commit_text(session, event, text, add_history=True):
     buf.validate_and_handle()
 
 
-
 def newline(event, chars=["{", "[", "("]):
     should_indent = event.current_buffer.document.char_before_cursor in chars
     copy_margin = not in_paste_mode() and settings.auto_indentation
@@ -129,6 +135,31 @@ def newline(event, chars=["{", "[", "("]):
     if should_indent and settings.auto_indentation:
         tab_size = settings.tab_size
         event.current_buffer.insert_text(" " * tab_size)
+
+
+# =============================================================================
+# 2. Prompt Editing Key Bindings (Enter, Auto-Match, Indentation, Paste)
+# =============================================================================
+
+
+def _insert_pair(pair):
+    def _(event):
+        event.current_buffer.insert_text(pair)
+        event.current_buffer.cursor_left()
+
+    return _
+
+
+def _insert_raw_string_pair(pair):
+    def _(event):
+        matches = RAW_STRING_PREFIX_RE.match(
+            event.current_buffer.document.current_line_before_cursor
+        )
+        dashes = matches.group(2) or ""
+        event.current_buffer.insert_text(pair + dashes)
+        event.current_buffer.cursor_left(len(dashes) + 1)
+
+    return _
 
 
 def create_prompt_key_bindings(parse_text_complete):
@@ -162,62 +193,24 @@ def create_prompt_key_bindings(parse_text_complete):
         event.current_buffer.cursor_position -= 1
 
     # auto match
-    @handle('(', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text("()")
-        event.current_buffer.cursor_left()
-
-    @handle('[', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text("[]")
-        event.current_buffer.cursor_left()
-
-    @handle('{', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text("{}")
-        event.current_buffer.cursor_left()
-
-    @handle('"', filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text('""')
-        event.current_buffer.cursor_left()
-
-    @handle("'", filter=insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text("''")
-        event.current_buffer.cursor_left()
+    auto_match_filter = (
+        insert_mode & default_focused & auto_match & following_text(r"[,)}\]]|$") & ~string_scope
+    )
+    for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}"), ('"', '""'), ("'", "''")]:
+        handle(open_char, filter=auto_match_filter)(_insert_pair(pair))
 
     # raw string
-    @handle('(', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
-    def _(event):
-        matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
-        dashes = matches.group(2) or ""
-        event.current_buffer.insert_text("()" + dashes)
-        event.current_buffer.cursor_left(len(dashes) + 1)
+    raw_string_delim_filter = (
+        insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$")
+    )
+    for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}")]:
+        handle(open_char, filter=raw_string_delim_filter)(_insert_raw_string_pair(pair))
 
-    @handle('[', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
-    def _(event):
-        matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
-        dashes = matches.group(2) or ""
-        event.current_buffer.insert_text("[]" + dashes)
-        event.current_buffer.cursor_left(len(dashes) + 1)
-
-    @handle('{', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$"))
-    def _(event):
-        matches = re.match(r".*(r|R)[\"'](-*)", event.current_buffer.document.current_line_before_cursor)
-        dashes = matches.group(2) or ""
-        event.current_buffer.insert_text("{}" + dashes)
-        event.current_buffer.cursor_left(len(dashes) + 1)
-
-    @handle('"', filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text('""')
-        event.current_buffer.cursor_left()
-
-    @handle("'", filter=insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope)
-    def _(event):
-        event.current_buffer.insert_text("''")
-        event.current_buffer.cursor_left()
+    raw_string_quote_filter = (
+        insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope
+    )
+    handle('"', filter=raw_string_quote_filter)(_insert_pair('""'))
+    handle("'", filter=raw_string_quote_filter)(_insert_pair("''"))
 
     # just move cursor
     @handle(')', filter=insert_mode & default_focused & auto_match & following_text(r"^\)"))
@@ -245,12 +238,12 @@ def create_prompt_key_bindings(parse_text_complete):
         text = event.current_buffer.document.text_before_cursor
         textList = text.split("\n")
         if len(textList) >= 2:
-            m = re.match(r"^\s*$", textList[-1])
+            m = WHITESPACE_ONLY_RE.match(textList[-1])
             if m:
                 current_indentation = m.group(0)
-                previous_indentation = re.match(r"^\s*", textList[-2]).group(0)
+                previous_indentation = LEADING_WHITESPACE_RE.match(textList[-2]).group(0)
                 tab_size = settings.tab_size
-                if len(current_indentation) >= settings.tab_size and \
+                if len(current_indentation) >= tab_size and \
                         current_indentation == previous_indentation:
                     event.current_buffer.delete_before_cursor(tab_size)
 
@@ -289,6 +282,11 @@ def create_prompt_key_bindings(parse_text_complete):
     return kb
 
 
+# =============================================================================
+# 3. Mode-Specific Key Bindings (R & Shell)
+# =============================================================================
+
+
 # keybinds for both r mode and browse mode
 def create_r_key_bindings(session, parse_text_complete):
     kb = create_prompt_key_bindings(parse_text_complete)
@@ -322,6 +320,10 @@ def create_shell_key_bindings(session):
 
     return kb
 
+
+# =============================================================================
+# 4. Global & Emacs-in-Vi Key Bindings
+# =============================================================================
 
 
 def create_key_bindings():
@@ -370,7 +372,7 @@ def create_key_bindings():
         b = event.current_buffer
         suggestion = b.suggestion
         if suggestion:
-            t = re.split(r"(\S+\s+)", suggestion.text)
+            t = WORD_SPLIT_RE.split(suggestion.text)
             b.insert_text(next((x for x in t if x), ""))
         else:
             nc.forward_word(event)
@@ -440,6 +442,11 @@ def create_key_bindings():
             get_app().create_background_task(run())
 
     return kb
+
+
+# =============================================================================
+# 5. Custom User Key Mappings
+# =============================================================================
 
 
 def map_key(session, key, value, mode="r"):

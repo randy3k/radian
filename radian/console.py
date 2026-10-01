@@ -10,6 +10,10 @@ from rchitect import console
 from .settings import radian_settings as settings
 
 
+# =============================================================================
+# 1. Terminal Input/Output & Rare Mode
+# =============================================================================
+
 if not is_windows():
     import termios
     from prompt_toolkit.input.vt100 import Vt100Input, cooked_mode
@@ -50,6 +54,10 @@ else:
     # either Win32Output or Windows10_Output
     CustomOutput = None
 
+
+# =============================================================================
+# 2. Console State & Helpers
+# =============================================================================
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
@@ -117,6 +125,11 @@ def native_prompt(app, message):
             app.renderer.reset()
             app._request_absolute_cursor_position()
             app._redraw()
+
+
+# =============================================================================
+# 3. Read Console Callback
+# =============================================================================
 
 
 def create_read_console(session):
@@ -204,6 +217,11 @@ def create_read_console(session):
         return text
 
     return read_console
+
+
+# =============================================================================
+# 4. Write Console Callback
+# =============================================================================
 
 
 def create_write_console_ex(session, stderr_format):

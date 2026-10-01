@@ -37,8 +37,15 @@ except ImportError:
     has_jedi = False
 
 
+# =============================================================================
+# 1. Code Tidying & Multiline Execution
+# =============================================================================
+
+LEADING_SPACES_RE = re.compile(r"^\s*")
+
+
 def leading_spaces(x):
-    m = re.match(r"^\s*", x)
+    m = LEADING_SPACES_RE.match(x)
     return m.group(0) if m else ""
 
 
@@ -100,6 +107,11 @@ def parse_text_complete(code):
                 return True
 
 
+# =============================================================================
+# 2. Completion (Jedi & LaTeX)
+# =============================================================================
+
+
 def get_reticulate_completions(document, complete_event):
     word = document.get_word_before_cursor()
     prefix_length = settings.completion_prefix_length
@@ -129,9 +141,14 @@ def get_reticulate_completions(document, complete_event):
 class PythonCompleter(Completer):
     def get_completions(self, document, complete_event):
         latex_comps = get_latex_completions(document, complete_event)
-        if len(latex_comps) > 0:
+        if latex_comps:
             return latex_comps
         return get_reticulate_completions(document, complete_event)
+
+
+# =============================================================================
+# 3. Reticulate Mode Registration & Configuration
+# =============================================================================
 
 
 def register_reticulate_mode(session):

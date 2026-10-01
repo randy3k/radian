@@ -5,6 +5,10 @@ from prompt_toolkit.search import SearchState
 
 
 class ModalBuffer(Buffer):
+    # -------------------------------------------------------------------------
+    # 1. Initialization & History Mode Filtering
+    # -------------------------------------------------------------------------
+
     def __init__(self, *args, session, **kwargs):
         self.session = session
         self._last_working_index = -1
@@ -52,6 +56,10 @@ class ModalBuffer(Buffer):
     def load_history_if_not_yet_loaded(self):
         # use _reset_history instead
         pass
+
+    # -------------------------------------------------------------------------
+    # 2. Incremental History Search
+    # -------------------------------------------------------------------------
 
     def _search(
         self,
@@ -108,6 +116,10 @@ class ModalBuffer(Buffer):
             self._reset_searching()
         elif self._last_search_history:
             self._search_history.add(self._last_search_history)
+
+    # -------------------------------------------------------------------------
+    # 3. Cursor & History Navigation
+    # -------------------------------------------------------------------------
 
     def go_to_next_history(self, i):
         self.go_to_history(i)
