@@ -9,7 +9,6 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
-from pygments.lexers.python import PythonLexer
 
 from rchitect import rcall, reticulate as rreticulate
 from rchitect.interface import roption
@@ -50,18 +49,13 @@ def _get_jedi():
 # 1. Code Tidying & Multiline Execution
 # =============================================================================
 
-LEADING_SPACES_RE = re.compile(r"^\s*")
-
-
-def leading_spaces(x):
-    m = LEADING_SPACES_RE.match(x)
-    return m.group(0) if m else ""
-
 
 def unindent(lines):
     if not lines:
         return lines
-    indentation = len(leading_spaces(lines[0]))
+    indentation = len(lines[0]) - len(lines[0].lstrip())
+    if indentation == 0:
+        return lines
     pattern = re.compile(r"^\s{{0,{}}}".format(indentation))
     return [pattern.sub("", line, count=1) for line in lines]
 
@@ -168,6 +162,8 @@ def register_reticulate_mode(session):
     if "reticulate" in session.modes:
         return
 
+    from pygments.lexers.python import PythonLexer
+
     main_mode = prompt_mode(session, "r") | prompt_mode(session, "browse")
     kb = KeyBindings()
 
@@ -214,13 +210,18 @@ def configure(session):
     if roption("radian.enable_reticulate_prompt", True):
         rreticulate.on_load(lambda: register_reticulate_mode(session))
 
-        has_reticulate = Condition(rreticulate.is_installed)
+        has_reticulate = Condition(
+            lambda: "reticulate" not in session.modes and rreticulate.is_installed()
+        )
         kb = session.modes["r"].prompt_key_bindings
         browsekb = session.modes["browse"].prompt_key_bindings
+        tilde_filter = insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate
 
-        @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate)
-        @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate)
-        def _(event):
+        @kb.add('~', filter=tilde_filter)
+        def _activate_reticulate(event):
             commit_text(session, event, "reticulate::repl_python()", False)
+
+        if browsekb is not kb:
+            browsekb.add('~', filter=tilde_filter)(_activate_reticulate)
 
 

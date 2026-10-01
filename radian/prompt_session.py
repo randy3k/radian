@@ -98,7 +98,8 @@ def _register_modes(session, settings):
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
 
-    r_key_bindings = create_r_key_bindings(session, parse_text_complete)
+    r_completer = RCompleter(timeout=settings.completion_timeout)
+    r_lexer = PygmentsLexer(SLexer)
 
     session.register_mode(
         name="r",
@@ -107,13 +108,13 @@ def _register_modes(session, settings):
         history_book="r",
         insert_new_line=True,
         multiline=settings.indent_lines,
-        completer=RCompleter(timeout=settings.completion_timeout),
+        completer=r_completer,
         complete_while_typing=settings.complete_while_typing,
-        lexer=PygmentsLexer(SLexer),
+        lexer=r_lexer,
         tempfile_suffix=".R",
         input_processors=input_processors,
         key_bindings=create_key_bindings(),
-        prompt_key_bindings=r_key_bindings,
+        prompt_key_bindings=create_r_key_bindings(session, parse_text_complete),
     )
 
     browse_level = [""]
@@ -132,15 +133,15 @@ def _register_modes(session, settings):
         history_book="r",
         insert_new_line=True,
         multiline=settings.indent_lines,
-        completer=RCompleter(timeout=settings.completion_timeout),
+        completer=r_completer,
         complete_while_typing=settings.complete_while_typing,
         keep_history=lambda text: not (
             settings.history_ignore_browser_commands and text.strip() in BROWSE_COMMANDS
         ),
-        lexer=PygmentsLexer(SLexer),
+        lexer=r_lexer,
         tempfile_suffix=".R",
         input_processors=input_processors,
-        prompt_key_bindings=r_key_bindings,
+        prompt_key_bindings=create_r_key_bindings(session, parse_text_complete),
     )
 
     def shell_process_text(s):

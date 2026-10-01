@@ -76,7 +76,7 @@ class CustomSLexer(RegexLexer):
              r'(?![\w.])',
              Keyword.Reserved),
             (r'(array|category|character|complex|double|function|integer|list|'
-             r'logical|matrix|numeric|vector|data.frame|c)'
+             r'logical|matrix|numeric|vector|data\.frame|c)'
              r'(?![\w.])',
              Keyword.Type),
             (r'(library|require|attach|detach|source)'
@@ -117,7 +117,7 @@ class CustomSLexer(RegexLexer):
             # calls:
             include('keywords'),
             include('punctuation'),
-            (r'r%s\s*(?=\()' % valid_name, Keyword.Pseudo),
+            (r'(?:%s)\s*(?=\()' % valid_name, Keyword.Pseudo),
             include('statements'),
 
             # blocks:
