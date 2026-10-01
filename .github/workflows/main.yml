@@ -33,6 +33,9 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.r }}
+      - name: Install libpng-dev
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y libpng-dev
       - name: Install required R packages for testing
         run: Rscript -e "install.packages(c('remotes', 'askpass', 'renv'))"
       - name: Install required R packages for testing
