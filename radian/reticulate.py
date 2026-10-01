@@ -178,7 +178,7 @@ def register_reticulate_mode(session):
     def _(event):
         commit_text(session, event, "exit", False)
 
-    @pkb.add("enter", filter=insert_mode & default_focused & preceding_text(".*:"))
+    @pkb.add("enter", filter=insert_mode & default_focused & preceding_text(r".*:$"))
     def _(event):
         newline(event, chars=[":"])
 

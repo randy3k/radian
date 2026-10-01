@@ -21,6 +21,10 @@ def test_reticulate(terminal):
     terminal.current_line().assert_startswith(" ")
     terminal.write("pass\n")
     terminal.current_line().strip().assert_equal(">>>")
+    terminal.write("d = {'a': 1}\n")
+    terminal.current_line().strip().assert_equal(">>>")
+    terminal.write("d['a']\n")
+    terminal.previous_line(2).strip().assert_equal("1")
     exit_reticulate_prompt(terminal)
 
 
