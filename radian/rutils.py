@@ -4,15 +4,19 @@ from rchitect import rcall, rcopy
 from rchitect.interface import roption, setoption
 
 
+# =============================================================================
+# 1. Package Inspection & Caching
+# =============================================================================
+
+_installed_packages_cache = (None, [])
+
+
 def package_is_loaded(pkg):
     return pkg in rcall(("base", "loadedNamespaces"), _convert=True)
 
 
 def package_is_installed(pkg):
     return len(rcall(("base", "find.package"), pkg, quiet=True, _convert=True)) > 0
-
-
-_installed_packages_cache = (None, [])
 
 
 def installed_packages():
@@ -29,6 +33,11 @@ def installed_packages():
         return _installed_packages_cache[1]
     except Exception:
         return []
+
+
+# =============================================================================
+# 2. Profile & Hook Loading
+# =============================================================================
 
 
 def source_file(path):
@@ -74,6 +83,17 @@ def source_radian_profile(path):
             source_file(local_profile)
 
 
+def run_on_load_hooks():
+    hooks = roption("radian.on_load_hooks", [])
+    for hook in hooks:
+        hook()
+
+
+# =============================================================================
+# 3. Session Lifecycle & Encoding Helpers
+# =============================================================================
+
+
 def register_cleanup(cleanup):
     rcall(
         ("base", "reg.finalizer"),
@@ -95,10 +115,4 @@ def set_utf8():
         if not os.environ.get("LANG", ""):
             os.environ["LANG"] = "en_US.UTF-8"
         setoption("encoding", "UTF-8")
-
-
-def run_on_load_hooks():
-    hooks = roption("radian.on_load_hooks", [])
-    for hook in hooks:
-        hook()
 

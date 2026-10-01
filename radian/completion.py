@@ -14,6 +14,10 @@ from .lexer import cursor_in_string
 
 
 
+# =============================================================================
+# 1. R Code & Package Completer
+# =============================================================================
+
 TOKEN_PATTERN = re.compile(r"(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")
 LIBRARY_PATTERN = re.compile(
     r"(?<![a-zA-Z0-9._])(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$"
@@ -106,6 +110,11 @@ class RCompleter(Completer):
             if p.startswith(token):
                 comp = p if library_prefix else p + "::"
                 yield Completion(comp, -len(token))
+
+
+# =============================================================================
+# 2. Shell Mode Path Completer
+# =============================================================================
 
 
 class SmartPathCompleter(Completer):

@@ -25,6 +25,11 @@ from prompt_toolkit.validation import DynamicValidator
 from .buffer import ModalBuffer
 
 
+# =============================================================================
+# 1. InputHook Selector
+# =============================================================================
+
+
 class CustomInputHookSelector(InputHookSelector):
     def select(self, timeout=None):
         loop = get_running_loop()
@@ -89,6 +94,11 @@ class CustomInputHookSelector(InputHookSelector):
         self.selector.close()
 
 
+# =============================================================================
+# 2. Prompt Mode Definition
+# =============================================================================
+
+
 class PromptMode:
     def __init__(
         self,
@@ -122,6 +132,11 @@ class PromptMode:
             if key not in PromptSession._fields:
                 raise KeyError("unknown field", key)
         self.settings = kwargs
+
+
+# =============================================================================
+# 3. Modal Prompt Session
+# =============================================================================
 
 
 class ModalPromptSession(PromptSession):
