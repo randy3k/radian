@@ -520,3 +520,153 @@ def test_inputhook_select_and_cleanup(monkeypatch):
         with pytest.raises(OSError):
             os.fstat(w_fd)
 
+
+def test_completion_unit(monkeypatch, tmp_path):
+    from prompt_toolkit.completion import CompleteEvent
+    from prompt_toolkit.document import Document
+    from radian.completion import RCompleter, SmartPathCompleter
+    from radian.lexer import cursor_in_comment
+
+    # 1. cursor_in_comment checks
+    assert not cursor_in_comment(Document("x <- 1", 6))
+    assert not cursor_in_comment(Document('x <- "# not comment"', 20))
+    assert cursor_in_comment(Document("# comment", 9))
+    assert cursor_in_comment(Document("x <- 1 # comment", 16))
+    assert not cursor_in_comment(Document("# comment\nx <- 1", 16))
+
+    # 2. RCompleter prefix & comment checks
+    calls = []
+
+    def fake_complete_line(buf, timeout=0, in_print=False):
+        calls.append((buf, timeout, in_print))
+        if buf.endswith("is."):
+            return "is.", ["is.null", "is.na"]
+        if buf.endswith("is.n"):
+            return "is.n", ["is.null", "is.na"]
+        if buf.endswith("R.version.s"):
+            return "R.version.s", ["R.version.string"]
+        if buf.endswith("utils::"):
+            return "utils::", ["utils::str", "utils::sessionInfo"]
+        if buf.endswith("utils::s"):
+            return "utils::s", ["utils::str", "utils::sessionInfo"]
+        if buf.endswith("mtcars$"):
+            return "mtcars$", ["mtcars$mpg", "mtcars$cyl"]
+        if buf.endswith("mtcars$m"):
+            return "mtcars$m", ["mtcars$mpg"]
+        if buf.endswith("s4obj@s"):
+            return "s4obj@s", ["s4obj@slot1"]
+        return "", ["from=", "to="]
+
+    monkeypatch.setattr("radian.completion._complete_line", fake_complete_line)
+    monkeypatch.setattr(
+        "radian.completion.installed_packages", lambda: ["utils", "utf8", "stats"]
+    )
+
+    completer = RCompleter()
+    typing_event = CompleteEvent(completion_requested=False)
+    tab_event = CompleteEvent(completion_requested=True)
+
+    # Punctuation, operators, numbers, and single-colon sequences do NOT auto-complete while typing
+    for text in [
+        "seq(c()",
+        "seq((",
+        'seq("a",',
+        "seq(x <-",
+        "x <-",
+        "x ==",
+        "df |>",
+        "1:5",
+        "x:",
+        "123",
+        "3.14",
+        ".5",
+        "::",
+        "$$",
+        "# utils",
+    ]:
+        calls.clear()
+        comps = [c.text for c in completer.get_completions(Document(text, len(text)), typing_event)]
+        assert comps == [], f"unexpected completions for {text!r}: {comps}"
+        assert calls == []
+
+    # Comments do not complete even on <Tab>
+    assert list(completer.get_completions(Document("# utils", 7), tab_event)) == []
+
+    # Dotted identifiers, namespace operators, and $/@@ chains DO auto-complete while typing
+    for text, expected in [
+        ("is.", ["is.null", "is.na"]),
+        ("is.n", ["is.null", "is.na"]),
+        ("R.version.s", ["R.version.string"]),
+        ("utils::", ["utils::str", "utils::sessionInfo"]),
+        ("utils::s", ["utils::str", "utils::sessionInfo"]),
+        ("mtcars$", ["mtcars$mpg", "mtcars$cyl"]),
+        ("mtcars$m", ["mtcars$mpg"]),
+        ("s4obj@s", ["s4obj@slot1"]),
+    ]:
+        comps = [c.text for c in completer.get_completions(Document(text, len(text)), typing_event)]
+        assert comps == expected, f"failed for {text!r}: {comps}"
+
+    # Package completions inside library(): exact match is filtered out once fully typed,
+    # and <Tab> right after library( / library(" / require( / requireNamespace(" lists all packages
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(", 8), typing_event)
+    ] == []
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(", 8), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document('library("', 9), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document("require(", 8), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document('requireNamespace("', 18), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(ut", 10), typing_event)
+    ] == ["utils", "utf8"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(utils", 13), typing_event)
+    ] == []
+
+    # LaTeX completions respect completion_prefix_length while typing, including \^2 and \_2
+    assert list(completer.get_completions(Document(r"\a", 2), typing_event)) == []
+    assert list(completer.get_completions(Document(r'"hello\n', 8), typing_event)) == []
+    assert any(
+        c.text == "α"
+        for c in completer.get_completions(Document(r"\al", 3), typing_event)
+    )
+    assert any(
+        c.text == "²"
+        for c in completer.get_completions(Document(r"\^2", 3), typing_event)
+    )
+    assert any(
+        c.text == "α"
+        for c in completer.get_completions(Document(r"\alpha", 6), typing_event)
+    )
+
+    # 3. SmartPathCompleter trailing space and ~ handling
+    sub = tmp_path / "subdir"
+    sub.mkdir()
+    (tmp_path / "file_a.txt").write_text("a")
+    monkeypatch.chdir(tmp_path)
+
+    path_completer = SmartPathCompleter()
+    # Trailing space after non-cd command completes in cwd with start_position == 0
+    ls_comps = list(path_completer.get_completions(Document("ls ", 3), tab_event))
+    assert any(c.text == "file_a.txt" and c.start_position == 0 for c in ls_comps)
+    ls_arg_comps = list(
+        path_completer.get_completions(Document("ls file_a.txt ", 14), tab_event)
+    )
+    assert any(c.text == "subdir" and c.start_position == 0 for c in ls_arg_comps)
+
+    # Bare "cd ~" does not replace "~" with the username
+    assert list(path_completer.get_completions(Document("cd ~", 4), tab_event)) == []

@@ -1,5 +1,6 @@
 import re
 from prompt_toolkit.completion import Completion
+from ..settings import radian_settings as settings
 
 __all__ = ["latex_symbols"]
 
@@ -35,8 +36,13 @@ def _get_latex_completions(document, complete_event):
         return
     latex_match = LATEX_PATTERN.search(text_before)
     if latex_match:
-        _ensure_latex_index()
         token = latex_match.group(1)
+        if (
+            not complete_event.completion_requested
+            and len(token) - 1 < settings.completion_prefix_length
+        ):
+            return
+        _ensure_latex_index()
         exact_sym = _LATEX_EXACT.get(token)
         if exact_sym is not None:
             yield Completion(exact_sym, -len(token), display=token, display_meta=exact_sym)

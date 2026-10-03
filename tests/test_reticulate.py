@@ -73,3 +73,87 @@ def test_completion(terminal):
     terminal.current_line().assert_contains("import")
     terminal.write(" os\n")
     exit_reticulate_prompt(terminal)
+
+
+def test_reticulate_completion_unit():
+    import __main__
+    from prompt_toolkit.completion import CompleteEvent
+    from prompt_toolkit.document import Document
+    from radian.reticulate import PythonCompleter
+
+    __main__.sys_test_mod = __import__("sys")
+    try:
+        completer = PythonCompleter()
+        typing_event = CompleteEvent(completion_requested=False)
+        tab_event = CompleteEvent(completion_requested=True)
+
+        # Adjacent punctuation, comments, trailing dots, and exact matches do NOT pop up completions while typing
+        for text in [
+            "x = robject({",
+            "x = robject({'a':",
+            "d = {'a':",
+            "a ==",
+            "# comment",
+            "sys_test_mod.",
+            "pass",
+        ]:
+            comps = [
+                c.text
+                for c in completer.get_completions(Document(text, len(text)), typing_event)
+            ]
+            assert comps == [], f"unexpected completions for {text!r}: {comps}"
+
+        assert "import" not in [
+            c.text
+            for c in completer.get_completions(Document("import", 6), typing_event)
+        ]
+
+        # Comments do not complete even on <Tab>, whereas '#' inside a string literal is not a comment
+        assert list(completer.get_completions(Document("# sys_test", 10), tab_event)) == []
+        assert list(completer.get_completions(Document("x = 1 # sys_test", 16), tab_event)) == []
+        assert "path" in [
+            c.text
+            for c in completer.get_completions(
+                Document('s = "# not comment"; sys_test_mod.', 34), tab_event
+            )
+        ]
+
+        # Dotted attribute with >= 1 char after dot DOES auto-complete while typing
+        comps_typing = [
+            c.text
+            for c in completer.get_completions(
+                Document("sys_test_mod.pa", 15), typing_event
+            )
+        ]
+        assert "path" in comps_typing
+        comps_one_char = [
+            c.text
+            for c in completer.get_completions(
+                Document("sys_test_mod.p", 14), typing_event
+            )
+        ]
+        assert "path" in comps_one_char
+
+        # Trailing dot DOES complete when <Tab> is pressed
+        comps_tab = [
+            c.text
+            for c in completer.get_completions(Document("sys_test_mod.", 13), tab_event)
+        ]
+        assert "path" in comps_tab
+
+        # Exact match on attribute closes popup
+        assert [
+            c.text
+            for c in completer.get_completions(
+                Document("sys_test_mod.maxsize", 20), typing_event
+            )
+        ] == []
+
+        # 1-char escape inside string does not trigger LaTeX completion while typing, 2-char does
+        assert list(completer.get_completions(Document(r'"hello\n', 8), typing_event)) == []
+        assert any(
+            c.text == "α"
+            for c in completer.get_completions(Document(r"\al", 3), typing_event)
+        )
+    finally:
+        del __main__.sys_test_mod

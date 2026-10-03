@@ -10,40 +10,14 @@ from .settings import radian_settings as settings
 from .latex import get_latex_completions
 from .rutils import installed_packages
 from .console import suppress_stderr
-from .lexer import cursor_in_string
+from .lexer import cursor_in_comment, cursor_in_string
 
 
 # =============================================================================
 # 1. R Completion Bridge
 # =============================================================================
 
-_completion_fns = None
-
-_ASSIGN_LINE_BUFFER_CODE = """
-function(buf) {
-    utils:::.assignLinebuffer(buf)
-    utils:::.assignEnd(nchar(buf))
-    utils:::.guessTokenFromLine()
-}
-"""
-
-_COMPLETE_TOKEN_CODE = """
-function(timeout = 0) {
-    settimelimit <- timeout > 0
-    tryCatch(
-        {
-            if (settimelimit) base::setTimeLimit(timeout)
-            utils:::.completeToken()
-            if (settimelimit) base::setTimeLimit()
-        },
-        error = function(e) {
-            if (settimelimit) base::setTimeLimit()
-            assign("comps", NULL, envir = utils:::.CompletionEnv)
-        }
-    )
-}
-"""
-
+_complete_line_fn = None
 
 _COMPLETE_LINE_CODE = """
 function(buf, timeout = 0, in_print = FALSE) {
@@ -56,14 +30,13 @@ function(buf, timeout = 0, in_print = FALSE) {
         token <- utils:::.guessTokenFromLine()
     }
     settimelimit <- timeout > 0 && !grepl("::", token, fixed = TRUE)
+    if (settimelimit) {
+        base::setTimeLimit(cpu = timeout, elapsed = timeout, transient = TRUE)
+        on.exit(base::setTimeLimit(cpu = Inf, elapsed = Inf, transient = TRUE), add = TRUE)
+    }
     tryCatch(
-        {
-            if (settimelimit) base::setTimeLimit(timeout)
-            utils:::.completeToken()
-            if (settimelimit) base::setTimeLimit()
-        },
+        utils:::.completeToken(),
         error = function(e) {
-            if (settimelimit) base::setTimeLimit()
             assign("comps", NULL, envir = utils:::.CompletionEnv)
         }
     )
@@ -72,40 +45,11 @@ function(buf, timeout = 0, in_print = FALSE) {
 """
 
 
-def _get_completion_fns():
-    global _completion_fns
-    if _completion_fns is None:
-        _completion_fns = (
-            reval(_ASSIGN_LINE_BUFFER_CODE),
-            reval(_COMPLETE_TOKEN_CODE),
-            reval("utils:::.retrieveCompletions"),
-            reval(_COMPLETE_LINE_CODE),
-        )
-    return _completion_fns
-
-
-def assign_line_buffer(buf):
-    assign_fn, _, _, _ = _get_completion_fns()
-    return rcopy(str, rcall(assign_fn, buf))
-
-
-def complete_token(timeout=0):
-    _, complete_fn, _, _ = _get_completion_fns()
-    rcall(complete_fn, timeout)
-
-
-def retrieve_completions():
-    _, _, retrieve_fn, _ = _get_completion_fns()
-    completions = rcopy(list, rcall(retrieve_fn))
-    if not completions:
-        return []
-    else:
-        return completions
-
-
 def _complete_line(buf, timeout=0, in_print=False):
-    _, _, _, complete_line_fn = _get_completion_fns()
-    res = rcopy(list, rcall(complete_line_fn, buf, timeout, in_print))
+    global _complete_line_fn
+    if _complete_line_fn is None:
+        _complete_line_fn = reval(_COMPLETE_LINE_CODE)
+    res = rcopy(list, rcall(_complete_line_fn, buf, timeout, in_print))
     if not res:
         return "", []
     return res[0], res[1:]
@@ -115,6 +59,9 @@ def _complete_line(buf, timeout=0, in_print=False):
 # 2. R Code & Package Completer
 # =============================================================================
 
+WORD_PATTERN = re.compile(
+    r"(?<![a-zA-Z0-9._:$@])((?:[a-zA-Z_]|\.[a-zA-Z._])[a-zA-Z0-9._]*(?:(?::::?|[$@])[a-zA-Z0-9._]+)*(?::::?|[$@])?)$"
+)
 TOKEN_PATTERN = re.compile(r"(?<![:$@a-zA-Z0-9._])([a-zA-Z0-9._]+)$")
 LIBRARY_PATTERN = re.compile(
     r"(?<![a-zA-Z0-9._])(?:(?:library|require)\([\"']?|requireNamespace\([\"'])([a-zA-Z0-9._]*)$"
@@ -137,18 +84,22 @@ class RCompleter(Completer):
         super().__init__()
 
     def get_completions(self, document, complete_event):
-        word = document.get_word_before_cursor()
-        prefix_length = settings.completion_prefix_length
-        if len(word) < prefix_length and not complete_event.completion_requested:
-            return
-
         latex_comps = get_latex_completions(document, complete_event)
         # only return latex completions if prefix has \
         if latex_comps:
             yield from latex_comps
             return
 
-        library_prefix = bool(LIBRARY_PATTERN.search(document.current_line_before_cursor))
+        if cursor_in_comment(document):
+            return
+
+        text_before = document.current_line_before_cursor
+        if not complete_event.completion_requested:
+            word_match = WORD_PATTERN.search(text_before)
+            if not word_match or len(word_match.group(1)) < settings.completion_prefix_length:
+                return
+
+        library_prefix = bool(LIBRARY_PATTERN.search(text_before))
         if not library_prefix:
             yield from self.get_r_builtin_completions(
                 document, complete_event, library_prefix=False
@@ -158,6 +109,9 @@ class RCompleter(Completer):
         )
 
     def get_r_builtin_completions(self, document, complete_event, library_prefix=None):
+        if cursor_in_comment(document):
+            return
+
         text_before = document.current_line_before_cursor
         completion_requested = complete_event.completion_requested
 
@@ -193,19 +147,33 @@ class RCompleter(Completer):
                 yield Completion(c, -len(token))
 
     def get_package_completions(self, document, complete_event, library_prefix=None):
+        if cursor_in_comment(document):
+            return
+
         text_before = document.current_line_before_cursor
-        token_match = TOKEN_PATTERN.search(text_before)
-        if not token_match:
-            return
-        token = token_match.group(1)
         if library_prefix is None:
-            library_prefix = bool(LIBRARY_PATTERN.search(text_before))
-        if not library_prefix and cursor_in_string(document):
-            return
+            lib_match = LIBRARY_PATTERN.search(text_before)
+            library_prefix = bool(lib_match)
+        else:
+            lib_match = LIBRARY_PATTERN.search(text_before) if library_prefix else None
+
+        if library_prefix:
+            token = lib_match.group(1) if lib_match else ""
+            if not token and not complete_event.completion_requested:
+                return
+        else:
+            if cursor_in_string(document):
+                return
+            token_match = TOKEN_PATTERN.search(text_before)
+            if not token_match:
+                return
+            token = token_match.group(1)
+
         for p in installed_packages():
             if p.startswith(token):
                 comp = p if library_prefix else p + "::"
-                yield Completion(comp, -len(token))
+                if comp != token:
+                    yield Completion(comp, -len(token))
 
 
 # =============================================================================
@@ -254,11 +222,21 @@ class SmartPathCompleter(Completer):
                     if not path:
                         text = text[1:]
 
+            if (
+                not quoted
+                and text.endswith((" ", "\t"))
+                and (is_win or not text[:-1].endswith("\\"))
+            ):
+                path = ""
+
+            raw_basename = os.path.basename(path)
             path = os.path.expanduser(path)
             path = os.path.expandvars(path)
             if not os.path.isabs(path):
                 path = os.path.join(os.getcwd(), path)
             basename = os.path.basename(path)
+            if raw_basename != basename:
+                return
             basename_lower = basename.lower()
             dirname = os.path.dirname(path)
 
@@ -274,4 +252,3 @@ class SmartPathCompleter(Completer):
 
         except Exception:
             pass
-

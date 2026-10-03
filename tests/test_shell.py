@@ -78,7 +78,8 @@ def test_cd2(terminal):
             assert [c.text for c in rc.get_package_completions(Document("utils::st", 9), ev)] == []
             assert [c.text for c in rc.get_package_completions(Document("df$st", 5), ev)] == []
             assert [c.text for c in rc.get_package_completions(Document('"stats', 6), ev)] == []
-            assert [c.text for c in rc.get_package_completions(Document('library("stats', 14), ev)] == ["stats"]
+            assert [c.text for c in rc.get_package_completions(Document('library("stat', 13), ev)] == ["stats"]
+            assert [c.text for c in rc.get_package_completions(Document('library("stats', 14), ev)] == []
             assert [c.text for c in rc.get_package_completions(Document("stats", 5), ev)] == ["stats::"]
         finally:
             completion_mod.installed_packages = orig_installed

@@ -13,6 +13,7 @@ from prompt_toolkit.lexers import PygmentsLexer
 from rchitect import rcall, reticulate as rreticulate
 from rchitect.interface import roption
 
+from .console import suppress_stderr
 from .key_bindings import (
     commit_text,
     create_prompt_key_bindings,
@@ -114,33 +115,70 @@ def parse_text_complete(code):
 # 2. Completion (Jedi & LaTeX)
 # =============================================================================
 
+WORD_PATTERN = re.compile(
+    r"(?<![a-zA-Z0-9._])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)$"
+)
+
+_py_lexer = None
+_py_tokens_cache = (None, ())
+
+
+def _tokenize_python_before_cursor(document):
+    global _py_lexer, _py_tokens_cache
+    text = document.text_before_cursor
+    if _py_tokens_cache[0] == text:
+        return _py_tokens_cache[1]
+    if _py_lexer is None:
+        from pygments.lexers.python import PythonLexer
+
+        _py_lexer = PythonLexer()
+    tokens = tuple(_py_lexer.get_tokens_unprocessed(text))
+    _py_tokens_cache = (text, tokens)
+    return tokens
+
+
+def cursor_in_python_comment(document):
+    if "#" not in document.current_line_before_cursor:
+        return False
+    from pygments.token import Comment
+
+    tokens = _tokenize_python_before_cursor(document)
+    return bool(tokens) and tokens[-1][1] in Comment
+
 
 def get_reticulate_completions(document, complete_event):
-    word = document.get_word_before_cursor()
-    prefix_length = settings.completion_prefix_length
-    if len(word) < prefix_length and not complete_event.completion_requested:
+    if cursor_in_python_comment(document):
         return []
+
+    if not complete_event.completion_requested:
+        word_match = WORD_PATTERN.search(document.current_line_before_cursor)
+        if not word_match or len(word_match.group(1)) < settings.completion_prefix_length:
+            return []
 
     jedi = _get_jedi()
     if jedi is None:
         return []
 
     try:
-        script = jedi.Interpreter(
-            document.text,
-            path="input-text",
-            namespaces=[__main__.__dict__],
-        )
-        return [
-            Completion(
-                str(c.name_with_symbols),
-                len(str(c.complete)) - len(str(c.name_with_symbols)),
+        with suppress_stderr():
+            script = jedi.Interpreter(
+                document.text,
+                path="input-text",
+                namespaces=[__main__.__dict__],
             )
+            completions = []
             for c in script.complete(
                 line=document.cursor_position_row + 1,
                 column=document.cursor_position_col,
-            )
-        ]
+            ):
+                name = str(c.name_with_symbols)
+                comp = str(c.complete)
+                if not comp or (
+                    not complete_event.completion_requested and len(comp) == len(name)
+                ):
+                    continue
+                completions.append(Completion(name, len(comp) - len(name)))
+            return completions
     except Exception:
         return []
 
@@ -182,7 +220,6 @@ def register_reticulate_mode(session):
     def _(event):
         newline(event, chars=[":"])
 
-    python_completer = PythonCompleter() if _get_jedi() is not None else None
     input_processors = (
         [HighlightMatchingBracketProcessor()]
         if settings.highlight_matching_bracket
@@ -202,7 +239,8 @@ def register_reticulate_mode(session):
         prompt_key_bindings=pkb,
         tempfile_suffix=".py",
         input_processors=input_processors,
-        completer=python_completer,
+        completer=PythonCompleter(),
+        complete_while_typing=settings.complete_while_typing,
     )
 
 

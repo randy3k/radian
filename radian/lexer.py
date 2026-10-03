@@ -135,6 +135,7 @@ class CustomSLexer(RegexLexer):
 
 _lexer = CustomSLexer()
 _cursor_in_string_cache = (None, False)
+_cursor_in_comment_cache = (None, False)
 
 
 def cursor_in_string(document):
@@ -159,3 +160,14 @@ def cursor_in_string(document):
     return res
 
 
+def cursor_in_comment(document):
+    global _cursor_in_comment_cache
+    if "#" not in document.current_line_before_cursor:
+        return False
+    text = document.text_before_cursor
+    if _cursor_in_comment_cache[0] == text:
+        return _cursor_in_comment_cache[1]
+    tokens = list(_lexer.get_tokens_unprocessed(text))
+    res = bool(tokens) and tokens[-1][1] is Token.Comment.Single
+    _cursor_in_comment_cache = (text, res)
+    return res
