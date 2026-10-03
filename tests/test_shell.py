@@ -96,5 +96,27 @@ def test_cd2(terminal):
     terminal.current_line().assert_startswith("#!>")
 
 
+def test_shell_oldpwd_unit(monkeypatch, tmp_path):
+    from radian.shell import run_command
+
+    dir_a = tmp_path / "dir_a"
+    dir_b = tmp_path / "dir_b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    monkeypatch.chdir(dir_a)
+    monkeypatch.setenv("OLDPWD", str(dir_b))
+
+    # Failed cd must NOT overwrite OLDPWD
+    run_command(f"cd {tmp_path / 'nonexistent_dir'}")
+    assert os.environ["OLDPWD"] == str(dir_b)
+    assert os.path.realpath(os.getcwd()) == os.path.realpath(str(dir_a))
+
+    # Successful cd updates OLDPWD to the previous directory
+    run_command(f"cd {dir_b}")
+    assert os.path.realpath(os.environ["OLDPWD"]) == os.path.realpath(str(dir_a))
+    assert os.path.realpath(os.getcwd()) == os.path.realpath(str(dir_b))
+
+
 
 

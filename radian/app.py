@@ -17,12 +17,6 @@ def get_app():
     return RadianApplication.instance
 
 
-def main(cleanup=None):
-    from .__main__ import main as _main
-
-    return _main(cleanup=cleanup)
-
-
 class RadianApplication:
     instance = None
     r_home = None

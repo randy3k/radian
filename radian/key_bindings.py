@@ -401,6 +401,7 @@ def create_key_bindings():
         handle(*keys, filter=vi_focused_insert & ebivim)(cmd)
 
     @handle('c-x', 'c-e', filter=emacs_mode & ~has_selection)
+    @handle('c-x', 'e', filter=emacs_mode & ~has_selection)
     def _(event):
         # match R behavior
         editor = roption("editor")
@@ -414,7 +415,7 @@ def create_key_bindings():
 
         buff = event.current_buffer
         if editor:
-            orig_visual = os.environ['VISUAL'] if 'VISUAL' in os.environ else None
+            orig_visual = os.environ.get('VISUAL')
             os.environ['VISUAL'] = editor
 
         buff.open_in_editor()
@@ -423,10 +424,10 @@ def create_key_bindings():
             # queue the clean up in thread executor as open_in_editor.
             async def run():
                 def cleanup():
-                    if orig_visual:
+                    if orig_visual is not None:
                         os.environ['VISUAL'] = orig_visual
                     else:
-                        del os.environ['VISUAL']
+                        os.environ.pop('VISUAL', None)
 
                 await run_in_terminal(cleanup, in_executor=True)
 

@@ -65,14 +65,6 @@ SUPPRESS_STDERR = False
 ANSI_ESCAPE_RE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 
-def normalize(string):
-    return ANSI_ESCAPE_RE.sub('', string.replace('\r\n', '\n'))
-
-
-def is_ascii(text):
-    return text.isascii()
-
-
 def is_long_non_ascii_multiline(text):
     return len(text) >= 1000 and "\n" in text and not text.isascii()
 
