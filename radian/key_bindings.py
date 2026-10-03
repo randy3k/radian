@@ -27,7 +27,7 @@ default_focused = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 vi_focused_insert = vi_insert_mode & default_focused
 
-RAW_STRING_PREFIX_RE = re.compile(r".*(r|R)[\"'](-*)")
+RAW_STRING_PREFIX_RE = re.compile(r".*(?<![a-zA-Z0-9._:$@])(r|R)[\"'](-*)$")
 WHITESPACE_ONLY_RE = re.compile(r"^\s*$")
 LEADING_WHITESPACE_RE = re.compile(r"^\s*")
 WORD_SPLIT_RE = re.compile(r"(\S+\s+)")
@@ -192,19 +192,6 @@ def create_prompt_key_bindings(parse_text_complete):
     for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}"), ('"', '""'), ("'", "''")]:
         handle(open_char, filter=auto_match_filter)(_insert_pair(pair))
 
-    # raw string
-    raw_string_delim_filter = (
-        insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$")
-    )
-    for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}")]:
-        handle(open_char, filter=raw_string_delim_filter)(_insert_raw_string_pair(pair))
-
-    raw_string_quote_filter = (
-        insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope
-    )
-    handle('"', filter=raw_string_quote_filter)(_insert_pair('""'))
-    handle("'", filter=raw_string_quote_filter)(_insert_pair("''"))
-
     # just move cursor
     @handle(')', filter=insert_mode & default_focused & auto_match & following_text(r"^\)"))
     @handle(']', filter=insert_mode & default_focused & auto_match & following_text(r"^\]"))
@@ -284,6 +271,17 @@ def create_prompt_key_bindings(parse_text_complete):
 def create_r_key_bindings(session, parse_text_complete):
     kb = create_prompt_key_bindings(parse_text_complete)
     handle = kb.add
+
+    # R raw string delimiter auto-match
+    raw_string_delim_filter = (
+        insert_mode
+        & default_focused
+        & auto_match
+        & preceding_text(r".*(?<![a-zA-Z0-9._:$@])(r|R)[\"'](-*)$")
+        & following_text(r"^[\"']|$")
+    )
+    for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}")]:
+        handle(open_char, filter=raw_string_delim_filter)(_insert_raw_string_pair(pair))
 
     # r mode
     @handle(';', filter=insert_mode & default_focused & cursor_at_begin)

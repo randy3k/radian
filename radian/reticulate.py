@@ -2,8 +2,10 @@ import __main__
 import ast
 from code import compile_command
 import re
+import signal
 import sys
 
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
@@ -13,7 +15,7 @@ from prompt_toolkit.lexers import PygmentsLexer
 from rchitect import rcall, reticulate as rreticulate
 from rchitect.interface import roption
 
-from .console import suppress_stderr
+from .console import sigint_handler, suppress_stderr
 from .key_bindings import (
     commit_text,
     create_prompt_key_bindings,
@@ -21,7 +23,6 @@ from .key_bindings import (
     default_focused,
     insert_mode,
     newline,
-    preceding_text,
     prompt_mode,
     text_is_empty,
 )
@@ -69,6 +70,8 @@ def tidy_code(code):
 
 def handle_multiline_code(code):
     main_dict = __main__.__dict__
+    orig_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, sigint_handler)
     try:
         mod = ast.parse(code, "<input>", "exec")
         if mod.body and isinstance(mod.body[-1], ast.Expr):
@@ -79,9 +82,13 @@ def handle_multiline_code(code):
             eval(compile(last, "<input>", "single"), main_dict, main_dict)
         else:
             eval(compile(mod, "<input>", "exec"), main_dict, main_dict)
+    except KeyboardInterrupt:
+        rcall(("base", "message"), "KeyboardInterrupt")
     except Exception as e:
         sys.last_type, sys.last_value, sys.last_traceback = sys.exc_info()
         rcall(("base", "message"), "{}: {}".format(type(e).__name__, e))
+    finally:
+        signal.signal(signal.SIGINT, orig_handler)
 
 
 def handle_code(code):
@@ -201,6 +208,7 @@ def register_reticulate_mode(session):
         return
 
     from pygments.lexers.python import PythonLexer
+    from pygments.token import Punctuation
 
     main_mode = prompt_mode(session, "r") | prompt_mode(session, "browse")
     kb = KeyBindings()
@@ -216,7 +224,16 @@ def register_reticulate_mode(session):
     def _(event):
         commit_text(session, event, "exit", False)
 
-    @pkb.add("enter", filter=insert_mode & default_focused & preceding_text(r".*:$"))
+    @Condition
+    def preceding_python_colon():
+        doc = get_app().current_buffer.document
+        if not doc.current_line_before_cursor.endswith(":"):
+            return False
+        tokens = _tokenize_python_before_cursor(doc)
+        return bool(tokens) and tokens[-1][1] in Punctuation
+
+    @pkb.add("c-j", filter=insert_mode & default_focused & preceding_python_colon)
+    @pkb.add("enter", filter=insert_mode & default_focused & preceding_python_colon)
     def _(event):
         newline(event, chars=[":"])
 

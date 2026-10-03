@@ -157,3 +157,52 @@ def test_reticulate_completion_unit():
         )
     finally:
         del __main__.sys_test_mod
+
+
+def test_reticulate_multiline_and_keybindings_unit(monkeypatch):
+    import signal
+    from prompt_toolkit.document import Document
+    from pygments.token import Punctuation
+    from radian.key_bindings import RAW_STRING_PREFIX_RE, create_prompt_key_bindings
+    from radian.reticulate import (
+        _tokenize_python_before_cursor,
+        handle_multiline_code,
+        parse_text_complete,
+    )
+
+    # 1. handle_multiline_code catches KeyboardInterrupt and restores SIGINT handler
+    messages = []
+    monkeypatch.setattr(
+        "radian.reticulate.rcall", lambda fn, msg: messages.append((fn, msg))
+    )
+    orig_sigint = signal.getsignal(signal.SIGINT)
+    handle_multiline_code("if True:\n    raise KeyboardInterrupt()\n")
+    assert messages == [(("base", "message"), "KeyboardInterrupt")]
+    assert signal.getsignal(signal.SIGINT) == orig_sigint
+
+    # 2. Token-based colon check only matches real Python Punctuation colons,
+    # not colons at the end of comments or unclosed string literals
+    def is_python_colon(text):
+        doc = Document(text, len(text))
+        if not doc.current_line_before_cursor.endswith(":"):
+            return False
+        tokens = _tokenize_python_before_cursor(doc)
+        return bool(tokens) and tokens[-1][1] in Punctuation
+
+    assert is_python_colon("def f():")
+    assert is_python_colon("if True:\n    for x in y:")
+    assert not is_python_colon("x = 1 # note:")
+    assert not is_python_colon('x = "http:')
+
+    # 3. RAW_STRING_PREFIX_RE is anchored to standalone r/R prefix and create_prompt_key_bindings
+    # does not bind R raw-string delimiter pairs in Python mode
+    assert RAW_STRING_PREFIX_RE.match('r"-') is not None
+    assert RAW_STRING_PREFIX_RE.match('x <- r"--') is not None
+    assert RAW_STRING_PREFIX_RE.match('var"-') is None
+    assert RAW_STRING_PREFIX_RE.match('df$r"-') is None
+
+    pkb = create_prompt_key_bindings(parse_text_complete)
+    assert not any(
+        b.handler.__qualname__.startswith("_insert_raw_string_pair")
+        for b in pkb.bindings
+    )
