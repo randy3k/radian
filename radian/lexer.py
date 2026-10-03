@@ -1,6 +1,6 @@
 import re
 
-from pygments.lexer import RegexLexer, include
+from pygments.lexer import RegexLexer, bygroups, include
 from pygments.token import (
     Comment,
     Error,
@@ -13,38 +13,6 @@ from pygments.token import (
     Text,
     Token,
 )
-
-
-def _build_raw_string_tokens():
-    statements = []
-    states = {
-        "string_squote": [
-            (r"([^\'\\]|\\[\s\S])*\'", String, "#pop"),
-            (r"[\s\S]+", Error),
-        ],
-        "string_dquote": [
-            (r'([^"\\]|\\[\s\S])*"', String, "#pop"),
-            (r"[\s\S]+", Error),
-        ],
-    }
-    quotes = [("squote", r"\'"), ("dquote", r"\"")]
-    dashes = [("", ""), ("1", "-"), ("2", "--"), ("3", "---"), ("4", "-{4,}")]
-    brackets = [("r", r"\(", r"\)"), ("s", r"\[", r"\]"), ("c", r"\{", r"\}")]
-
-    for q_name, q_pat in quotes:
-        for d_idx, d_pat in dashes:
-            for b_key, b_open, b_close in brackets:
-                state_name = f"string_{q_name}_{b_key}{d_idx}"
-                statements.append((rf"(r|R){q_pat}{d_pat}{b_open}", String, state_name))
-                states[state_name] = [
-                    (rf"[\s\S]*?{b_close}{d_pat}{q_pat}", String, "#pop"),
-                    (r"[\s\S]+", Error),
-                ]
-
-    return statements, states
-
-
-_RAW_STRING_STATEMENTS, _RAW_STRING_STATES = _build_raw_string_tokens()
 
 
 class CustomSLexer(RegexLexer):
@@ -60,13 +28,14 @@ class CustomSLexer(RegexLexer):
     mimetypes = ['text/S-plus', 'text/S', 'text/x-r-source', 'text/x-r',
                  'text/x-R', 'text/x-r-history', 'text/x-r-profile']
 
-    valid_name = r'(?:`[^`\\]*(?:\\.[^`\\]*)*`)|(?![rR][\'"])(?:(?:[a-zA-Z]|[_.][^0-9])[\w_.]*)'
+    valid_name = r'(?:`[^`\\]*(?:\\[\s\S][^`\\]*)*`)|(?![rR][\'"])(?:(?:[a-zA-Z]|[_.][^0-9])[\w_.]*)'
     tokens = {
         'comments': [
             (r'#.*$', Comment.Single),
         ],
         'valid_name': [
             (valid_name, Name),
+            (r'`[^`\\]*(?:\\[\s\S][^`\\]*)*\\?\Z', Name),
         ],
         'punctuation': [
             (r'\[{1,2}|\]{1,2}|\(|\)|;|,', Punctuation),
@@ -111,7 +80,10 @@ class CustomSLexer(RegexLexer):
             include('valid_name'),
             include('numbers'),
             include('operators'),
-            *_RAW_STRING_STATEMENTS,
+            (r'((?:r|R)(["\'])(-*)\()([\s\S]*?\)\3\2)', bygroups(String, None, None, String)),
+            (r'((?:r|R)(["\'])(-*)\[)([\s\S]*?\]\3\2)', bygroups(String, None, None, String)),
+            (r'((?:r|R)(["\'])(-*)\{)([\s\S]*?\}\3\2)', bygroups(String, None, None, String)),
+            (r'(?:r|R)["\']-*[\(\[\{]', String, 'raw_string_unclosed'),
         ],
         'root': [
             # calls:
@@ -125,7 +97,17 @@ class CustomSLexer(RegexLexer):
             # (r'\{', Punctuation, 'block'),
             (r'.', Text),
         ],
-        **_RAW_STRING_STATES,
+        'string_squote': [
+            (r"([^\'\\]|\\[\s\S])*\'", String, "#pop"),
+            (r"[\s\S]+", Error),
+        ],
+        'string_dquote': [
+            (r'([^"\\]|\\[\s\S])*"', String, "#pop"),
+            (r"[\s\S]+", Error),
+        ],
+        'raw_string_unclosed': [
+            (r"[\s\S]+", Error),
+        ],
     }
 
     def analyse_text(text):

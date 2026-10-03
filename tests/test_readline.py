@@ -525,14 +525,23 @@ def test_completion_unit(monkeypatch, tmp_path):
     from prompt_toolkit.completion import CompleteEvent
     from prompt_toolkit.document import Document
     from radian.completion import RCompleter, SmartPathCompleter
-    from radian.lexer import cursor_in_comment
+    from radian.lexer import cursor_in_comment, cursor_in_string
 
-    # 1. cursor_in_comment checks
+    # 1. cursor_in_comment and cursor_in_string checks (including raw strings & unclosed backticks)
     assert not cursor_in_comment(Document("x <- 1", 6))
     assert not cursor_in_comment(Document('x <- "# not comment"', 20))
     assert cursor_in_comment(Document("# comment", 9))
     assert cursor_in_comment(Document("x <- 1 # comment", 16))
     assert not cursor_in_comment(Document("# comment\nx <- 1", 16))
+    assert not cursor_in_comment(Document("df$`col#1", 9))
+    assert not cursor_in_string(Document('df$`col"1', 9))
+    assert not cursor_in_string(Document('x <- "a"; df$`col', 17))
+    assert cursor_in_string(Document('r"(', 3))
+    assert cursor_in_string(Document('r"(hello', 8))
+    assert not cursor_in_string(Document('r"(hello)"', 10))
+    assert not cursor_in_string(Document('r"()"', 5))
+    assert cursor_in_string(Document('r"-----(hello )----"', 20))
+    assert not cursor_in_string(Document('r"-----(hello )-----"', 21))
 
     # 2. RCompleter prefix & comment checks
     calls = []
