@@ -132,7 +132,10 @@ def native_prompt(app, message):
 
 
 def create_read_console(session):
+    from .prompt_session import BROWSE_PATTERN
+
     interrupted = [False]
+    _text_stored = ["", 0, False]  # text, startpos, sent_by_line
 
     def _read_console(message, add_history=1):
         app = session.app
@@ -165,6 +168,7 @@ def create_read_console(session):
 
             except KeyboardInterrupt:
                 interrupted[0] = True
+                _text_stored[:] = ["", 0, False]
                 raise
 
             except Exception as e:
@@ -182,11 +186,13 @@ def create_read_console(session):
 
         return text
 
-    _text_stored = ["", 0, False]  # text, startpos, sent_by_line
-
     def read_console(message, add_history):
         if session.current_mode.name in ["r", "browse"]:
             # this code is needed to allow new line breaks with strings, see #377
+            if _text_stored[0] and (
+                message == settings.prompt or BROWSE_PATTERN.match(message)
+            ):
+                _text_stored[:] = ["", 0, False]
             if _text_stored[0]:
                 text = _text_stored[0][_text_stored[1]:]
             else:

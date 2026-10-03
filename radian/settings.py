@@ -39,9 +39,10 @@ _DEFAULT_SETTINGS = (
 
 class RadianSettings:
     def __init__(self):
-        super().__setattr__(
-            "_settings", {key: default for key, default, _ in _DEFAULT_SETTINGS}
-        )
+        defaults = {key: default for key, default, _ in _DEFAULT_SETTINGS}
+        defaults["prompt"] = PROMPT
+        defaults["auto_width"] = True
+        super().__setattr__("_settings", defaults)
 
     def __getattr__(self, key):
         return self._settings[key]

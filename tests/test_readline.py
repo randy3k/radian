@@ -670,3 +670,42 @@ def test_completion_unit(monkeypatch, tmp_path):
 
     # Bare "cd ~" does not replace "~" with the username
     assert list(path_completer.get_completions(Document("cd ~", 4), tab_event)) == []
+
+
+def test_read_console_clears_stale_multiline_buffer():
+    from types import SimpleNamespace
+    from radian.console import create_read_console
+    from radian.settings import radian_settings as settings
+
+    long_multiline = "x <- '" + ("文字" * 600) + "'\ny <- 42"
+    prompts = [long_multiline, "z <- 99"]
+
+    def fake_prompt(add_history=1):
+        return prompts.pop(0)
+
+    session = SimpleNamespace(
+        app=SimpleNamespace(
+            is_running=False,
+            output=SimpleNamespace(write_raw=lambda s: None),
+        ),
+        current_mode=SimpleNamespace(
+            name="r",
+            sticky=True,
+            sticky_on_sigint=True,
+            insert_new_line=False,
+            insert_new_line_on_sigint=False,
+        ),
+        mode_to_be_activated=lambda: "r",
+        activate_mode=lambda m: None,
+        prompt=fake_prompt,
+        _prompt_message=settings.prompt,
+    )
+
+    rc = create_read_console(session)
+    # First top-level read starts line-by-line delivery ("{")
+    assert rc(settings.prompt, 1) == "{"
+    # Continuation prompt "+ " receives line 1
+    assert rc("+ ", 1).startswith("x <- '")
+    # If R aborts due to syntax error and returns to top-level prompt (settings.prompt),
+    # stale remaining lines ("y <- 42", "}") are discarded and a fresh prompt is read!
+    assert rc(settings.prompt, 1) == "z <- 99"
