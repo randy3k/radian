@@ -50,9 +50,6 @@ class RadianApplication:
         if options.no_init_file:
             os.environ["R_PROFILE_USER"] = ""
 
-        if options.local_history and not os.path.exists(".radian_history"):
-            open(".radian_history", "w+").close()
-
         # enable crayon on windows
         # we use CMDER_ROOT as a temporary workaround
         if sys.platform.startswith("win") and "CMDER_ROOT" not in os.environ:

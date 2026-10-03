@@ -182,23 +182,25 @@ class ModalBuffer(Buffer):
         if not (keep(self.text) if callable(keep) else keep):
             return
         self.history._ensure_loaded()
-        loaded = self.history._loaded_strings
-        if not loaded or loaded[0] != (self.session.current_mode.name, self.text):
-            self.history.append_string(self.text, self.session.current_mode.name)
+        lines = self.history._loaded_lines
+        modes = self.history._loaded_modes
+        mode_name = self.session.current_mode.name
+        if not lines or lines[-1] != self.text or modes[-1] != mode_name:
+            self.history.append_string(self.text, mode_name)
 
     def _reset_searching(self):
         self._last_search_direction = None
         self._last_search_history = None
         self._search_history.clear()
 
-    def _reset_history(self):
+    def _reset_history(self, current_text=""):
         self.history._ensure_loaded()
         self._working_lines = deque(self.history._loaded_lines)
-        self._working_lines.append("")
+        self._working_lines.append(current_text)
         self._working_lines_mode = [*self.history._loaded_modes, None]
         self._Buffer__working_index = len(self._working_lines) - 1
 
     def reset(self, *args, **kwargs):
         self._reset_searching()
         super().reset(*args, **kwargs)
-        self._reset_history()
+        self._reset_history(self.text)

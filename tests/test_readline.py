@@ -346,23 +346,32 @@ def test_history_search_options(radian_command, tmp_path):
                 time.sleep(0.1)
 
 
-def test_modal_prompt_session():
+def test_modal_prompt_session(tmp_path):
+    from types import SimpleNamespace
+    from prompt_toolkit.document import Document
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
-    from radian.lineedit.history import ModalInMemoryHistory
+    from radian.lineedit.history import (
+        ModalAutoSuggestFromHistory,
+        ModalFileHistory,
+        ModalInMemoryHistory,
+    )
     from radian.lineedit.prompt import ModalPromptSession, PromptMode
+    from radian.prompt_session import _create_history
 
     with pytest.raises(KeyError):
         PromptMode("bad", nonexistent_field=True)
 
     with create_pipe_input() as pipe_input:
+        history = ModalInMemoryHistory()
         session = ModalPromptSession(
-            history=ModalInMemoryHistory(),
+            history=history,
             input=pipe_input,
             output=DummyOutput(),
             multiline=False,
             add_history=True,
             search_no_duplicates=True,
+            auto_suggest=ModalAutoSuggestFromHistory(),
         )
         assert session.add_history is True
         assert session.search_no_duplicates is True
@@ -370,6 +379,12 @@ def test_modal_prompt_session():
         session.register_mode(
             "r",
             is_activated=lambda s: s._prompt_message == "r$> ",
+            history_book="r",
+            multiline=True,
+        )
+        session.register_mode(
+            "browse",
+            is_activated=lambda s: s._prompt_message == "Browse[1]> ",
             history_book="r",
             multiline=True,
         )
@@ -400,6 +415,43 @@ def test_modal_prompt_session():
         assert session.mode_to_be_activated() == "r"
         session._prompt_message = "other> "
         assert session.mode_to_be_activated() == "unknown"
+
+        # Mode-aware AutoSuggestFromHistory filters by history_book and does not match current uncommitted line
+        history.append_string("apple_r <- 123", "r")
+        history.append_string("apple_browse <- 456", "browse")
+        history.append_string("apple_shell --help", "shell")
+        assert list(history.load()) == [
+            ("shell", "apple_shell --help"),
+            ("browse", "apple_browse <- 456"),
+            ("r", "apple_r <- 123"),
+        ]
+
+        session.activate_mode("r")
+        session.default_buffer.reset(Document("apple_", 6))
+        sug_r = session.auto_suggest.get_suggestion(
+            session.default_buffer, session.default_buffer.document
+        )
+        assert sug_r is not None and sug_r.text == "browse <- 456"
+
+        session.activate_mode("shell")
+        session.default_buffer.reset(Document("apple_", 6))
+        sug_sh = session.auto_suggest.get_suggestion(
+            session.default_buffer, session.default_buffer.document
+        )
+        assert sug_sh is not None and sug_sh.text == "shell --help"
+
+        # _create_history uses local_history_file when options.local_history is True even if file doesn't exist yet
+        custom_local = tmp_path / ".custom_radian_history"
+        h = _create_history(
+            SimpleNamespace(no_history=False, global_history=False, local_history=True),
+            SimpleNamespace(
+                local_history_file=str(custom_local),
+                global_history_file=str(tmp_path / ".global_history"),
+                history_size=100,
+            ),
+        )
+        assert isinstance(h, ModalFileHistory)
+        assert h.filename == str(custom_local)
 
 
 def test_inputhook_select_and_cleanup(monkeypatch):
