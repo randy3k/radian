@@ -9,7 +9,7 @@ def test_readline(terminal):
     terminal.previous_line(1).assert_startswith("hello")
     terminal.current_line().assert_startswith("> ")
     terminal.write("ok\n")
-    terminal.previous_line(2).assert_contain("\"ok\"")
+    terminal.previous_line(1).assert_contains("\"ok\"")
 
     # multiline backspace with fewer than tab_size leading spaces
     terminal.write("1 +\n  \x7f2\n")
@@ -21,7 +21,7 @@ def test_readline(terminal):
     terminal.write("\t")
     terminal.current_line().strip().assert_equal("r$> R.version.string")
     terminal.write("\n\n")
-    terminal.previous_line(2).assert_contain("R version")
+    terminal.previous_line(2).assert_contains("R version")
 
 
 def test_askpass(terminal):
@@ -30,7 +30,7 @@ def test_askpass(terminal):
     terminal.write("askpass::askpass('askpass> ')\n")
     terminal.current_line().assert_startswith("askpass>")
     terminal.write("answer\n")
-    terminal.previous_line(2).assert_contain("\"answer\"")
+    terminal.previous_line(2).assert_contains("\"answer\"")
 
 
 def test_renv(terminal, tmp_path):
@@ -200,10 +200,10 @@ def test_history(tmp_path):
 def test_history_search(terminal):
     terminal.current_line().assert_startswith("r$>")
     terminal.write("apple_val <- 111\n")
-    terminal.previous_line(2).assert_contain("apple_val <- 111")
+    terminal.previous_line(2).assert_contains("apple_val <- 111")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("apple_val <- 222\n")
-    terminal.previous_line(2).assert_contain("apple_val <- 222")
+    terminal.previous_line(2).assert_contains("apple_val <- 222")
     terminal.current_line().strip().assert_equal("r$>")
     # Enter shell mode, run a command containing 'apple_val', then return to R mode
     terminal.write(";echo apple_val_shell\n")
@@ -215,7 +215,8 @@ def test_history_search(terminal):
     terminal.previous_line(2).assert_startswith("other_shell")
     terminal.current_line().strip().assert_equal("#!>")
     terminal.write("\x12apple_val")
-    terminal.current_line().assert_contain("echo apple_val_shell")
+    terminal.current_line().assert_contains("I-search backward: apple_val")
+    terminal.previous_non_empty_line().assert_contains("echo apple_val_shell")
     terminal.write("\x07")
     terminal.current_line().strip().assert_equal("#!>")
     terminal.write("\x7f")
@@ -223,25 +224,29 @@ def test_history_search(terminal):
 
     # Ctrl-R search for 'apple_val' in R mode should skip shell history and find 'apple_val <- 222'
     terminal.write("\x12apple_val")
-    terminal.current_line().assert_contain("apple_val <- 222")
+    terminal.current_line().assert_contains("I-search backward: apple_val")
+    terminal.previous_non_empty_line().assert_contains("apple_val <- 222")
     # Pressing Ctrl-R again finds the older 'apple_val <- 111'
     terminal.write("\x12")
-    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.previous_non_empty_line().assert_contains("apple_val <- 111")
     # Pressing Ctrl-S (\x13) reverses direction back to 'apple_val <- 222', then Ctrl-R back to '111'
     terminal.write("\x13")
-    terminal.current_line().assert_contain("apple_val <- 222")
-    terminal.write("\x12\r\r")
+    terminal.previous_non_empty_line().assert_contains("apple_val <- 222")
+    terminal.write("\x12\r")
+    terminal.current_line().assert_contains("apple_val <- 111")
+    terminal.write("\r")
+    terminal.previous_line(2).assert_contains("apple_val <- 111")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("apple_val\n")
     terminal.previous_line(2).assert_startswith("[1] 111")
 
     # Prefix history search with Up (\x1b[A) and Down (\x1b[B) arrows skips shell mode
     terminal.write("apple_val <- \x1b[A")
-    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.current_line().assert_contains("apple_val <- 111")
     terminal.write("\x1b[A")
-    terminal.current_line().assert_contain("apple_val <- 222")
+    terminal.current_line().assert_contains("apple_val <- 222")
     terminal.write("\x1b[B")
-    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.current_line().assert_contains("apple_val <- 111")
     terminal.sendintr()
     terminal.current_line().strip().assert_equal("r$>")
 
@@ -249,13 +254,13 @@ def test_history_search(terminal):
     terminal.write("browser()\n")
     terminal.current_line().strip().assert_equal("Browse[1]>")
     terminal.write("browse_apple <- 333\n")
-    terminal.previous_line(2).assert_contain("browse_apple <- 333")
+    terminal.previous_line(2).assert_contains("browse_apple <- 333")
     terminal.current_line().strip().assert_equal("Browse[1]>")
     terminal.write("Q\n")
     terminal.current_line().strip().assert_equal("r$>")
     # 'Q' was ignored, so Up arrow recalls 'browse_apple <- 333' directly
     terminal.write("\x1b[A")
-    terminal.current_line().assert_contain("browse_apple <- 333")
+    terminal.current_line().assert_contains("browse_apple <- 333")
     terminal.sendintr()
     terminal.current_line().strip().assert_equal("r$>")
 
@@ -277,7 +282,7 @@ def test_history_search_options(radian_command, tmp_path):
             terminal.current_line().assert_startswith("r$>")
             # Test escape_key_map (which binds via session.modes['r'].prompt_key_bindings)
             terminal.write("dup_item\x1b-20\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.previous_line(2).assert_contains("dup_item <- 20")
             terminal.current_line().strip().assert_equal("r$>")
             # Layout of history:
             # 0: dup_item <- 20 (older duplicate before oldest unique match!)
@@ -286,28 +291,32 @@ def test_history_search_options(radian_command, tmp_path):
             # 3: other_cmd <- 99
             # 4: dup_item <- 20 (newest duplicate)
             terminal.write("dup_item <- 10\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 10")
+            terminal.previous_line(2).assert_contains("dup_item <- 10")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item <- 20\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.previous_line(2).assert_contains("dup_item <- 20")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("other_cmd <- 99\n")
-            terminal.previous_line(2).assert_contain("other_cmd <- 99")
+            terminal.previous_line(2).assert_contains("other_cmd <- 99")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item <- 20\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.previous_line(2).assert_contains("dup_item <- 20")
             terminal.current_line().strip().assert_equal("r$>")
 
             # Case-insensitive Ctrl-R search for 'DUP_ITEM':
             # 1st match is 'dup_item <- 20' (index 4)
             terminal.write("\x12DUP_ITEM")
-            terminal.current_line().assert_contain("dup_item <- 20")
+            terminal.current_line().assert_contains("I-search backward: DUP_ITEM")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 20")
             # Pressing Ctrl-R once should skip index 2 ('dup_item <- 20') and find 'dup_item <- 10' (index 1)
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- 10")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 10")
             # Pressing Ctrl-R again at the oldest unique match should NOT match index 0 ('dup_item <- 20'),
             # and accepting + executing should run 'dup_item <- 10'
-            terminal.write("\x12\r\r")
+            terminal.write("\x12\r")
+            terminal.current_line().assert_contains("dup_item <- 10")
+            terminal.write("\r")
+            terminal.previous_line(2).assert_contains("dup_item <- 10")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item\n")
             terminal.previous_line(2).assert_startswith("[1] 10")
@@ -315,24 +324,28 @@ def test_history_search_options(radian_command, tmp_path):
             # Multiple occurrences on the same line + Ctrl-S forward search with search_no_duplicates:
             # 'dup_item ' (with trailing space) occurs twice on 'dup_item <- dup_item + 5'
             terminal.write("dup_item <- dup_item + 5\n")
-            terminal.previous_line(2).assert_contain("dup_item <- dup_item + 5")
+            terminal.previous_line(2).assert_contains("dup_item <- dup_item + 5")
             terminal.current_line().strip().assert_equal("r$>")
             # 1st match is 2nd 'dup_item ' on 'dup_item <- dup_item + 5'
             terminal.write("\x12dup_item ")
-            terminal.current_line().assert_contain("dup_item <- dup_item + 5")
+            terminal.current_line().assert_contains("I-search backward: dup_item ")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- dup_item + 5")
             # Next Ctrl-R moves to 1st 'dup_item ' on the same line
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- dup_item + 5")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- dup_item + 5")
             # Next Ctrl-R moves to 'dup_item <- 10', then skips duplicate '10' to 'dup_item <- 20'
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- 10")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 10")
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- 20")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 20")
             # Ctrl-S (\x13) reverses direction to forward search ('dup_item <- 10'),
             # then next Ctrl-S steps forward to 'dup_item <- dup_item + 5'
             terminal.write("\x13")
-            terminal.current_line().assert_contain("dup_item <- 10")
-            terminal.write("\x13\r\r")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 10")
+            terminal.write("\x13\r")
+            terminal.current_line().assert_contains("dup_item <- dup_item + 5")
+            terminal.write("\r")
+            terminal.previous_line(2).assert_contains("dup_item <- dup_item + 5")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item\n")
             terminal.previous_line(2).assert_startswith("[1] 20")
