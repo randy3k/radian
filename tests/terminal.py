@@ -69,6 +69,9 @@ class Var(object):
         self.getter = getter
 
     def __getattr__(self, name):
+        if name.startswith("assert_"):
+            raise AttributeError(name)
+
         # fallback methods
         def _(*args, **kwargs):
             return Var(lambda: getattr(self.getter(), name)(*args, **kwargs))
@@ -151,3 +154,13 @@ class Terminal(object):
 
     def previous_line(self, num=1):
         return Var(lambda: self._line(self.screen.cursor.y - num))
+
+    def _previous_non_empty_line(self):
+        for y in range(self.screen.cursor.y - 1, -1, -1):
+            line = self._line(y)
+            if line.strip():
+                return line
+        return ""
+
+    def previous_non_empty_line(self):
+        return Var(self._previous_non_empty_line)

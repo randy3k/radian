@@ -3,7 +3,6 @@ import re
 import sys
 import time
 
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.enums import EditingMode
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
@@ -28,7 +27,12 @@ from .key_bindings import (
     create_shell_key_bindings,
 )
 from .lexer import CustomSLexer as SLexer
-from .lineedit import ModalFileHistory, ModalInMemoryHistory, ModalPromptSession
+from .lineedit import (
+    ModalAutoSuggestFromHistory,
+    ModalFileHistory,
+    ModalInMemoryHistory,
+    ModalPromptSession,
+)
 
 
 BROWSE_PATTERN = re.compile(r"Browse\[([0-9]+)\]> $")
@@ -41,12 +45,14 @@ BROWSE_COMMANDS = {"n", "s", "f", "c", "cont", "Q", "where", "help"}
 
 
 def _create_history(options, settings):
-    local_history_file = settings.local_history_file
+    local_history_file = os.path.expandvars(os.path.expanduser(settings.local_history_file))
     global_history_file = settings.global_history_file
 
     if options.no_history:
         return ModalInMemoryHistory()
-    if not options.global_history and os.path.exists(local_history_file):
+    if not options.global_history and (
+        options.local_history or os.path.exists(local_history_file)
+    ):
         return ModalFileHistory(
             os.path.abspath(local_history_file), settings.history_size
         )
@@ -98,7 +104,8 @@ def _register_modes(session, settings):
     if settings.highlight_matching_bracket:
         input_processors.append(HighlightMatchingBracketProcessor())
 
-    r_key_bindings = create_r_key_bindings(session, parse_text_complete)
+    r_completer = RCompleter(timeout=settings.completion_timeout)
+    r_lexer = PygmentsLexer(SLexer)
 
     session.register_mode(
         name="r",
@@ -107,13 +114,13 @@ def _register_modes(session, settings):
         history_book="r",
         insert_new_line=True,
         multiline=settings.indent_lines,
-        completer=RCompleter(timeout=settings.completion_timeout),
+        completer=r_completer,
         complete_while_typing=settings.complete_while_typing,
-        lexer=PygmentsLexer(SLexer),
+        lexer=r_lexer,
         tempfile_suffix=".R",
         input_processors=input_processors,
         key_bindings=create_key_bindings(),
-        prompt_key_bindings=r_key_bindings,
+        prompt_key_bindings=create_r_key_bindings(session, parse_text_complete),
     )
 
     browse_level = [""]
@@ -132,15 +139,15 @@ def _register_modes(session, settings):
         history_book="r",
         insert_new_line=True,
         multiline=settings.indent_lines,
-        completer=RCompleter(timeout=settings.completion_timeout),
+        completer=r_completer,
         complete_while_typing=settings.complete_while_typing,
         keep_history=lambda text: not (
             settings.history_ignore_browser_commands and text.strip() in BROWSE_COMMANDS
         ),
-        lexer=PygmentsLexer(SLexer),
+        lexer=r_lexer,
         tempfile_suffix=".R",
         input_processors=input_processors,
-        prompt_key_bindings=r_key_bindings,
+        prompt_key_bindings=create_r_key_bindings(session, parse_text_complete),
     )
 
     def shell_process_text(s):
@@ -219,7 +226,7 @@ def create_radian_prompt_session(options, settings):
         enable_suspend=True,
         input=CustomInput(sys.stdin),
         output=output,
-        auto_suggest=AutoSuggestFromHistory() if settings.auto_suggest else None,
+        auto_suggest=ModalAutoSuggestFromHistory() if settings.auto_suggest else None,
         inputhook=_create_inputhook(lambda: session_ref[0]),
     )
     session_ref[0] = session

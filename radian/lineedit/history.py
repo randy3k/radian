@@ -1,30 +1,66 @@
 import datetime
 import os
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory, Suggestion
 from prompt_toolkit.history import History
 
 
 class ModalHistory(History):
+    def __init__(self):
+        self._loaded_lines = []
+        self._loaded_modes = []
+        super().__init__()
+
     def _ensure_loaded(self):
         if not self._loaded:
-            self._loaded_strings = list(self.load_history_strings())
+            entries = list(self.load_history_strings())
+            self._loaded_lines = [s for _, s in reversed(entries)]
+            self._loaded_modes = [m for m, _ in reversed(entries)]
             self._loaded = True
 
     def load(self):
         self._ensure_loaded()
-        yield from self._loaded_strings
+        yield from zip(reversed(self._loaded_modes), reversed(self._loaded_lines))
 
     def append_string(self, string: str, mode=None) -> None:
         self._ensure_loaded()
-        self._loaded_strings.insert(0, (mode, string))
+        self._loaded_lines.append(string)
+        self._loaded_modes.append(mode)
         self.store_string(string, mode)
 
     def get_strings(self):
         self._ensure_loaded()
-        return [s for _, s in reversed(self._loaded_strings)]
+        return list(self._loaded_lines)
 
     def get_modes(self):
         self._ensure_loaded()
-        return [m for m, _ in reversed(self._loaded_strings)]
+        return list(self._loaded_modes)
+
+
+class ModalAutoSuggestFromHistory(AutoSuggestFromHistory):
+    def get_suggestion(self, buffer, document):
+        history = buffer.history
+        if not isinstance(history, ModalHistory) or not hasattr(buffer, "session"):
+            return super().get_suggestion(buffer, document)
+
+        text = document.text.rsplit("\n", 1)[-1]
+        if not text.strip():
+            return None
+
+        history._ensure_loaded()
+        session = buffer.session
+        current_book = session.current_mode.history_book
+        valid_modes = {
+            name for name, m in session.modes.items() if m.history_book == current_book
+        }
+        for mode_name, string in zip(
+            reversed(history._loaded_modes), reversed(history._loaded_lines)
+        ):
+            if mode_name not in valid_modes:
+                continue
+            for line in reversed(string.splitlines()):
+                if line.startswith(text):
+                    return Suggestion(line[len(text) :])
+        return None
 
 
 class ModalInMemoryHistory(ModalHistory):

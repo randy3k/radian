@@ -2,18 +2,20 @@ import __main__
 import ast
 from code import compile_command
 import re
+import signal
 import sys
 
+from prompt_toolkit.application.current import get_app
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.layout.processors import HighlightMatchingBracketProcessor
 from prompt_toolkit.lexers import PygmentsLexer
-from pygments.lexers.python import PythonLexer
 
-from rchitect import rcall, reval
-from rchitect.interface import package_event, roption, set_hook
+from rchitect import rcall, reticulate as rreticulate
+from rchitect.interface import roption
 
+from .console import sigint_handler, suppress_stderr
 from .key_bindings import (
     commit_text,
     create_prompt_key_bindings,
@@ -21,38 +23,41 @@ from .key_bindings import (
     default_focused,
     insert_mode,
     newline,
-    preceding_text,
     prompt_mode,
     text_is_empty,
 )
 from .latex import get_latex_completions
-from .rutils import package_is_installed, package_is_loaded
 from .settings import radian_settings as settings
 
 
-try:
-    import jedi
-    has_jedi = True
-except ImportError:
-    has_jedi = False
+_jedi = None
+_jedi_checked = False
+
+
+def _get_jedi():
+    global _jedi, _jedi_checked
+    if not _jedi_checked:
+        _jedi_checked = True
+        try:
+            import jedi
+
+            _jedi = jedi
+        except ImportError:
+            _jedi = None
+    return _jedi
 
 
 # =============================================================================
 # 1. Code Tidying & Multiline Execution
 # =============================================================================
 
-LEADING_SPACES_RE = re.compile(r"^\s*")
-
-
-def leading_spaces(x):
-    m = LEADING_SPACES_RE.match(x)
-    return m.group(0) if m else ""
-
 
 def unindent(lines):
     if not lines:
         return lines
-    indentation = len(leading_spaces(lines[0]))
+    indentation = len(lines[0]) - len(lines[0].lstrip())
+    if indentation == 0:
+        return lines
     pattern = re.compile(r"^\s{{0,{}}}".format(indentation))
     return [pattern.sub("", line, count=1) for line in lines]
 
@@ -65,6 +70,8 @@ def tidy_code(code):
 
 def handle_multiline_code(code):
     main_dict = __main__.__dict__
+    orig_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, sigint_handler)
     try:
         mod = ast.parse(code, "<input>", "exec")
         if mod.body and isinstance(mod.body[-1], ast.Expr):
@@ -75,9 +82,13 @@ def handle_multiline_code(code):
             eval(compile(last, "<input>", "single"), main_dict, main_dict)
         else:
             eval(compile(mod, "<input>", "exec"), main_dict, main_dict)
+    except KeyboardInterrupt:
+        rcall(("base", "message"), "KeyboardInterrupt")
     except Exception as e:
         sys.last_type, sys.last_value, sys.last_traceback = sys.exc_info()
         rcall(("base", "message"), "{}: {}".format(type(e).__name__, e))
+    finally:
+        signal.signal(signal.SIGINT, orig_handler)
 
 
 def handle_code(code):
@@ -111,29 +122,70 @@ def parse_text_complete(code):
 # 2. Completion (Jedi & LaTeX)
 # =============================================================================
 
+WORD_PATTERN = re.compile(
+    r"(?<![a-zA-Z0-9._])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)$"
+)
+
+_py_lexer = None
+_py_tokens_cache = (None, ())
+
+
+def _tokenize_python_before_cursor(document):
+    global _py_lexer, _py_tokens_cache
+    text = document.text_before_cursor
+    if _py_tokens_cache[0] == text:
+        return _py_tokens_cache[1]
+    if _py_lexer is None:
+        from pygments.lexers.python import PythonLexer
+
+        _py_lexer = PythonLexer()
+    tokens = tuple(_py_lexer.get_tokens_unprocessed(text))
+    _py_tokens_cache = (text, tokens)
+    return tokens
+
+
+def cursor_in_python_comment(document):
+    if "#" not in document.current_line_before_cursor:
+        return False
+    from pygments.token import Comment
+
+    tokens = _tokenize_python_before_cursor(document)
+    return bool(tokens) and tokens[-1][1] in Comment
+
 
 def get_reticulate_completions(document, complete_event):
-    word = document.get_word_before_cursor()
-    prefix_length = settings.completion_prefix_length
-    if len(word) < prefix_length and not complete_event.completion_requested:
+    if cursor_in_python_comment(document):
+        return []
+
+    if not complete_event.completion_requested:
+        word_match = WORD_PATTERN.search(document.current_line_before_cursor)
+        if not word_match or len(word_match.group(1)) < settings.completion_prefix_length:
+            return []
+
+    jedi = _get_jedi()
+    if jedi is None:
         return []
 
     try:
-        script = jedi.Interpreter(
-            document.text,
-            path="input-text",
-            namespaces=[__main__.__dict__],
-        )
-        return [
-            Completion(
-                str(c.name_with_symbols),
-                len(str(c.complete)) - len(str(c.name_with_symbols)),
+        with suppress_stderr():
+            script = jedi.Interpreter(
+                document.text,
+                path="input-text",
+                namespaces=[__main__.__dict__],
             )
+            completions = []
             for c in script.complete(
                 line=document.cursor_position_row + 1,
                 column=document.cursor_position_col,
-            )
-        ]
+            ):
+                name = str(c.name_with_symbols)
+                comp = str(c.complete)
+                if not comp or (
+                    not complete_event.completion_requested and len(comp) == len(name)
+                ):
+                    continue
+                completions.append(Completion(name, len(comp) - len(name)))
+            return completions
     except Exception:
         return []
 
@@ -155,6 +207,9 @@ def register_reticulate_mode(session):
     if "reticulate" in session.modes:
         return
 
+    from pygments.lexers.python import PythonLexer
+    from pygments.token import Punctuation
+
     main_mode = prompt_mode(session, "r") | prompt_mode(session, "browse")
     kb = KeyBindings()
 
@@ -169,22 +224,28 @@ def register_reticulate_mode(session):
     def _(event):
         commit_text(session, event, "exit", False)
 
-    @pkb.add("enter", filter=insert_mode & default_focused & preceding_text(".*:"))
+    @Condition
+    def preceding_python_colon():
+        doc = get_app().current_buffer.document
+        if not doc.current_line_before_cursor.endswith(":"):
+            return False
+        tokens = _tokenize_python_before_cursor(doc)
+        return bool(tokens) and tokens[-1][1] in Punctuation
+
+    @pkb.add("c-j", filter=insert_mode & default_focused & preceding_python_colon)
+    @pkb.add("enter", filter=insert_mode & default_focused & preceding_python_colon)
     def _(event):
         newline(event, chars=[":"])
 
-    python_completer = PythonCompleter() if has_jedi else None
     input_processors = (
         [HighlightMatchingBracketProcessor()]
         if settings.highlight_matching_bracket
         else None
     )
 
-    py_repl_active = reval("reticulate:::py_repl_active")
-
     session.register_mode(
         "reticulate",
-        is_activated=lambda s: bool(rcall(py_repl_active, _convert=True)),
+        is_activated=lambda s: rreticulate.py_repl_active(),
         prompt_message=lambda x: x,
         callback=lambda s: handle_code(s.default_buffer.text),
         multiline=True,
@@ -195,27 +256,27 @@ def register_reticulate_mode(session):
         prompt_key_bindings=pkb,
         tempfile_suffix=".py",
         input_processors=input_processors,
-        completer=python_completer,
+        completer=PythonCompleter(),
+        complete_while_typing=settings.complete_while_typing,
     )
 
 
 def configure(session):
     if roption("radian.enable_reticulate_prompt", True):
-        if package_is_loaded("reticulate"):
-            register_reticulate_mode(session)
-        else:
-            set_hook(
-                package_event("reticulate", "onLoad"),
-                lambda *args: register_reticulate_mode(session),
-            )
+        rreticulate.on_load(lambda: register_reticulate_mode(session))
 
-        has_reticulate = Condition(lambda: package_is_installed("reticulate"))
+        has_reticulate = Condition(
+            lambda: "reticulate" not in session.modes and rreticulate.is_installed()
+        )
         kb = session.modes["r"].prompt_key_bindings
         browsekb = session.modes["browse"].prompt_key_bindings
+        tilde_filter = insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate
 
-        @kb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate)
-        @browsekb.add('~', filter=insert_mode & default_focused & cursor_at_begin & text_is_empty & has_reticulate)
-        def _(event):
+        @kb.add('~', filter=tilde_filter)
+        def _activate_reticulate(event):
             commit_text(session, event, "reticulate::repl_python()", False)
+
+        if browsekb is not kb:
+            browsekb.add('~', filter=tilde_filter)(_activate_reticulate)
 
 

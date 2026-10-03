@@ -27,7 +27,7 @@ default_focused = has_focus(DEFAULT_BUFFER)
 insert_mode = vi_insert_mode | emacs_insert_mode
 vi_focused_insert = vi_insert_mode & default_focused
 
-RAW_STRING_PREFIX_RE = re.compile(r".*(r|R)[\"'](-*)")
+RAW_STRING_PREFIX_RE = re.compile(r".*(?<![a-zA-Z0-9._:$@])(r|R)[\"'](-*)$")
 WHITESPACE_ONLY_RE = re.compile(r"^\s*$")
 LEADING_WHITESPACE_RE = re.compile(r"^\s*")
 WORD_SPLIT_RE = re.compile(r"(\S+\s+)")
@@ -166,20 +166,13 @@ def create_prompt_key_bindings(parse_text_complete):
     kb = KeyBindings()
     handle = kb.add
 
-    @Condition
-    def parse_complete():
-        app = get_app()
-        return parse_text_complete(app.current_buffer.text)
-
     @handle('c-j', filter=insert_mode & default_focused)
     @handle('enter', filter=insert_mode & default_focused)
     def _(event):
-        newline(event)
-
-    @handle('c-j', filter=insert_mode & default_focused & parse_complete)
-    @handle('enter', filter=insert_mode & default_focused & parse_complete)
-    def _(event):
-        event.current_buffer.validate_and_handle()
+        if parse_text_complete(event.current_buffer.text):
+            event.current_buffer.validate_and_handle()
+        else:
+            newline(event)
 
     @handle('c-j', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
     @handle('enter', filter=insert_mode & default_focused & auto_match & preceding_text(r".*\{$") & following_text(r"^\}"))
@@ -198,19 +191,6 @@ def create_prompt_key_bindings(parse_text_complete):
     )
     for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}"), ('"', '""'), ("'", "''")]:
         handle(open_char, filter=auto_match_filter)(_insert_pair(pair))
-
-    # raw string
-    raw_string_delim_filter = (
-        insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)[\"'](-*)$")
-    )
-    for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}")]:
-        handle(open_char, filter=raw_string_delim_filter)(_insert_raw_string_pair(pair))
-
-    raw_string_quote_filter = (
-        insert_mode & default_focused & auto_match & preceding_text(r".*(r|R)$") & ~string_scope
-    )
-    handle('"', filter=raw_string_quote_filter)(_insert_pair('""'))
-    handle("'", filter=raw_string_quote_filter)(_insert_pair("''"))
 
     # just move cursor
     @handle(')', filter=insert_mode & default_focused & auto_match & following_text(r"^\)"))
@@ -291,6 +271,17 @@ def create_prompt_key_bindings(parse_text_complete):
 def create_r_key_bindings(session, parse_text_complete):
     kb = create_prompt_key_bindings(parse_text_complete)
     handle = kb.add
+
+    # R raw string delimiter auto-match
+    raw_string_delim_filter = (
+        insert_mode
+        & default_focused
+        & auto_match
+        & preceding_text(r".*(?<![a-zA-Z0-9._:$@])(r|R)[\"'](-*)$")
+        & following_text(r"^[\"']|$")
+    )
+    for open_char, pair in [("(", "()"), ("[", "[]"), ("{", "{}")]:
+        handle(open_char, filter=raw_string_delim_filter)(_insert_raw_string_pair(pair))
 
     # r mode
     @handle(';', filter=insert_mode & default_focused & cursor_at_begin)
@@ -410,6 +401,7 @@ def create_key_bindings():
         handle(*keys, filter=vi_focused_insert & ebivim)(cmd)
 
     @handle('c-x', 'c-e', filter=emacs_mode & ~has_selection)
+    @handle('c-x', 'e', filter=emacs_mode & ~has_selection)
     def _(event):
         # match R behavior
         editor = roption("editor")
@@ -423,7 +415,7 @@ def create_key_bindings():
 
         buff = event.current_buffer
         if editor:
-            orig_visual = os.environ['VISUAL'] if 'VISUAL' in os.environ else None
+            orig_visual = os.environ.get('VISUAL')
             os.environ['VISUAL'] = editor
 
         buff.open_in_editor()
@@ -432,10 +424,10 @@ def create_key_bindings():
             # queue the clean up in thread executor as open_in_editor.
             async def run():
                 def cleanup():
-                    if orig_visual:
+                    if orig_visual is not None:
                         os.environ['VISUAL'] = orig_visual
                     else:
-                        del os.environ['VISUAL']
+                        os.environ.pop('VISUAL', None)
 
                 await run_in_terminal(cleanup, in_executor=True)
 

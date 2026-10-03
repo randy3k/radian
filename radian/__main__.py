@@ -184,17 +184,17 @@ def main(cleanup=None):
     if options.r:
         os.environ["R_BINARY"] = options.r
 
-    if not options.version:
-        maybe_reexec(module="radian")
-
-    r_home = get_rhome()
-
     if options.version:
+        try:
+            r_home = get_rhome()
+        except RuntimeError:
+            r_home = None
         _print_version(r_home)
         return
 
-    if not r_home:
-        raise RuntimeError("Cannot find R binary. Expose it via the `PATH` variable.")
+    maybe_reexec(module="radian")
+
+    r_home = get_rhome()
 
     if rversion(r_home) < parse_version("4.2.0"):
         raise RuntimeError("R >= 4.2.0 is required.")
@@ -206,12 +206,6 @@ def main(cleanup=None):
     os.environ["RADIAN_COMMAND_ARGS"] = " ".join(
         ["--" + k.replace("_", "-") for k, v in options.__dict__.items() if v]
     )
-
-    try:
-        # failed to import jedi on demand in some edge cases.
-        import jedi  # noqa: F401
-    except ImportError:
-        pass
 
     from .app import RadianApplication
 

@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 
 import rchitect
@@ -16,12 +15,6 @@ from .settings import radian_settings
 
 def get_app():
     return RadianApplication.instance
-
-
-def main(cleanup=None):
-    from .__main__ import main as _main
-
-    return _main(cleanup=cleanup)
 
 
 class RadianApplication:
@@ -50,35 +43,6 @@ class RadianApplication:
 
         if options.no_init_file:
             os.environ["R_PROFILE_USER"] = ""
-
-        if options.local_history and not os.path.exists(".radian_history"):
-            open(".radian_history", "w+").close()
-
-        doc_dir = os.path.join(self.r_home, "doc")
-        include_dir = os.path.join(self.r_home, "include")
-        share_dir = os.path.join(self.r_home, "share")
-        if not (
-            os.path.isdir(doc_dir)
-            and os.path.isdir(include_dir)
-            and os.path.isdir(share_dir)
-        ):
-            try:
-                paths = subprocess.check_output(
-                    [
-                        os.path.join(self.r_home, "bin", "R"),
-                        "--no-echo",
-                        "--vanilla",
-                        "-e",
-                        "cat(paste(R.home('doc'), R.home('include'), R.home('share'), sep=':'))",
-                    ]
-                )
-                doc_dir, include_dir, share_dir = paths.decode().split(":")
-            except Exception:
-                pass
-
-        os.environ["R_DOC_DIR"] = doc_dir
-        os.environ["R_INCLUDE_DIR"] = include_dir
-        os.environ["R_SHARE_DIR"] = share_dir
 
         # enable crayon on windows
         # we use CMDER_ROOT as a temporary workaround
@@ -110,9 +74,6 @@ class RadianApplication:
 
         os.environ["RCHITECT_REGISTER_SIGNAL_HANDLERS"] = "1"
         rchitect.init(args=args, register_signal_handlers=True)
-
-        if sys.platform.startswith("win"):
-            rutils.set_utf8()
 
     def apply_r_settings(self, settings):
         setoption("prompt", settings.prompt)

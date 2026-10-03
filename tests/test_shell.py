@@ -64,7 +64,6 @@ def test_cd2(terminal):
         sys.modules,
         {
             "rchitect": MagicMock(),
-            "rchitect.completion": MagicMock(),
             "rchitect.interface": MagicMock(),
         },
     ):
@@ -79,7 +78,8 @@ def test_cd2(terminal):
             assert [c.text for c in rc.get_package_completions(Document("utils::st", 9), ev)] == []
             assert [c.text for c in rc.get_package_completions(Document("df$st", 5), ev)] == []
             assert [c.text for c in rc.get_package_completions(Document('"stats', 6), ev)] == []
-            assert [c.text for c in rc.get_package_completions(Document('library("stats', 14), ev)] == ["stats"]
+            assert [c.text for c in rc.get_package_completions(Document('library("stat', 13), ev)] == ["stats"]
+            assert [c.text for c in rc.get_package_completions(Document('library("stats', 14), ev)] == []
             assert [c.text for c in rc.get_package_completions(Document("stats", 5), ev)] == ["stats::"]
         finally:
             completion_mod.installed_packages = orig_installed
@@ -94,6 +94,28 @@ def test_cd2(terminal):
     terminal.write("cd -\n")
     terminal.previous_line(2).strip().assert_equal(os.getcwd())
     terminal.current_line().assert_startswith("#!>")
+
+
+def test_shell_oldpwd_unit(monkeypatch, tmp_path):
+    from radian.shell import run_command
+
+    dir_a = tmp_path / "dir_a"
+    dir_b = tmp_path / "dir_b"
+    dir_a.mkdir()
+    dir_b.mkdir()
+
+    monkeypatch.chdir(dir_a)
+    monkeypatch.setenv("OLDPWD", str(dir_b))
+
+    # Failed cd must NOT overwrite OLDPWD
+    run_command(f"cd {tmp_path / 'nonexistent_dir'}")
+    assert os.environ["OLDPWD"] == str(dir_b)
+    assert os.path.realpath(os.getcwd()) == os.path.realpath(str(dir_a))
+
+    # Successful cd updates OLDPWD to the previous directory
+    run_command(f"cd {dir_b}")
+    assert os.path.realpath(os.environ["OLDPWD"]) == os.path.realpath(str(dir_a))
+    assert os.path.realpath(os.getcwd()) == os.path.realpath(str(dir_b))
 
 
 

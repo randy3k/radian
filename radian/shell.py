@@ -26,11 +26,12 @@ def run_command(command):
             sys.stdout.write("cd method takes at most one argument\n\n")
             return
         try:
+            cwd = os.getcwd()
             path = cmd_list[1].strip() if len(cmd_list) == 2 else "~"
             if path == "-":
-                oldpwd = os.environ["OLDPWD"] if "OLDPWD" in os.environ else os.getcwd()
-                os.environ["OLDPWD"] = os.getcwd()
+                oldpwd = os.environ["OLDPWD"] if "OLDPWD" in os.environ else cwd
                 os.chdir(oldpwd)
+                os.environ["OLDPWD"] = cwd
             else:
                 if sys.platform.startswith('win'):
                     path = path.replace("\\", "/")
@@ -39,8 +40,8 @@ def run_command(command):
 
                 path = os.path.expanduser(path)
                 path = os.path.expandvars(path)
-                os.environ["OLDPWD"] = os.getcwd()
                 os.chdir(path)
+                os.environ["OLDPWD"] = cwd
 
             sys.stdout.write(os.getcwd())
             sys.stdout.write("\n")

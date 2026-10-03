@@ -168,6 +168,10 @@ class ModalPromptSession(PromptSession):
     def register_mode(self, name, **kwargs):
         mode = PromptMode(name, **kwargs)
         self.modes[mode.name] = mode
+        self._default_settings["key_bindings"] = merge_key_bindings(
+            [DynamicKeyBindings(lambda: self.current_mode.prompt_key_bindings)]
+            + [m.key_bindings for m in self.modes.values() if m.key_bindings]
+        )
         if len(self.modes) == 1:
             self.activate_mode(mode.name)
         else:
@@ -185,11 +189,6 @@ class ModalPromptSession(PromptSession):
         self._restore_settings()
         for field, value in mode.settings.items():
             setattr(self, field, value)
-
-        self.key_bindings = merge_key_bindings(
-            [DynamicKeyBindings(lambda: self.current_mode.prompt_key_bindings)]
-            + [m.key_bindings for m in self.modes.values() if m.key_bindings]
-        )
 
     def _backup_settings(self):
         for name in self._fields:

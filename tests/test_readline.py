@@ -9,11 +9,19 @@ def test_readline(terminal):
     terminal.previous_line(1).assert_startswith("hello")
     terminal.current_line().assert_startswith("> ")
     terminal.write("ok\n")
-    terminal.previous_line(2).assert_contain("\"ok\"")
+    terminal.previous_line(1).assert_contains("\"ok\"")
 
     # multiline backspace with fewer than tab_size leading spaces
     terminal.write("1 +\n  \x7f2\n")
     terminal.previous_line(2).assert_startswith("[1] 3")
+
+    # builtin R completion
+    terminal.write("R.version.str")
+    terminal.current_line().assert_contains("R.version.str")
+    terminal.write("\t")
+    terminal.current_line().strip().assert_equal("r$> R.version.string")
+    terminal.write("\n\n")
+    terminal.previous_line(2).assert_startswith('[1] "R ')
 
 
 def test_askpass(terminal):
@@ -22,7 +30,7 @@ def test_askpass(terminal):
     terminal.write("askpass::askpass('askpass> ')\n")
     terminal.current_line().assert_startswith("askpass>")
     terminal.write("answer\n")
-    terminal.previous_line(2).assert_contain("\"answer\"")
+    terminal.previous_line(2).assert_contains("\"answer\"")
 
 
 def test_renv(terminal, tmp_path):
@@ -192,10 +200,10 @@ def test_history(tmp_path):
 def test_history_search(terminal):
     terminal.current_line().assert_startswith("r$>")
     terminal.write("apple_val <- 111\n")
-    terminal.previous_line(2).assert_contain("apple_val <- 111")
+    terminal.previous_line(2).assert_contains("apple_val <- 111")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("apple_val <- 222\n")
-    terminal.previous_line(2).assert_contain("apple_val <- 222")
+    terminal.previous_line(2).assert_contains("apple_val <- 222")
     terminal.current_line().strip().assert_equal("r$>")
     # Enter shell mode, run a command containing 'apple_val', then return to R mode
     terminal.write(";echo apple_val_shell\n")
@@ -207,7 +215,8 @@ def test_history_search(terminal):
     terminal.previous_line(2).assert_startswith("other_shell")
     terminal.current_line().strip().assert_equal("#!>")
     terminal.write("\x12apple_val")
-    terminal.current_line().assert_contain("echo apple_val_shell")
+    terminal.current_line().assert_contains("I-search backward: apple_val")
+    terminal.previous_non_empty_line().assert_contains("echo apple_val_shell")
     terminal.write("\x07")
     terminal.current_line().strip().assert_equal("#!>")
     terminal.write("\x7f")
@@ -215,25 +224,29 @@ def test_history_search(terminal):
 
     # Ctrl-R search for 'apple_val' in R mode should skip shell history and find 'apple_val <- 222'
     terminal.write("\x12apple_val")
-    terminal.current_line().assert_contain("apple_val <- 222")
+    terminal.current_line().assert_contains("I-search backward: apple_val")
+    terminal.previous_non_empty_line().assert_contains("apple_val <- 222")
     # Pressing Ctrl-R again finds the older 'apple_val <- 111'
     terminal.write("\x12")
-    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.previous_non_empty_line().assert_contains("apple_val <- 111")
     # Pressing Ctrl-S (\x13) reverses direction back to 'apple_val <- 222', then Ctrl-R back to '111'
     terminal.write("\x13")
-    terminal.current_line().assert_contain("apple_val <- 222")
-    terminal.write("\x12\r\r")
+    terminal.previous_non_empty_line().assert_contains("apple_val <- 222")
+    terminal.write("\x12\r")
+    terminal.current_line().assert_contains("apple_val <- 111")
+    terminal.write("\r")
+    terminal.previous_line(2).assert_contains("apple_val <- 111")
     terminal.current_line().strip().assert_equal("r$>")
     terminal.write("apple_val\n")
     terminal.previous_line(2).assert_startswith("[1] 111")
 
     # Prefix history search with Up (\x1b[A) and Down (\x1b[B) arrows skips shell mode
     terminal.write("apple_val <- \x1b[A")
-    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.current_line().assert_contains("apple_val <- 111")
     terminal.write("\x1b[A")
-    terminal.current_line().assert_contain("apple_val <- 222")
+    terminal.current_line().assert_contains("apple_val <- 222")
     terminal.write("\x1b[B")
-    terminal.current_line().assert_contain("apple_val <- 111")
+    terminal.current_line().assert_contains("apple_val <- 111")
     terminal.sendintr()
     terminal.current_line().strip().assert_equal("r$>")
 
@@ -241,13 +254,13 @@ def test_history_search(terminal):
     terminal.write("browser()\n")
     terminal.current_line().strip().assert_equal("Browse[1]>")
     terminal.write("browse_apple <- 333\n")
-    terminal.previous_line(2).assert_contain("browse_apple <- 333")
+    terminal.previous_line(2).assert_contains("browse_apple <- 333")
     terminal.current_line().strip().assert_equal("Browse[1]>")
     terminal.write("Q\n")
     terminal.current_line().strip().assert_equal("r$>")
     # 'Q' was ignored, so Up arrow recalls 'browse_apple <- 333' directly
     terminal.write("\x1b[A")
-    terminal.current_line().assert_contain("browse_apple <- 333")
+    terminal.current_line().assert_contains("browse_apple <- 333")
     terminal.sendintr()
     terminal.current_line().strip().assert_equal("r$>")
 
@@ -269,7 +282,7 @@ def test_history_search_options(radian_command, tmp_path):
             terminal.current_line().assert_startswith("r$>")
             # Test escape_key_map (which binds via session.modes['r'].prompt_key_bindings)
             terminal.write("dup_item\x1b-20\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.previous_line(2).assert_contains("dup_item <- 20")
             terminal.current_line().strip().assert_equal("r$>")
             # Layout of history:
             # 0: dup_item <- 20 (older duplicate before oldest unique match!)
@@ -278,28 +291,32 @@ def test_history_search_options(radian_command, tmp_path):
             # 3: other_cmd <- 99
             # 4: dup_item <- 20 (newest duplicate)
             terminal.write("dup_item <- 10\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 10")
+            terminal.previous_line(2).assert_contains("dup_item <- 10")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item <- 20\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.previous_line(2).assert_contains("dup_item <- 20")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("other_cmd <- 99\n")
-            terminal.previous_line(2).assert_contain("other_cmd <- 99")
+            terminal.previous_line(2).assert_contains("other_cmd <- 99")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item <- 20\n")
-            terminal.previous_line(2).assert_contain("dup_item <- 20")
+            terminal.previous_line(2).assert_contains("dup_item <- 20")
             terminal.current_line().strip().assert_equal("r$>")
 
             # Case-insensitive Ctrl-R search for 'DUP_ITEM':
             # 1st match is 'dup_item <- 20' (index 4)
             terminal.write("\x12DUP_ITEM")
-            terminal.current_line().assert_contain("dup_item <- 20")
+            terminal.current_line().assert_contains("I-search backward: DUP_ITEM")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 20")
             # Pressing Ctrl-R once should skip index 2 ('dup_item <- 20') and find 'dup_item <- 10' (index 1)
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- 10")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 10")
             # Pressing Ctrl-R again at the oldest unique match should NOT match index 0 ('dup_item <- 20'),
             # and accepting + executing should run 'dup_item <- 10'
-            terminal.write("\x12\r\r")
+            terminal.write("\x12\r")
+            terminal.current_line().assert_contains("dup_item <- 10")
+            terminal.write("\r")
+            terminal.previous_line(2).assert_contains("dup_item <- 10")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item\n")
             terminal.previous_line(2).assert_startswith("[1] 10")
@@ -307,24 +324,28 @@ def test_history_search_options(radian_command, tmp_path):
             # Multiple occurrences on the same line + Ctrl-S forward search with search_no_duplicates:
             # 'dup_item ' (with trailing space) occurs twice on 'dup_item <- dup_item + 5'
             terminal.write("dup_item <- dup_item + 5\n")
-            terminal.previous_line(2).assert_contain("dup_item <- dup_item + 5")
+            terminal.previous_line(2).assert_contains("dup_item <- dup_item + 5")
             terminal.current_line().strip().assert_equal("r$>")
             # 1st match is 2nd 'dup_item ' on 'dup_item <- dup_item + 5'
             terminal.write("\x12dup_item ")
-            terminal.current_line().assert_contain("dup_item <- dup_item + 5")
+            terminal.current_line().assert_contains("I-search backward: dup_item ")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- dup_item + 5")
             # Next Ctrl-R moves to 1st 'dup_item ' on the same line
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- dup_item + 5")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- dup_item + 5")
             # Next Ctrl-R moves to 'dup_item <- 10', then skips duplicate '10' to 'dup_item <- 20'
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- 10")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 10")
             terminal.write("\x12")
-            terminal.current_line().assert_contain("dup_item <- 20")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 20")
             # Ctrl-S (\x13) reverses direction to forward search ('dup_item <- 10'),
             # then next Ctrl-S steps forward to 'dup_item <- dup_item + 5'
             terminal.write("\x13")
-            terminal.current_line().assert_contain("dup_item <- 10")
-            terminal.write("\x13\r\r")
+            terminal.previous_non_empty_line().assert_contains("dup_item <- 10")
+            terminal.write("\x13\r")
+            terminal.current_line().assert_contains("dup_item <- dup_item + 5")
+            terminal.write("\r")
+            terminal.previous_line(2).assert_contains("dup_item <- dup_item + 5")
             terminal.current_line().strip().assert_equal("r$>")
             terminal.write("dup_item\n")
             terminal.previous_line(2).assert_startswith("[1] 20")
@@ -338,23 +359,32 @@ def test_history_search_options(radian_command, tmp_path):
                 time.sleep(0.1)
 
 
-def test_modal_prompt_session():
+def test_modal_prompt_session(tmp_path):
+    from types import SimpleNamespace
+    from prompt_toolkit.document import Document
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
-    from radian.lineedit.history import ModalInMemoryHistory
+    from radian.lineedit.history import (
+        ModalAutoSuggestFromHistory,
+        ModalFileHistory,
+        ModalInMemoryHistory,
+    )
     from radian.lineedit.prompt import ModalPromptSession, PromptMode
+    from radian.prompt_session import _create_history
 
     with pytest.raises(KeyError):
         PromptMode("bad", nonexistent_field=True)
 
     with create_pipe_input() as pipe_input:
+        history = ModalInMemoryHistory()
         session = ModalPromptSession(
-            history=ModalInMemoryHistory(),
+            history=history,
             input=pipe_input,
             output=DummyOutput(),
             multiline=False,
             add_history=True,
             search_no_duplicates=True,
+            auto_suggest=ModalAutoSuggestFromHistory(),
         )
         assert session.add_history is True
         assert session.search_no_duplicates is True
@@ -362,6 +392,12 @@ def test_modal_prompt_session():
         session.register_mode(
             "r",
             is_activated=lambda s: s._prompt_message == "r$> ",
+            history_book="r",
+            multiline=True,
+        )
+        session.register_mode(
+            "browse",
+            is_activated=lambda s: s._prompt_message == "Browse[1]> ",
             history_book="r",
             multiline=True,
         )
@@ -392,6 +428,43 @@ def test_modal_prompt_session():
         assert session.mode_to_be_activated() == "r"
         session._prompt_message = "other> "
         assert session.mode_to_be_activated() == "unknown"
+
+        # Mode-aware AutoSuggestFromHistory filters by history_book and does not match current uncommitted line
+        history.append_string("apple_r <- 123", "r")
+        history.append_string("apple_browse <- 456", "browse")
+        history.append_string("apple_shell --help", "shell")
+        assert list(history.load()) == [
+            ("shell", "apple_shell --help"),
+            ("browse", "apple_browse <- 456"),
+            ("r", "apple_r <- 123"),
+        ]
+
+        session.activate_mode("r")
+        session.default_buffer.reset(Document("apple_", 6))
+        sug_r = session.auto_suggest.get_suggestion(
+            session.default_buffer, session.default_buffer.document
+        )
+        assert sug_r is not None and sug_r.text == "browse <- 456"
+
+        session.activate_mode("shell")
+        session.default_buffer.reset(Document("apple_", 6))
+        sug_sh = session.auto_suggest.get_suggestion(
+            session.default_buffer, session.default_buffer.document
+        )
+        assert sug_sh is not None and sug_sh.text == "shell --help"
+
+        # _create_history uses local_history_file when options.local_history is True even if file doesn't exist yet
+        custom_local = tmp_path / ".custom_radian_history"
+        h = _create_history(
+            SimpleNamespace(no_history=False, global_history=False, local_history=True),
+            SimpleNamespace(
+                local_history_file=str(custom_local),
+                global_history_file=str(tmp_path / ".global_history"),
+                history_size=100,
+            ),
+        )
+        assert isinstance(h, ModalFileHistory)
+        assert h.filename == str(custom_local)
 
 
 def test_inputhook_select_and_cleanup(monkeypatch):
@@ -512,3 +585,201 @@ def test_inputhook_select_and_cleanup(monkeypatch):
         with pytest.raises(OSError):
             os.fstat(w_fd)
 
+
+def test_completion_unit(monkeypatch, tmp_path):
+    from prompt_toolkit.completion import CompleteEvent
+    from prompt_toolkit.document import Document
+    from radian.completion import RCompleter, SmartPathCompleter
+    from radian.lexer import cursor_in_comment, cursor_in_string
+
+    # 1. cursor_in_comment and cursor_in_string checks (including raw strings & unclosed backticks)
+    assert not cursor_in_comment(Document("x <- 1", 6))
+    assert not cursor_in_comment(Document('x <- "# not comment"', 20))
+    assert cursor_in_comment(Document("# comment", 9))
+    assert cursor_in_comment(Document("x <- 1 # comment", 16))
+    assert not cursor_in_comment(Document("# comment\nx <- 1", 16))
+    assert not cursor_in_comment(Document("df$`col#1", 9))
+    assert not cursor_in_string(Document('df$`col"1', 9))
+    assert not cursor_in_string(Document('x <- "a"; df$`col', 17))
+    assert cursor_in_string(Document('r"(', 3))
+    assert cursor_in_string(Document('r"(hello', 8))
+    assert not cursor_in_string(Document('r"(hello)"', 10))
+    assert not cursor_in_string(Document('r"()"', 5))
+    assert cursor_in_string(Document('r"-----(hello )----"', 20))
+    assert not cursor_in_string(Document('r"-----(hello )-----"', 21))
+
+    # 2. RCompleter prefix & comment checks
+    calls = []
+
+    def fake_complete_line(buf, timeout=0, in_print=False):
+        calls.append((buf, timeout, in_print))
+        if buf.endswith("is."):
+            return "is.", ["is.null", "is.na"]
+        if buf.endswith("is.n"):
+            return "is.n", ["is.null", "is.na"]
+        if buf.endswith("R.version.s"):
+            return "R.version.s", ["R.version.string"]
+        if buf.endswith("utils::"):
+            return "utils::", ["utils::str", "utils::sessionInfo"]
+        if buf.endswith("utils::s"):
+            return "utils::s", ["utils::str", "utils::sessionInfo"]
+        if buf.endswith("mtcars$"):
+            return "mtcars$", ["mtcars$mpg", "mtcars$cyl"]
+        if buf.endswith("mtcars$m"):
+            return "mtcars$m", ["mtcars$mpg"]
+        if buf.endswith("s4obj@s"):
+            return "s4obj@s", ["s4obj@slot1"]
+        return "", ["from=", "to="]
+
+    monkeypatch.setattr("radian.completion._complete_line", fake_complete_line)
+    monkeypatch.setattr(
+        "radian.completion.installed_packages", lambda: ["utils", "utf8", "stats"]
+    )
+
+    completer = RCompleter()
+    typing_event = CompleteEvent(completion_requested=False)
+    tab_event = CompleteEvent(completion_requested=True)
+
+    # Punctuation, operators, numbers, and single-colon sequences do NOT auto-complete while typing
+    for text in [
+        "seq(c()",
+        "seq((",
+        'seq("a",',
+        "seq(x <-",
+        "x <-",
+        "x ==",
+        "df |>",
+        "1:5",
+        "x:",
+        "123",
+        "3.14",
+        ".5",
+        "::",
+        "$$",
+        "# utils",
+    ]:
+        calls.clear()
+        comps = [c.text for c in completer.get_completions(Document(text, len(text)), typing_event)]
+        assert comps == [], f"unexpected completions for {text!r}: {comps}"
+        assert calls == []
+
+    # Comments do not complete even on <Tab>
+    assert list(completer.get_completions(Document("# utils", 7), tab_event)) == []
+
+    # Dotted identifiers, namespace operators, and $/@@ chains DO auto-complete while typing
+    for text, expected in [
+        ("is.", ["is.null", "is.na"]),
+        ("is.n", ["is.null", "is.na"]),
+        ("R.version.s", ["R.version.string"]),
+        ("utils::", ["utils::str", "utils::sessionInfo"]),
+        ("utils::s", ["utils::str", "utils::sessionInfo"]),
+        ("mtcars$", ["mtcars$mpg", "mtcars$cyl"]),
+        ("mtcars$m", ["mtcars$mpg"]),
+        ("s4obj@s", ["s4obj@slot1"]),
+    ]:
+        comps = [c.text for c in completer.get_completions(Document(text, len(text)), typing_event)]
+        assert comps == expected, f"failed for {text!r}: {comps}"
+
+    # Package completions inside library(): exact match is filtered out once fully typed,
+    # and <Tab> right after library( / library(" / require( / requireNamespace(" lists all packages
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(", 8), typing_event)
+    ] == []
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(", 8), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document('library("', 9), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document("require(", 8), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document('requireNamespace("', 18), tab_event)
+    ] == ["utils", "utf8", "stats"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(ut", 10), typing_event)
+    ] == ["utils", "utf8"]
+    assert [
+        c.text
+        for c in completer.get_completions(Document("library(utils", 13), typing_event)
+    ] == []
+
+    # LaTeX completions respect completion_prefix_length while typing, including \^2 and \_2
+    assert list(completer.get_completions(Document(r"\a", 2), typing_event)) == []
+    assert list(completer.get_completions(Document(r'"hello\n', 8), typing_event)) == []
+    assert any(
+        c.text == "α"
+        for c in completer.get_completions(Document(r"\al", 3), typing_event)
+    )
+    assert any(
+        c.text == "²"
+        for c in completer.get_completions(Document(r"\^2", 3), typing_event)
+    )
+    assert any(
+        c.text == "α"
+        for c in completer.get_completions(Document(r"\alpha", 6), typing_event)
+    )
+
+    # 3. SmartPathCompleter trailing space and ~ handling
+    sub = tmp_path / "subdir"
+    sub.mkdir()
+    (tmp_path / "file_a.txt").write_text("a")
+    monkeypatch.chdir(tmp_path)
+
+    path_completer = SmartPathCompleter()
+    # Trailing space after non-cd command completes in cwd with start_position == 0
+    ls_comps = list(path_completer.get_completions(Document("ls ", 3), tab_event))
+    assert any(c.text == "file_a.txt" and c.start_position == 0 for c in ls_comps)
+    ls_arg_comps = list(
+        path_completer.get_completions(Document("ls file_a.txt ", 14), tab_event)
+    )
+    assert any(c.text == "subdir" and c.start_position == 0 for c in ls_arg_comps)
+
+    # Bare "cd ~" does not replace "~" with the username
+    assert list(path_completer.get_completions(Document("cd ~", 4), tab_event)) == []
+
+
+def test_read_console_clears_stale_multiline_buffer():
+    from types import SimpleNamespace
+    from radian.console import create_read_console
+    from radian.settings import radian_settings as settings
+
+    long_multiline = "x <- '" + ("文字" * 600) + "'\ny <- 42"
+    prompts = [long_multiline, "z <- 99"]
+
+    def fake_prompt(add_history=1):
+        return prompts.pop(0)
+
+    session = SimpleNamespace(
+        app=SimpleNamespace(
+            is_running=False,
+            output=SimpleNamespace(write_raw=lambda s: None),
+        ),
+        current_mode=SimpleNamespace(
+            name="r",
+            sticky=True,
+            sticky_on_sigint=True,
+            insert_new_line=False,
+            insert_new_line_on_sigint=False,
+        ),
+        mode_to_be_activated=lambda: "r",
+        activate_mode=lambda m: None,
+        prompt=fake_prompt,
+        _prompt_message=settings.prompt,
+    )
+
+    rc = create_read_console(session)
+    # First top-level read starts line-by-line delivery ("{")
+    assert rc(settings.prompt, 1) == "{"
+    # Continuation prompt "+ " receives line 1
+    assert rc("+ ", 1).startswith("x <- '")
+    # If R aborts due to syntax error and returns to top-level prompt (settings.prompt),
+    # stale remaining lines ("y <- 42", "}") are discarded and a fresh prompt is read!
+    assert rc(settings.prompt, 1) == "z <- 99"

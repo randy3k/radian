@@ -74,8 +74,22 @@ class ModalBuffer(Buffer):
             return (self.working_index, self.cursor_position)
 
         orig_lines = self._working_lines
+        modes = self.session.modes
+        current_book = self.session.current_mode.history_book
+        valid_modes = {name for name, m in modes.items() if m.history_book == current_book}
+        no_dups = self.session.search_no_duplicates
+        search_history = self._search_history
+        working_modes = self._working_lines_mode
+        working_index = self.working_index
+        last_index = len(orig_lines) - 1
         self._working_lines = [
-            line if i == self.working_index or self._search_matches(i) else ""
+            line
+            if i == working_index
+            or (
+                (i == last_index or working_modes[i] in valid_modes)
+                and (not no_dups or line not in search_history)
+            )
+            else ""
             for i, line in enumerate(orig_lines)
         ]
         try:
@@ -168,23 +182,25 @@ class ModalBuffer(Buffer):
         if not (keep(self.text) if callable(keep) else keep):
             return
         self.history._ensure_loaded()
-        loaded = self.history._loaded_strings
-        if not loaded or loaded[0] != (self.session.current_mode.name, self.text):
-            self.history.append_string(self.text, self.session.current_mode.name)
+        lines = self.history._loaded_lines
+        modes = self.history._loaded_modes
+        mode_name = self.session.current_mode.name
+        if not lines or lines[-1] != self.text or modes[-1] != mode_name:
+            self.history.append_string(self.text, mode_name)
 
     def _reset_searching(self):
         self._last_search_direction = None
         self._last_search_history = None
         self._search_history.clear()
 
-    def _reset_history(self):
-        self._working_lines_mode = deque([None])
-        for m, item in self.history.load():
-            self._working_lines.appendleft(item)
-            self._working_lines_mode.appendleft(m)
-            self._Buffer__working_index += 1
+    def _reset_history(self, current_text=""):
+        self.history._ensure_loaded()
+        self._working_lines = deque(self.history._loaded_lines)
+        self._working_lines.append(current_text)
+        self._working_lines_mode = [*self.history._loaded_modes, None]
+        self._Buffer__working_index = len(self._working_lines) - 1
 
     def reset(self, *args, **kwargs):
         self._reset_searching()
         super().reset(*args, **kwargs)
-        self._reset_history()
+        self._reset_history(self.text)

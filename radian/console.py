@@ -61,21 +61,12 @@ else:
 
 TERMINAL_CURSOR_AT_BEGINNING = [True]
 
-SUPPRESS_STDOUT = False
 SUPPRESS_STDERR = False
 ANSI_ESCAPE_RE = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 
-def normalize(string):
-    return ANSI_ESCAPE_RE.sub('', string.replace('\r\n', '\n'))
-
-
-def is_ascii(text):
-    return all(ord(c) < 128 for c in text)
-
-
 def is_long_non_ascii_multiline(text):
-    return len(text) >= 1000 and "\n" in text and not is_ascii(text)
+    return len(text) >= 1000 and "\n" in text and not text.isascii()
 
 
 @contextmanager
@@ -133,7 +124,10 @@ def native_prompt(app, message):
 
 
 def create_read_console(session):
+    from .prompt_session import BROWSE_PATTERN
+
     interrupted = [False]
+    _text_stored = ["", 0, False]  # text, startpos, sent_by_line
 
     def _read_console(message, add_history=1):
         app = session.app
@@ -166,6 +160,7 @@ def create_read_console(session):
 
             except KeyboardInterrupt:
                 interrupted[0] = True
+                _text_stored[:] = ["", 0, False]
                 raise
 
             except Exception as e:
@@ -183,11 +178,13 @@ def create_read_console(session):
 
         return text
 
-    _text_stored = ["", 0, False]  # text, startpos, sent_by_line
-
     def read_console(message, add_history):
         if session.current_mode.name in ["r", "browse"]:
             # this code is needed to allow new line breaks with strings, see #377
+            if _text_stored[0] and (
+                message == settings.prompt or BROWSE_PATTERN.match(message)
+            ):
+                _text_stored[:] = ["", 0, False]
             if _text_stored[0]:
                 text = _text_stored[0][_text_stored[1]:]
             else:
@@ -247,24 +244,31 @@ def create_write_console_ex(session, stderr_format):
                 output.flush()
 
     if not write_text:
+        is_win = is_windows()
+
         def write_text(buf, format_str=None):
-            output.enable_autowrap()  # Patch for Windows10_Output
+            if is_win:
+                output.enable_autowrap()  # Patch for Windows10_Output
             output.write_raw(format_str.format(buf) if format_str else buf)
             output.flush()
 
     def write_console_ex(buf, otype):
         if otype == 0:
-            if SUPPRESS_STDOUT:
-                return
             write_text(buf)
         else:
             if SUPPRESS_STDERR:
                 return
             write_text(buf, stderr_format)
 
-        buf = normalize(buf)
-        if buf:
-            TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+        if "\x1b" not in buf:
+            if buf:
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
+        elif buf.endswith("\n"):
+            TERMINAL_CURSOR_AT_BEGINNING[0] = True
+        else:
+            buf = ANSI_ESCAPE_RE.sub("", buf)
+            if buf:
+                TERMINAL_CURSOR_AT_BEGINNING[0] = buf.endswith("\n")
 
     return write_console_ex
 
