@@ -21,7 +21,7 @@ def test_readline(terminal):
     terminal.write("\t")
     terminal.current_line().strip().assert_equal("r$> R.version.string")
     terminal.write("\n\n")
-    terminal.previous_line(2).assert_contains("R version")
+    terminal.previous_line(2).assert_startswith('[1] "R ')
 
 
 def test_askpass(terminal):
