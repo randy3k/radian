@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.8.0 - 2026-11-08
+
+### Features
+
+* Require `rchitect >= 0.6.0, < 0.7.0` and delegate `R_DOC_DIR` / `R_INCLUDE_DIR` / `R_SHARE_DIR`, Windows ACP fallback, and `reticulate` state hooks to `rchitect` ([#538](https://github.com/randy3k/radian/pull/538))
+* Support LaTeX completions in `reticulate` mode even when `jedi` is not installed and make `AutoSuggestFromHistory` mode-aware ([#538](https://github.com/randy3k/radian/pull/538))
+
+### Bug Fixes
+
+* Handle missing R gracefully when running `radian --version` ([#538](https://github.com/randy3k/radian/pull/538))
+* Clear stale multiline buffer in `read_console` on console reset or interrupt ([#538](https://github.com/randy3k/radian/pull/538))
+* Refine R, `reticulate`, and LaTeX completion triggers, multiline `reticulate` interrupt handling, Python `:` newline detection, and R raw-string auto-match keybindings ([#538](https://github.com/randy3k/radian/pull/538))
+* Fix `CustomSLexer` raw-string rules and unclosed backticks, and harden shell `cd` `OLDPWD` updates ([#538](https://github.com/randy3k/radian/pull/538))
+
+### Performance & Refactoring
+
+* Move R completion bridge into `radian.completion`, collapse R completion into a single `rcall`, and halve `os.stat` calls in `installed_packages()` ([#538](https://github.com/randy3k/radian/pull/538))
+* Optimize R lexer, `ModalHistory` reset, `ModalBuffer._search()` indexing, `Enter` keybinding filter evaluation, console cursor tracking, and lazy startup imports (`jedi`, `PythonLexer`, `latex_symbols`) ([#538](https://github.com/randy3k/radian/pull/538))
+
+**Full Changelog**: https://github.com/randy3k/radian/compare/v0.7.1...v0.8.0
+
 ## 0.7.1 - 2026-09-30
 
 ### Bug Fixes
